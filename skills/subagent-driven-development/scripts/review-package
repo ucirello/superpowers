@@ -1,44 +1,53 @@
 #!/usr/bin/env bash
-# Generate a review package: commit list, stat summary, and the net
+# Generate a review package: revision list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
+# call. Using the recorded per-task BASE (not @-) keeps multi-revision
 # tasks intact.
 #
-# Usage: review-package BASE HEAD [OUTFILE]
-# Default OUTFILE: <repo-root>/.superpowers/sdd/review-<base7>..<head7>.diff
+# Usage: review-package BASE TIP [OUTFILE]
+# Default OUTFILE: <workspace-root>/.tmp/rocketclaw/sdd/review-<base7>..<tip7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-  echo "usage: review-package BASE HEAD [OUTFILE]" >&2
+  echo "usage: review-package BASE TIP [OUTFILE]" >&2
   exit 2
 fi
 
 base=$1
-head=$2
+tip=$2
 
-git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+base_commit=$(jj log --no-graph -r "exactly($base, 1)" -T 'commit_id') || {
+  echo "bad BASE: $base" >&2
+  exit 2
+}
+tip_commit=$(jj log --no-graph -r "exactly($tip, 1)" -T 'commit_id') || {
+  echo "bad TIP: $tip" >&2
+  exit 2
+}
+base_short=${base_commit:0:7}
+tip_short=${tip_commit:0:7}
 
 if [ $# -eq 3 ]; then
   out=$3
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
-  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+  out="$dir/review-${base_short}..${tip_short}.diff"
 fi
 
 {
-  echo "# Review package: ${base}..${head}"
+  echo "# Review package: ${base}..${tip}"
   echo
-  echo "## Commits"
-  git log --oneline "${base}..${head}"
+  echo "## Revisions"
+  jj log --no-graph -r "${base_commit}..${tip_commit}" \
+    -T 'change_id.short(12) ++ " " ++ commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  git diff --stat "${base}..${head}"
+  jj diff --from "$base_commit" --to "$tip_commit" --stat
   echo
   echo "## Diff"
-  git diff -U10 "${base}..${head}"
+  jj diff --from "$base_commit" --to "$tip_commit" --git --context 10
 } > "$out"
 
-commits=$(git rev-list --count "${base}..${head}")
-echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+revisions=$(jj log -r "${base_commit}..${tip_commit}" --count)
+echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"

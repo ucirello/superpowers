@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# Resolve and ensure the working-tree directory SDD uses for its short-lived
+# Resolve and ensure the workspace directory SDD uses for its short-lived
 # artifacts: task briefs, implementer reports, review packages, and the
 # progress ledger. Print the directory's absolute path.
 #
-# The workspace lives in the working tree (not under .git/) because Claude Code
-# treats .git/ as a protected path and denies agent writes there — which blocks
-# an implementer subagent from writing its report file. A self-ignoring
-# .gitignore keeps the workspace out of `git status` and out of accidental
-# commits without modifying any tracked file.
+# The artifact directory lives under the Jujutsu workspace's local .tmp tree.
+# A self-ignoring .gitignore keeps artifacts out of snapshots without modifying
+# any tracked file. Outside a Jujutsu workspace, use the current directory's
+# local .tmp tree as a fallback.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -15,8 +14,11 @@
 # Usage: sdd-workspace
 set -euo pipefail
 
-root=$(git rev-parse --show-toplevel)
-dir="$root/.superpowers/sdd"
+if root=$(jj workspace root 2>/dev/null); then
+  dir="$root/.tmp/rocketclaw/sdd"
+else
+  dir="$PWD/.tmp/rocketclaw/sdd"
+fi
 mkdir -p "$dir"
 printf '*\n' > "$dir/.gitignore"
 cd "$dir" && pwd

@@ -23,6 +23,7 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Change Descriptions | Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Verify local syntax and history take precedence, compatible Go guidance improves clarity and structure, and no fixed prefix, type, scope, subject, body, example, or template is prescribed. |
 
     ## Calibration
 
