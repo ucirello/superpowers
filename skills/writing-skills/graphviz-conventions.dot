@@ -12,7 +12,9 @@ digraph STYLE_GUIDE {
         "Take an action" [shape=box];
 
         // Commands are plaintext
-        "git commit -m 'msg'" [shape=plaintext];
+        "jj commit" [shape=plaintext];
+        "Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards." [shape=note];
+        "Repository-local message syntax and history win; apply only compatible Go guidance." [shape=note];
 
         // States are ellipses
         "Current state" [shape=ellipse];
@@ -29,7 +31,7 @@ digraph STYLE_GUIDE {
         "Write test first" [shape=box];
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
-        "NEVER use git add -A" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "NEVER assume a staging area" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions
@@ -76,7 +78,7 @@ digraph STYLE_GUIDE {
 
         // Commands are literal
         "grep -r 'pattern' .";
-        "git status";
+        "jj st";
         "npm run build";
 
         // States describe situation
@@ -92,7 +94,7 @@ digraph STYLE_GUIDE {
         "Trigger: Something happens" [shape=ellipse];
         "Initial check?" [shape=diamond];
         "Main action" [shape=box];
-        "git status" [shape=plaintext];
+        "jj st" [shape=plaintext];
         "Another check?" [shape=diamond];
         "Alternative action" [shape=box];
         "STOP: Don't do this" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
@@ -101,8 +103,8 @@ digraph STYLE_GUIDE {
         "Trigger: Something happens" -> "Initial check?";
         "Initial check?" -> "Main action" [label="yes"];
         "Initial check?" -> "Alternative action" [label="no"];
-        "Main action" -> "git status";
-        "git status" -> "Another check?";
+        "Main action" -> "jj st";
+        "jj st" -> "Another check?";
         "Another check?" -> "Process complete" [label="ok"];
         "Another check?" -> "STOP: Don't do this" [label="problem"];
         "Alternative action" -> "Process complete";
@@ -152,12 +154,12 @@ digraph STYLE_GUIDE {
         "Test failed" [shape=ellipse];
         "Read error message" [shape=box];
         "Can reproduce?" [shape=diamond];
-        "git diff HEAD~1" [shape=plaintext];
+        "jj diff --from @- --to @" [shape=plaintext];
         "NEVER ignore errors" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
 
         "Test failed" -> "Read error message";
         "Read error message" -> "Can reproduce?";
-        "Can reproduce?" -> "git diff HEAD~1" [label="yes"];
+        "Can reproduce?" -> "jj diff --from @- --to @" [label="yes"];
 
         // Bad: vague and wrong shapes
         bad_1 [label="Something wrong", shape=box];  // Should be ellipse (state)
