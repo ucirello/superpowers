@@ -17,11 +17,11 @@ fi
 base=$1
 tip=$2
 
-base_commit=$(jj log --no-graph -r "exactly($base, 1)" -T 'commit_id') || {
+base_commit=$(jj --ignore-working-copy log --no-graph -r "exactly($base, 1)" -T 'commit_id') || {
   echo "bad BASE: $base" >&2
   exit 2
 }
-tip_commit=$(jj log --no-graph -r "exactly($tip, 1)" -T 'commit_id') || {
+tip_commit=$(jj --ignore-working-copy log --no-graph -r "exactly($tip, 1)" -T 'commit_id') || {
   echo "bad TIP: $tip" >&2
   exit 2
 }
@@ -39,15 +39,15 @@ fi
   echo "# Review package: ${base}..${tip}"
   echo
   echo "## Revisions"
-  jj log --no-graph -r "${base_commit}..${tip_commit}" \
+  jj --ignore-working-copy log --no-graph -r "${base_commit}..${tip_commit}" \
     -T 'change_id.short(12) ++ " " ++ commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  jj diff --from "$base_commit" --to "$tip_commit" --stat
+  jj --ignore-working-copy diff --from "$base_commit" --to "$tip_commit" --stat
   echo
   echo "## Diff"
-  jj diff --from "$base_commit" --to "$tip_commit" --git --context 10
+  jj --ignore-working-copy diff --from "$base_commit" --to "$tip_commit" --git --context 10
 } > "$out"
 
-revisions=$(jj log -r "${base_commit}..${tip_commit}" --count)
+revisions=$(jj --ignore-working-copy log -r "${base_commit}..${tip_commit}" --count)
 echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"
