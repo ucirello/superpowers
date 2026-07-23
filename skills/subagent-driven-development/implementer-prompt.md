@@ -49,6 +49,8 @@ Subagent (general-purpose):
 
     Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
+    Repository-local message syntax and established history take precedence. Apply compatible Go guidance to message quality, clarity, and structure without replacing the repository's syntax. Do not impose a fixed message format, type, scope, prefix, or template.
+
     ## Code Organization
 
     You reason best about code you can hold in context at once, and your edits are more

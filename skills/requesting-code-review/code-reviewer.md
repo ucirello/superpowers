@@ -43,7 +43,6 @@ Subagent (general-purpose):
     mkdir -p "$TMP_ROOT"
     REVIEW_DIR="$TMP_ROOT/review-$PPID-$$"
     REVIEW_WORKSPACE="review-$$"
-    mkdir "$REVIEW_DIR"
     jj workspace add --name "$REVIEW_WORKSPACE" -r [END_REV] "$REVIEW_DIR"
     # After the review:
     cd "$ORIGINAL_ROOT"
