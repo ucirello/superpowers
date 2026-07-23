@@ -23,7 +23,7 @@ jj workspace list
 jj status
 ```
 
-`jj workspace root` is the authoritative project-root lookup. `jj workspace list` shows every working copy attached to the repository. Each listed workspace has its own working-copy commit, shown as `<workspace-name>@` in `jj log`.
+`jj workspace root` is the authoritative current-workspace-root lookup. `jj workspace list` shows every working copy attached to the repository. Each listed workspace has its own working-copy commit, shown as `<workspace-name>@` in `jj log`.
 
 If the user, harness, or current session says the current workspace was created for this task, trust that signal. Report `Already in isolated workspace at <path>.` and skip to Step 2. Do not infer isolation merely from a bookmark: Jujutsu has no active or checked-out bookmark.
 
@@ -44,16 +44,16 @@ If the harness provides a native isolation tool such as `EnterWorktree`, `Worktr
 Follow this priority order. Explicit user instructions always win:
 
 1. Use the exact user-declared destination when one exists.
-2. Use an existing `$(jj workspace root)/.worktrees/` directory.
-3. Otherwise use an existing `$(jj workspace root)/worktrees/` directory.
-4. If neither exists, default to `$(jj workspace root)/.worktrees/`.
+2. Use an existing `$(jj workspace root)/.workspaces/` directory.
+3. Otherwise use an existing `$(jj workspace root)/workspaces/` directory.
+4. If neither exists, default to `$(jj workspace root)/.workspaces/`.
 
 Resolve and quote the path instead of assuming the current directory is the project root:
 
 ```bash
 workspace_root=$(jj workspace root) || exit 1
 workspace_name="$WORKSPACE_NAME"
-workspace_parent="$workspace_root/.worktrees"  # Replace with the selected parent.
+workspace_parent="$workspace_root/.workspaces"  # Replace with the selected parent.
 path="$workspace_parent/$workspace_name"
 ```
 
@@ -66,8 +66,8 @@ Jujutsu automatically tracks new files unless they match an ignore rule. Because
 If the selected directory is not covered by the repository's ignore conventions, add it to the root `.gitignore`. If it was previously tracked, the ignore rule alone is insufficient; untrack it explicitly:
 
 ```bash
-jj file untrack .worktrees
-jj file list .worktrees
+jj file untrack .workspaces
+jj file list .workspaces
 jj status
 ```
 
@@ -108,7 +108,7 @@ Choose a new bookmark name; do not move an existing bookmark implicitly. A bookm
 
 ## Step 2: Project Setup
 
-Auto-detect and run the repository's documented setup. Keep all paths relative to the new `jj workspace root` and do not invent global cache or temporary paths.
+Auto-detect and run the repository's documented setup. Keep all paths relative to the new `jj workspace root`. Store temporary files created in the workspace under `.tmp/`; do not invent global cache or temporary paths.
 
 ```bash
 # Node.js
@@ -193,7 +193,7 @@ When the workspace is no longer needed, use `jj workspace forget <workspace-name
 ### Assuming Directory Location
 
 - **Problem:** Hard-coded or OS-global paths violate project conventions and may escape the writable workspace.
-- **Fix:** Follow explicit instructions, then existing project-local workspace directories, then `.worktrees/`; quote every path.
+- **Fix:** Follow explicit instructions, then existing project-local workspace directories, then `.workspaces/`; quote every path.
 
 ## Red Flags
 
@@ -210,8 +210,9 @@ When the workspace is no longer needed, use `jj workspace forget <workspace-name
 **Always:**
 - Run Step 0 first.
 - Resolve the root with `jj workspace root` and quote paths.
-- Prefer native harness isolation, then the repository's established workspace directory, then `.worktrees/`.
+- Prefer native harness isolation, then the repository's established workspace directory, then `.workspaces/`.
 - Use `jj workspace add` for isolation.
+- Store temporary files under the workspace-local `.tmp/` directory.
 - Verify state with `jj status` and tracking with `jj file list`.
 - Keep bookmarks optional and explicit.
 - Auto-detect and run documented project setup.

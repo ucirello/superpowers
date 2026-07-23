@@ -61,7 +61,7 @@ If the revision selection is ambiguous, ask which revision is the completed feat
 
 ### Step 3: Determine the Base Bookmark
 
-Inspect likely bases without assuming one from a branch name:
+Inspect likely bases without assuming one from a bookmark name:
 
 ```bash
 jj bookmark list main master
@@ -199,7 +199,7 @@ Apply path provenance rules:
 | Workspace state | Action |
 |-----------------|--------|
 | Durable/default workspace | Do not forget or remove it |
-| Workspace strictly beneath `<durable-root>/.worktrees/` or `<durable-root>/worktrees/` | Owned; cleanup is permitted |
+| Workspace strictly beneath `<durable-root>/.workspaces/` or `<durable-root>/workspaces/` | Owned; cleanup is permitted |
 | Any other path | Externally managed; do not forget or remove it |
 
 Never infer ownership from the workspace name alone. Obtain `<durable-root>` from `jj workspace root --name <durable-workspace>`, resolve both paths physically, and require the workspace path to be a strict child of one of those two managed directories. Reject an equal path, a parent path, symlink escape, or any path containing unresolved traversal.
@@ -240,7 +240,7 @@ Create task-specific children beneath `$TEMP_ROOT`, clean them when finished, an
 
 ## Common Mistakes
 
-**Treating bookmarks like checked-out branches**
+**Treating bookmarks as active**
 - **Problem:** Assuming a bookmark advances with new child revisions
 - **Fix:** Identify `<feature-tip>` explicitly and move or create the bookmark before pushing
 
