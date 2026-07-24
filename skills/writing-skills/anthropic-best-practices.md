@@ -212,11 +212,15 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Jujutsu Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing descriptions or reviewing the current change.
 ```
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local syntax, instructions, and history win. Inspect `jj diff` and `jj log`; apply compatible Go guidance only to quality, clarity, and structure, without assuming a fixed prefix, type, scope, or template. Use `jj describe` to edit the current change description or `jj commit` to describe it and start a new change.
 
 Avoid vague descriptions like these:
 
@@ -650,42 +654,21 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
+For Skills where output quality depends on seeing examples or a dynamic shape, provide one that preserves repository-specific variation:
 
 ````markdown  theme={null}
-## Commit message format
+## Jujutsu change description quality
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
+Before running `jj describe`, `jj commit`, or validating a description:
 
-Add login endpoint and token validation middleware
-```
+1. Read repository-local instructions and syntax; they override this guidance.
+2. Inspect the current change with `jj diff` and relevant history with `jj log`.
+3. Derive the message's quality and structure from repository history, applying compatible Go guidance without imposing fixed subjects, bodies, types, scopes, or templates.
+4. Follow repository conventions for issue references and trailers; do not invent them.
 
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Use `jj describe` to edit the current change description and `jj commit` to describe the current change and start a new one.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

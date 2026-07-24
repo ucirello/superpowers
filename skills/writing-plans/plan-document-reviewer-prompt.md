@@ -23,6 +23,8 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Change Descriptions | Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Verify each task determines repository-local syntax at execution time with `jj log`, applies compatible Go guidance only to quality, clarity, and structure, uses `jj describe` and `jj new`, and prescribes no fixed prefix, type, scope, subject, body, template, branding, attribution, generated-by prose, or Conventional Commit example. |
+    | Temporary Storage | Plans use their persistent project path. Scratch artifacts use `$(jj workspace root 2>/dev/null || pwd)/.tmp/writing-plans/` and never an operating-system global temporary directory. |
 
     ## Calibration
 

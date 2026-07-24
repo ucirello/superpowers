@@ -662,7 +662,10 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Supporting files only for tools or heavy reference
 
 **Deployment:**
-- [ ] Commit skill to git and push to your fork (if configured)
+- [ ] Inspect `jj st` and `jj diff`, then finish the current change with `jj commit`
+- [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+- [ ] Repository-local description syntax, instructions, and history win; apply compatible Go guidance to message quality, clarity, and structure without imposing syntax
+- [ ] Set or move the appropriate bookmark to the completed revision (`@-` after `jj commit`) and run `jj git push --bookmark <bookmark> [--remote <remote>]` if configured
 - [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow

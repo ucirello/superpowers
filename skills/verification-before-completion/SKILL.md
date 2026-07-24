@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before finalizing a change or creating a PR - requires running verification commands and confirming output before making any success claims; evidence before assertions always
 ---
 
 # Verification Before Completion
@@ -44,14 +44,16 @@ Skip any step = lying, not verifying
 | Build succeeds | Build command: exit 0 | Linter passing, logs look good |
 | Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
 | Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
+| Agent completed | Identify its revision with `jj log`; `jj diff -r <revision>` shows the intended changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
+
+`jj diff` without `-r` inspects only the working-copy revision (`@`). If delegated work is in another revision, locate that revision with `jj log` and inspect it explicitly.
 
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
+- About to move on from a completed change, publish its bookmark, or create a PR without verification
 - Trusting agent success reports
 - Relying on partial verification
 - Thinking "just this once"
@@ -99,9 +101,17 @@ Skip any step = lying, not verifying
 
 **Agent delegation:**
 ```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
+✅ Agent reports success → Locate its revision with `jj log` → Check `jj diff -r <revision>` → Verify changes → Report actual state
 ❌ Trust agent report
 ```
+
+**Publication:**
+```
+✅ Verify the completed revision → Verify the bookmark targets it → Run `jj git push --bookmark <bookmark>`
+❌ Assume `jj git push` publishes an unnamed working-copy revision
+```
+
+Jujutsu publishes bookmarks and the revisions reachable from them. Starting a new working-copy change with `jj new` does not publish or make the previous revision immutable.
 
 ## When To Apply
 
@@ -109,7 +119,7 @@ Skip any step = lying, not verifying
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
-- Committing, PR creation, task completion
+- Moving on from a completed change, publishing its bookmark, PR creation, task completion
 - Moving to next task
 - Delegating to agents
 
