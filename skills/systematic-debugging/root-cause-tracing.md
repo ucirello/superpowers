@@ -106,7 +106,7 @@ Use the bisection script `find-polluter.sh` in this directory:
 
 Runs tests one-by-one, stops at first polluter. See script for usage.
 
-## Adapted Example: Empty projectDir
+## Example Adapted from a Real Human Session: Empty projectDir
 
 **Symptom:** `.jj` created in `packages/core/` (source code)
 

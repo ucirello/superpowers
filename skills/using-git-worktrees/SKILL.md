@@ -37,7 +37,7 @@ Honor a declared preference without asking. If the user declines, work in place 
 
 ### 1a. Native Workspace Tools
 
-If the harness provides a native isolation tool such as `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag, use it and skip to Step 2. Native tools keep harness workspace state synchronized. Only create a Jujutsu workspace manually when no native isolation tool is available.
+If the harness provides a native isolation tool, use it and skip to Step 2. Native tools keep harness workspace state synchronized. Only create a Jujutsu workspace manually when no native isolation tool is available.
 
 ### 1b. Select a Path
 
@@ -61,19 +61,29 @@ Use a short, task-specific workspace name that is valid as a path component. Rej
 
 ### 1c. Verify File-Tracking Safety
 
-Jujutsu automatically tracks new files unless they match an ignore rule. Because the default destination is inside the current workspace, ensure the selected workspace directory is ignored by the root `.gitignore`. Jujutsu uses `.gitignore`; there is no `.jjignore`.
+Jujutsu automatically tracks new files unless they match an ignore rule. Because the default destination is inside the current workspace, ensure the selected workspace directory is ignored by the root `.gitignore`. Jujutsu uses `.gitignore`; there is no `.jjignore`. External destinations do not need an ignore rule in the current repository.
 
-If the selected directory is not covered by the repository's ignore conventions, add it to the root `.gitignore`. If it was previously tracked, the ignore rule alone is insufficient; untrack it explicitly:
+For a destination inside the current workspace, derive the selected parent relative to the workspace root, add that exact parent to the root ignore file when needed, and untrack any content that was already tracked:
 
 ```bash
-jj file untrack .workspaces
-jj file list .workspaces
+case "$workspace_parent/" in
+  "$workspace_root"/*)
+    relative_parent=${workspace_parent#"$workspace_root"/}
+    ignore_entry="/$relative_parent/"
+    grep -Fqx "$ignore_entry" "$workspace_root/.gitignore" ||
+      printf '%s\n' "$ignore_entry" >> "$workspace_root/.gitignore"
+    if [ -n "$(jj file list "$relative_parent")" ]; then
+      jj file untrack "$relative_parent"
+    fi
+    jj file list "$relative_parent"
+    ;;
+esac
 jj status
 ```
 
-`jj file list <workspace-directory>` must produce no tracked paths before proceeding. `jj file untrack` requires the path to be ignored first. Do not use staging commands: Jujutsu has no index, and ordinary new files are included in the working-copy commit automatically.
+The final `jj file list "$relative_parent"` must produce no tracked paths before proceeding. `jj file untrack` requires the path to be ignored first. Do not use staging commands: Jujutsu has no index, and ordinary new files are included in the working-copy commit automatically.
 
-If changing `.gitignore` creates a repository change that should stand alone, inspect `git log` and describe that change before creating the workspace. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-specific standards and observed history take precedence; apply compatible Go guidance without imposing fixed prefixes or example wording. Use `jj describe` to set the description and `jj new` to start a new working-copy change.
+If changing `.gitignore` creates a repository change that should stand alone, inspect `jj log` and describe that change before creating the workspace. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-specific standards and observed history take precedence; apply compatible Go guidance without imposing fixed prefixes or example wording. Use `jj describe` to set the description and `jj new` to start a new working-copy change.
 
 ### 1d. Create the Workspace
 
@@ -97,7 +107,7 @@ If creation fails because the sandbox denies the destination, report the permiss
 
 ### 1e. Create a Bookmark Only When Needed
 
-Do not create a bookmark merely to emulate a branch. Create one when the user requested a named line of work, repository policy requires one, or the change will be pushed with `jj git push` or used by `gh`:
+Do not create a bookmark merely to emulate a branch. Create one when the user requested a named line of work, repository policy requires one, or the change must be published or consumed by another tool:
 
 ```bash
 jj bookmark list "$BOOKMARK_NAME"
@@ -108,7 +118,7 @@ Choose a new bookmark name; do not move an existing bookmark implicitly. A bookm
 
 ## Step 2: Project Setup
 
-Auto-detect and run the repository's documented setup. Keep all paths relative to the new `jj workspace root`. Store temporary files created in the workspace under `.tmp/`; do not invent global cache or temporary paths.
+Auto-detect and run the repository's documented setup. Keep all paths relative to the new `jj workspace root`. Store temporary files created in the workspace under `.tmp/`; do not use an OS-global temporary directory.
 
 ```bash
 # Node.js
@@ -157,6 +167,7 @@ When the workspace is no longer needed, use `jj workspace forget <workspace-name
 | User or harness confirms current isolation | Keep current workspace |
 | Need repository root | `jj workspace root` |
 | Need attached working copies | `jj workspace list` |
+| Native workspace tool available | Use it |
 | Need isolated working copy | `jj workspace add --name <name> <path>` |
 | Need a specific base | Add `--revision <revset>` |
 | Need current state | `jj status` |
@@ -167,33 +178,18 @@ When the workspace is no longer needed, use `jj workspace forget <workspace-name
 | Workspace became stale | `jj workspace update-stale` in that workspace |
 | Workspace is finished | `jj workspace forget <name>`, then remove files separately |
 | Setup or baseline tests fail | Report failure and ask |
+| No package.json/Cargo.toml | Skip dependency install |
 
-## Common Mistakes
+## Common Rationalizations
 
-### Treating Bookmarks as Branches
-
-- **Problem:** Reporting a "current bookmark" or assuming a bookmark moves because a workspace is active.
-- **Fix:** Treat bookmarks as shared pointers. Use `jj bookmark list` and move them explicitly when required.
-
-### Sharing a Working-Copy Commit
-
-- **Problem:** Reusing or editing another workspace's working-copy commit can make that workspace stale.
-- **Fix:** Let `jj workspace add` create a distinct working-copy commit; use `jj workspace update-stale` when Jujutsu reports staleness.
-
-### Using Staging Commands
-
-- **Problem:** Applying index-based habits obscures what Jujutsu snapshots automatically.
-- **Fix:** Use `jj status`, `jj diff`, `jj file list`, `jj file track`, and `jj file untrack`. Use `jj split` or `jj squash` when changes need separation.
-
-### Ignoring an Already-Tracked Path
-
-- **Problem:** Adding an ignore rule does not untrack files already present in a commit.
-- **Fix:** Add the ignore rule first, run `jj file untrack <path>`, and verify with `jj file list <path>`.
-
-### Assuming Directory Location
-
-- **Problem:** Hard-coded or OS-global paths violate project conventions and may escape the writable workspace.
-- **Fix:** Follow explicit instructions, then existing project-local workspace directories, then `.workspaces/`; quote every path.
+| Excuse | Reality |
+|--------|---------|
+| "I'm obviously isolated - no need to check" | Run Step 0. Harness-created isolation is not reliably visible from the directory name; `jj workspace root` and `jj workspace list` establish the current state. |
+| "Creating a workspace manually is quicker than checking for a native tool" | A native tool owns placement and cleanup and keeps harness state synchronized. Bypassing it creates workspace state the harness may not manage. |
+| "The workspace directory is surely ignored already" | Verify with `jj file list`. Jujutsu automatically tracks new files, and an ignore rule does not untrack paths already present in a commit. |
+| "A bookmark is just the current branch" | Jujutsu has no active bookmark. Bookmarks are shared pointers and move only when explicitly created, moved, or carried through a rewrite. |
+| "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.workspaces/` default; validate the workspace name before composing the path. |
+| "The workspace is fresh - baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
 
 ## Red Flags
 
@@ -211,7 +207,7 @@ When the workspace is no longer needed, use `jj workspace forget <workspace-name
 - Run Step 0 first.
 - Resolve the root with `jj workspace root` and quote paths.
 - Prefer native harness isolation, then the repository's established workspace directory, then `.workspaces/`.
-- Use `jj workspace add` for isolation.
+- Use `jj workspace add` for manual isolation.
 - Store temporary files under the workspace-local `.tmp/` directory.
 - Verify state with `jj status` and tracking with `jj file list`.
 - Keep bookmarks optional and explicit.

@@ -7,7 +7,7 @@ Add to your Codex config (`~/.codex/config.toml`):
 multi_agent = true
 ```
 
-This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`. When using subagent-driven-development, you should always close implementer and reviewer subagents when they have finished all their work.
+This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`. When using subagent-driven-development, close reviewer subagents when their review returns. Keep each implementer subagent open until its task's review passes — the fix loop resumes the implementer — then close it. If your harness cannot send another message to a spawned agent, dispatch each fix round as a fresh implementer carrying the brief, the report file, and the findings.
 
 ## Workspace Detection
 
@@ -39,10 +39,10 @@ its description before informing the user to use the App's native controls.
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Follow local syntax and history first. Where compatible, use Go guidance: a
-short imperative subject followed by a body explaining context and rationale
-when needed. Do not impose a fixed prefix, template, capitalization scheme, or
-example wording.
+Inspect repository history with `jj log` before composing the description.
+Follow local syntax and history first, applying compatible Go guidance only to
+quality, clarity, and structure. Do not impose a fixed subject, body, prefix,
+template, capitalization scheme, or example wording.
 
 Use the App's native controls:
 

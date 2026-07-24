@@ -103,7 +103,7 @@ When you find a bug:
 3. **Add validation at each layer** - Entry, business, environment, debug
 4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
 
-## Adapted Example
+## Example Adapted from a Human Session
 
 Bug: Empty `projectDir` caused `jj git init` in source code
 
@@ -119,7 +119,7 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 - Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` as the fallback
 - Layer 4: Stack trace logging before `jj git init`
 
-**Result:** Initialization outside the allowed workspace-local temporary directory is rejected during tests.
+**Historical result:** All 1847 tests passed, and the original bug was impossible to reproduce. In this adaptation, initialization outside the allowed workspace-local temporary directory is rejected during tests.
 
 ## Key Insight
 

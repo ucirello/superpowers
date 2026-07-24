@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Some Windows shells reap nohup background processes. Auto-foreground when detected.
+# Windows/Git Bash can reap nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"

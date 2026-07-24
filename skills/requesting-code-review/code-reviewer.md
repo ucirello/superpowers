@@ -82,6 +82,10 @@ Subagent (general-purpose):
     - Documentation complete?
     - No obvious bugs?
 
+    **Change descriptions:**
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Inspect repository history with `jj log` at runtime. Repository-local commit-message syntax as established by project instructions and observed history ALWAYS wins when it differs from the Go guidance. Apply compatible Go guidance to message quality, clarity, and structure without replacing repository-local syntax. Recommend `jj describe -m "<description composed from the standards above>"` when a description must be corrected.
+    - Do the reviewed revisions have accurate descriptions that follow those standards?
+
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.

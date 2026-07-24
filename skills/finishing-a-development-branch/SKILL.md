@@ -1,44 +1,33 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion by presenting structured options for local integration, a pull request, preservation, or cleanup
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 ---
 
-# Finishing Development Work
+# Finishing a Development Branch
 
 ## Overview
 
-Guide completion of development work by presenting clear options and handling the chosen Jujutsu workflow.
-
-**Core principle:** Verify tests and descriptions -> detect revisions and workspace ownership -> present options -> execute choice -> clean up.
+**Core principle:** Verify tests -> identify changes and workspace -> verify descriptions -> present options -> execute choice -> clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
-## The Process
+## Step 1: Verify Tests
 
-### Step 1: Verify Tests
+Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
 
-**Before presenting options, verify tests pass:**
-
-```bash
-# Run the project's test suite.
-npm test / cargo test / pytest / go test ./...
-```
-
-**If tests fail:**
+**If tests fail**, report the failures and stop. The menu comes after a green suite:
 
 ```text
 Tests failing (<N> failures). Must fix before completing:
 
-<failure output>
-
-Cannot proceed with integration or a pull request until tests pass.
+[Show failures]
 ```
 
-Stop. Do not proceed to Step 2.
+**If tests pass:** continue to Step 2.
 
-### Step 2: Detect Revision and Workspace State
+## Step 2: Identify Changes and Workspace
 
-Jujutsu has no active bookmark and no detached-HEAD mode. Identify revisions explicitly rather than inferring them from checkout state.
+Identify the completed change and workspace explicitly. A bookmark at an ancestor does not define the working-copy change:
 
 ```bash
 jj status
@@ -48,87 +37,97 @@ jj workspace list
 WORKSPACE_PATH=$(jj workspace root)
 ```
 
-Determine and retain these values:
+Record these values before later commands can rewrite revisions or change directory:
 
 | Value | How to determine it |
 |-------|---------------------|
-| `<feature-tip>` | `@` when the working-copy revision contains the completed change; otherwise `@-` when `@` is the new empty revision above it |
-| `<feature-bookmark>` | A local bookmark at `<feature-tip>`, if one exists; otherwise leave unset until an option requires one |
-| `<workspace-name>` | Match the working-copy change ID shown by `jj log -r @` to `jj workspace list` |
+| `<feature-tip>` | The stable change ID for `@` when it contains the completed work, or for `@-` when `@` is a new empty change above it |
+| `<feature-bookmark>` | A local bookmark at `<feature-tip>`, if one exists; otherwise leave unset until pushing requires one |
+| `<workspace-name>` | Match the working-copy change ID in `jj log -r @` to `jj workspace list` |
 | `<workspace-path>` | The exact output of `jj workspace root` |
 
-If the revision selection is ambiguous, ask which revision is the completed feature tip before offering destructive or remote operations.
+If the selection is ambiguous, ask which change is the completed feature tip before offering integration or discard operations.
 
-### Step 3: Determine the Base Bookmark
+## Step 3: Determine Base and Verify Descriptions
 
-Inspect likely bases without assuming one from a bookmark name:
+The base is whatever the work was based on, usually named in the plan, conversation, or a tracked remote bookmark. Inspect likely bases without assuming one from a conventional name:
 
 ```bash
-jj bookmark list main master
+jj bookmark list --all-remotes main master
 jj log -r 'heads((::<feature-tip> & bookmarks()) ~ <feature-tip>)'
 ```
 
-Use the repository's actual primary bookmark. If more than one candidate remains, ask: "Is `<base-bookmark>` the integration base for this work?"
+If the base is not already known, ask: "This work was based on `<base-bookmark>` - is that correct?" Confirm before integrating; choosing the wrong base is expensive to undo.
 
-Now inspect and retain the candidate revisions before any fetch can move the base bookmark:
+Inspect every change that would be integrated or pushed:
 
 ```bash
 jj log -r '<base-bookmark>..<feature-tip>'
-git log -n <history-count> --format=%B
-# Record each candidate as an immutable commit ID for later repeated -r arguments.
-jj log --no-graph -r '<base-bookmark>..<feature-tip>' -T 'commit_id ++ "\n"'
+jj log --no-graph -r '<base-bookmark>..<feature-tip>' -T 'description ++ "\n"'
 ```
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Runtime repository syntax and history take precedence. Apply compatible Go commit-message guidance without imposing a fixed prefix, message, or template. Every non-empty candidate revision must have an accurate description suitable for the repository. Edit a deficient description with `jj describe <revision>` and inspect the stack again. Refresh the retained immutable commit IDs after any edit. Do not continue until descriptions satisfy the repository's present standards.
+Compose descriptions from the actual diff and repository history. Repository-local description syntax and established history take precedence. Apply compatible Go guidance to description quality, clarity, and structure without replacing the repository's syntax. Do not impose a fixed description format, type, scope, prefix, issue-reference form, trailer policy, or template.
 
-### Step 4: Present Options
+Every non-empty change must have an accurate, repository-appropriate description. Edit a deficient one with `jj describe <revision>`, then inspect the stack again. Before any fetch or rewrite, retain each candidate as an immutable commit ID for repeated `-r` arguments, and retain `<feature-tip>` as its stable change ID:
 
-Present exactly these four options:
+```bash
+jj log --no-graph -r '<base-bookmark>..<feature-tip>' -T 'commit_id ++ "\n"'
+```
+
+Do not continue until all descriptions are suitable for durable history.
+
+## Step 4: Present Options
+
+Present exactly these three options:
 
 ```text
 Implementation complete. What would you like to do?
 
 1. Integrate into <base-bookmark> locally
-2. Push and create a pull request
+2. Push and create a Pull Request
 3. Keep the work as-is (I'll handle it later)
-4. Discard this work
 
 Which option?
 ```
 
-Do not add explanation; keep the options concise.
+Present the menu exactly as written. Discard happens only when your human partner explicitly asks to throw the work away; do not offer it in the menu. Wait for their answer because the integration decision is theirs.
 
-### Step 5: Execute Choice
+## Step 5: Execute Choice
 
-#### Option 1: Integrate Locally
+### Option 1: Integrate Locally
 
-Fetch the configured remote, rebase exactly the retained feature revisions onto the updated base, and advance the base bookmark. Jujutsu preserves dependencies within a `--revision` set and follows rewritten revisions by change ID.
+Fetch the configured remote, rebase exactly the retained feature revisions onto the updated base, and test the integrated feature tip before moving the base bookmark. Repeated `-r` arguments preserve dependencies among the selected revisions, and the retained change ID follows the rewritten tip.
 
 ```bash
 jj git fetch --remote <remote>
 jj rebase -r <retained-commit-id-1> -r <retained-commit-id-2> ... -o <base-bookmark>
-jj bookmark move <base-bookmark> --to <feature-tip>
+jj edit <feature-tip>
 
 # Verify tests on the integrated result.
-jj edit <base-bookmark>
 <test command>
 ```
 
-If rebasing produces conflicts, resolve them and rerun the tests before cleanup. Do not push the base bookmark unless explicitly requested.
+If the rebase conflicts or tests fail, stop, preserve the workspace and bookmarks, and investigate. The base bookmark has not moved and nothing has been pushed.
 
-Only after integration and tests succeed, clean up the workspace in Step 6. Inspect local and remote state with `jj bookmark list --all-remotes <feature-bookmark>`. If `<feature-bookmark>` exists only for this work and was never pushed, forget it without scheduling a remote deletion:
+Once the integrated result is green, advance the base bookmark without pushing it:
+
+```bash
+jj bookmark move <base-bookmark> --to <feature-tip>
+```
+
+Then inspect local and remote bookmark state with `jj bookmark list --all-remotes <feature-bookmark>`. If the feature bookmark exists only for this work and was never pushed, forget it without scheduling a remote deletion:
 
 ```bash
 jj bookmark forget <feature-bookmark>
 ```
 
-Use `jj bookmark delete <feature-bookmark>` instead only when the user explicitly wants a tracked remote bookmark deleted on the next push.
+Use `jj bookmark delete <feature-bookmark>` only when your human partner explicitly wants the corresponding tracked remote bookmark deleted on a later push. Continue to Step 6 only after integration and tests succeed.
 
-#### Option 2: Push and Create a Pull Request
+### Option 2: Push and Create PR
 
-Ensure a named bookmark points to the feature tip. Create it if absent; otherwise move it explicitly because bookmarks do not automatically advance when new revisions are added on top.
+Ensure a named bookmark points to the feature tip. Create it if absent; otherwise move it explicitly because Jujutsu bookmarks do not automatically advance with new descendant changes:
 
 ```bash
 jj bookmark create <feature-bookmark> -r <feature-tip>
@@ -138,63 +137,55 @@ jj bookmark move <feature-bookmark> --to <feature-tip>
 jj git push --bookmark <feature-bookmark> --remote <remote>
 ```
 
-Compose the pull request title and body from the verified revisions and repository requirements, using placeholders rather than a fixed title or body.
+Then create the pull or merge request against `<base-bookmark>` with the forge's tooling, or use the creation URL printed by the push. Build its title and body from the verified changes and follow the repository's request template and conventions. Report the resulting URL.
 
-```bash
-GIT_DIR=$(jj git root) gh pr create \
-  --base <base-bookmark> \
-  --head <feature-bookmark> \
-  --title '<pull-request-title>' \
-  --body '<pull-request-body>'
-```
+Keep the workspace; your human partner iterates on review feedback there.
 
-Do not clean up the workspace; it is needed to address review feedback.
+### Option 3: Keep As-Is
 
-#### Option 3: Keep As-Is
-
-Report: "Keeping revision `<feature-tip>`<and bookmark ` <feature-bookmark>` when present>. Workspace preserved at `<workspace-path>`."
+Report: "Keeping change `<feature-tip>`<and bookmark `<feature-bookmark>` when present>. Workspace preserved at `<workspace-path>`."
 
 Do not clean up the workspace or create a bookmark solely for this option.
 
-#### Option 4: Discard
+### If Your Human Partner Asks to Discard the Work
 
-Show the exact revisions first:
+This path exists only in response to an explicit request to throw the work away. First show the exact changes:
 
 ```bash
 jj log -r '<base-bookmark>..<feature-tip>'
 ```
 
-Confirm with a neutral, runtime-populated prompt:
+Then confirm with runtime values:
 
 ```text
 This will abandon:
 - Bookmark: <feature-bookmark-or-none>
-- Revisions: <revision-list>
+- Changes: <change-list>
 - Workspace: <workspace-path-and-ownership-action>
 
 Type 'discard' to confirm.
 ```
 
-Wait for exact confirmation. If confirmed, abandon only the displayed feature revset. This is recoverable through Jujutsu's operation log, unlike a destructive filesystem reset.
+Wait for that exact confirmation. When it arrives, abandon only the displayed feature revset:
 
 ```bash
 jj abandon '<base-bookmark>..<feature-tip>'
 ```
 
-Abandoning revisions deletes local bookmarks that point to them. If a corresponding tracked remote bookmark exists, do not push its deletion unless the user explicitly requests that remote effect. Then clean up an owned workspace in Step 6.
+Abandoning is recoverable through Jujutsu's operation log and removes local bookmarks pointing to the abandoned changes. If a corresponding tracked remote bookmark exists, do not push its deletion unless your human partner explicitly requests that remote effect. Then continue to Step 6.
 
-### Step 6: Clean Up an Owned Workspace
+## Step 6: Clean Up an Owned Workspace
 
-Only run for Options 1 and 4. Options 2 and 3 always preserve the workspace.
+Run this step only after successful local integration or confirmed discard. Push and keep-as-is always preserve the workspace.
 
-Jujutsu workspace registration and filesystem cleanup are separate. Before either action, record the exact workspace name and path, and select a surviving workspace from `jj workspace list` for repository commands after cleanup.
+Jujutsu workspace registration and filesystem cleanup are separate. Before either action, retain the exact workspace name and path and select a surviving workspace for repository commands after cleanup:
 
 ```bash
 WORKSPACE_PATH=$(jj workspace root)
 jj workspace list
 ```
 
-Apply path provenance rules:
+Apply path-provenance rules:
 
 | Workspace state | Action |
 |-----------------|--------|
@@ -202,7 +193,7 @@ Apply path provenance rules:
 | Workspace strictly beneath `<durable-root>/.workspaces/` or `<durable-root>/workspaces/` | Owned; cleanup is permitted |
 | Any other path | Externally managed; do not forget or remove it |
 
-Never infer ownership from the workspace name alone. Obtain `<durable-root>` from `jj workspace root --name <durable-workspace>`, resolve both paths physically, and require the workspace path to be a strict child of one of those two managed directories. Reject an equal path, a parent path, symlink escape, or any path containing unresolved traversal.
+Never infer ownership from the workspace name. Obtain `<durable-root>` with `jj workspace root --name <durable-workspace>`, resolve both paths physically, and require the candidate to be a strict child of one of the two managed directories. An equal path, parent path, symlink escape, or unresolved traversal is not owned.
 
 For an owned workspace, leave its directory before forgetting it. Run the command from a surviving workspace so the repository remains addressable:
 
@@ -212,11 +203,11 @@ cd "$SURVIVING_ROOT"
 jj workspace forget <workspace-name>
 ```
 
-After `jj workspace forget` succeeds, remove the forgotten workspace directory with the platform's approved workspace-removal mechanism. If none exists, leave the files in place and report the path; `jj workspace forget` deliberately does not delete files.
+Only after `jj workspace forget` succeeds, remove the forgotten workspace directory with the platform's approved workspace-removal mechanism. If none exists, leave the files in place and report the path; `jj workspace forget` deliberately does not delete files.
 
-### Repository-Local Temporary Paths
+## Repository-Local Temporary Paths
 
-If any completion step needs temporary files, use the repository workspace rather than an operating-system temporary directory:
+If any completion step needs temporary files, keep them inside the current repository workspace:
 
 ```bash
 if REPO_ROOT=$(jj workspace root 2>/dev/null); then
@@ -231,64 +222,24 @@ Create task-specific children beneath `$TEMP_ROOT`, clean them when finished, an
 
 ## Quick Reference
 
-| Option | Rebase/integrate | Push | Keep workspace | Bookmark cleanup |
-|--------|------------------|------|----------------|------------------|
+| Option | Integrate | Push | Keep workspace | Bookmark cleanup |
+|--------|-----------|------|----------------|------------------|
 | 1. Integrate locally | yes | no | only if unowned | forget local feature bookmark when appropriate |
-| 2. Create pull request | no | yes | yes | no |
+| 2. Create PR | no | yes | yes | no |
 | 3. Keep as-is | no | no | yes | no |
-| 4. Discard | abandon selected revisions | no | only if unowned | automatic for bookmarks on abandoned revisions |
+| Discard (explicit request only) | abandon selected changes | no | only if unowned | automatic for bookmarks on abandoned changes |
 
-## Common Mistakes
+## Common Rationalizations
 
-**Treating bookmarks as active**
-- **Problem:** Assuming a bookmark advances with new child revisions
-- **Fix:** Identify `<feature-tip>` explicitly and move or create the bookmark before pushing
-
-**Skipping test or description verification**
-- **Problem:** Integrating broken code or publishing inaccurate revision descriptions
-- **Fix:** Verify tests and inspect every candidate revision before offering options
-
-**Using pull semantics that do not exist**
-- **Problem:** Expecting one command to fetch and integrate remote changes
-- **Fix:** Run `jj git fetch`, then explicitly rebase the feature stack onto the updated base bookmark
-
-**Deleting a bookmark when forgetting is intended**
-- **Problem:** `jj bookmark delete` schedules deletion on tracked remotes at the next applicable push
-- **Fix:** Use `jj bookmark forget` for local-only cleanup
-
-**Cleaning up the workspace for Option 2**
-- **Problem:** Removing the workspace needed for review iteration
-- **Fix:** Only clean up for Options 1 and 4
-
-**Removing files before forgetting an owned workspace**
-- **Problem:** Leaving stale workspace registration
-- **Fix:** From a surviving workspace, run `jj workspace forget <workspace-name>` before approved filesystem removal
-
-**Cleaning up an externally managed workspace**
-- **Problem:** Removing a workspace owned by another process causes stale external state
-- **Fix:** Require strict managed-path provenance; otherwise preserve it
-
-**Using an operating-system temporary directory**
-- **Problem:** Files escape repository-local path controls and cleanup expectations
-- **Fix:** Use `$(jj workspace root)/.tmp`, with local `.tmp` only when no workspace root is available
-
-## Red Flags
-
-**Never:**
-- Proceed with failing tests or deficient change descriptions
-- Integrate without verifying tests on the rebased result
-- Abandon revisions without displaying the exact revset and receiving typed confirmation
-- Push a base bookmark or remote deletion without explicit approval
-- Assume a bookmark is current because it names the feature
-- Forget or remove an externally managed workspace
-- Remove workspace files before `jj workspace forget` succeeds
-- Use a system temporary path or utility
-
-**Always:**
-- Identify the feature tip and base bookmark explicitly
-- Let runtime repository syntax and history override generic conventions
-- Present exactly four options
-- Get typed confirmation for discard
-- Preserve the workspace for push and keep-as-is choices
-- Check strict path provenance before workspace cleanup
-- Run cleanup commands from a surviving workspace
+| Excuse | Reality |
+|--------|---------|
+| "Tests passed earlier this session" | Run the suite on the tree you are about to integrate. A green run only proves the tree it ran on. |
+| "They obviously want it integrated" | Integration is your human partner's decision. Present the menu and wait. |
+| "They seem done with this feature, so I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner explicitly asks for it. |
+| "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes abandonment. |
+| "The request is up, so the workspace is clutter now" | Review feedback gets fixed in that workspace. It stays until the work lands. |
+| "This other workspace looks stale, so I'll clean it too" | Clean up only an owned workspace with strict managed-path provenance. Everything else belongs to its host. |
+| "The integrated-result failure is probably flaky" | A failing integrated result stops everything. The workspace and bookmarks stay in place while you investigate. |
+| "The base is obviously main" | Confirm what the work was based on. Integrating onto the wrong base is expensive to undo. |
+| "The push was rejected, so I'll force it" | Jujutsu push safety checks indicate changed remote or bookmark state. Fetch and investigate; do not bypass them without explicit approval. |
+| "The bookmark names the feature, so it must be current" | Bookmarks do not follow descendant changes automatically. Inspect and move the bookmark explicitly. |

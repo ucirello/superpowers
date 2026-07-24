@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Finish the current change with `jj commit`
+    4. Finish the current change with `jj commit -m "<description>"`
     5. Self-review (see below)
     6. Report back
 
@@ -45,11 +45,11 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before finishing the change, not after every edit.
 
     Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-    Repository-local message syntax and established history take precedence. Apply compatible Go guidance to message quality, clarity, and structure without replacing the repository's syntax. Do not impose a fixed message format, type, scope, prefix, or template.
+    Inspect repository history with `jj log` at runtime. Repository-local description syntax and established history take precedence. Apply compatible Go guidance to description quality, clarity, and structure without replacing the repository's syntax. Do not impose a fixed description format, type, scope, prefix, or template.
 
     ## Code Organization
 
@@ -110,9 +110,12 @@ Subagent (general-purpose):
 
     ## After Review Findings
 
-    If a reviewer finds issues and you fix them, re-run the tests that cover
-    the amended code and append the results to your report file. Reviewers
-    will not re-run tests for you — your report is the test evidence.
+    If the task review finds issues, you will be resumed with the findings.
+    Fix them, re-run the tests that cover the amended code, and append a fix
+    report to your report file: what you changed, the covering tests you
+    ran, the command, and the output. Reviewers will not re-run tests for
+    you — your report is the test evidence. Then reply with the same short
+    status contract as your first report.
 
     ## Report Format
 

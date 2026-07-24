@@ -5,7 +5,7 @@ description: Use when completing tasks, implementing major features, or before i
 
 # Requesting Code Review
 
-Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
+Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history.
 
 **Core principle:** Review early, review often.
 
@@ -26,8 +26,9 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **1. Choose the Jujutsu revision range:**
 ```bash
 jj status  # Snapshot the current working copy before resolving endpoints.
-BASE_REV=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')  # or resolve main@origin
-END_REV=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
+# For a completed change after `jj commit`; use @- and @ for unfinished work.
+BASE_REV=$(jj log --no-graph -r '@--' -T 'commit_id ++ "\n"')  # or resolve main@origin
+END_REV=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')
 ```
 
 Pass immutable commit IDs to the reviewer so its read-only `--ignore-working-copy` commands inspect the snapshotted endpoints exactly. Local instructions and repository history take precedence.
@@ -48,6 +49,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 
+When feedback composes, edits, validates, or recommends a change description: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Inspect repository history with `jj log` at runtime. Repository-local commit-message syntax as established by project instructions and observed history ALWAYS wins when it differs from the Go guidance. Apply compatible Go guidance to message quality, clarity, and structure without replacing repository-local syntax. Use `jj describe -m "<description composed from the standards above>"` when editing a description.
+
 ## Example
 
 ```
@@ -55,14 +58,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_REV=<revision selected from jj log>
-END_REV=[Resolved immutable commit ID]
+BASE_REV=<resolved parent revision>
+END_REV=<resolved completed revision>
 
 [Dispatch code reviewer subagent]
-  DESCRIPTION: [Concise factual summary of the completed work]
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  BASE_REV: [Revision selected from repository history]
-  END_REV: [Resolved immutable commit ID]
+  DESCRIPTION: Implemented verifyIndex() and repairIndex()
+  PLAN_OR_REQUIREMENTS: Task 2 from the implementation plan
+  BASE_REV: [Resolved parent revision]
+  END_REV: [Resolved completed revision]
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests
@@ -75,20 +78,12 @@ You: [Fix progress indicators]
 [Continue to Task 3]
 ```
 
-## Integration with Workflows
+## Common Rationalizations
 
-**Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
-
-**Executing Plans:**
-- Review after each task or at natural checkpoints
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
-- Review before integration
-- Review when stuck
+| Excuse | Reality |
+|--------|---------|
+| "I'll just review the diff myself instead of dispatching a reviewer" | You're the coordinator — reviewing the diff inline burns the context window you need to keep driving the work. Dispatch a reviewer subagent: the diff and the evaluation live in its context, and only the findings come back to you. |
+| "The reviewer needs my whole session history to understand the change" | Hand it precisely crafted context, never your session's history. That keeps the reviewer on the work product, not your thought process. |
 
 ## Red Flags
 

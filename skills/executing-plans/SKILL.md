@@ -11,15 +11,16 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that RocketClaw works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (Claude Code, Codex CLI, Codex App, and Copilot CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note:** Tell your human partner that work quality will be significantly higher with access to subagents (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
 ## The Process
 
 ### Step 1: Load and Review Plan
-1. Read plan file
-2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create todos for the plan items and proceed
+1. Ensure an isolated Jujutsu workspace: use superpowers:using-git-worktrees to create one or verify the existing one
+2. Read plan file
+3. Review critically - identify any questions or concerns about the plan
+4. If concerns: Raise them with your human partner before starting
+5. If no concerns: Create todos for the plan items and proceed
 
 ### Step 2: Execute Tasks
 
@@ -31,7 +32,7 @@ For each task:
 
 When a task calls for composing, editing, validating, or recommending a commit or change description: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Repository-local message syntax and established history take precedence. Apply compatible Go guidance to message quality, clarity, and structure without replacing the repository's syntax.
+At execution time, inspect recent Jujutsu descriptions with `jj log --no-graph -r 'ancestors(@-, 10)' -T 'description ++ "\n\n"'` and derive the repository's local syntax. Repository instructions and observed history take precedence; apply compatible Go guidance to message quality, clarity, and structure without replacing local syntax. Use `jj describe` to record the dynamically composed description and `jj new` afterward only when the plan calls for a separate following change.
 
 ### Step 3: Complete Development
 
@@ -65,10 +66,3 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never create implementation changes directly on the main/master bookmark without explicit user consent
-
-## Integration
-
-**Required workflow skills:**
-- **superpowers:using-git-worktrees** - Ensures an isolated Jujutsu workspace (creates one or verifies an existing one; routing name retained for compatibility)
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks

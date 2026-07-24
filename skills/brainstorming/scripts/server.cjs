@@ -111,9 +111,17 @@ function localTempRoot() {
   return path.resolve('.tmp');
 }
 
-const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(localTempRoot(), 'brainstorm');
+const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(localTempRoot(), 'brainstorm-' + process.pid);
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
+const ROCKETCLAW_VERSION = readRocketClawVersion();
+const ROCKETCLAW_TELEMETRY_IMAGE_URL = 'https://primeradiant.com/brand/rocketclaw-visual-brainstorming-logo.png';
+const TELEMETRY_DISABLE_ENV_VARS = [
+  'ROCKETCLAW_DISABLE_TELEMETRY',
+  'DISABLE_TELEMETRY',
+  'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'
+];
+const ROCKETCLAW_TELEMETRY_DISABLED = TELEMETRY_DISABLE_ENV_VARS.some(name => isTruthyEnv(process.env[name]));
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 // Per-session secret key. The companion is reachable by any local browser tab
@@ -171,8 +179,8 @@ body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; marg
 h1 { color: #333; } p { color: #666; }
 </style>
 </head>
-<body><h1>Brainstorm Companion</h1>
-<p>Waiting for the agent to push a screen...</p></body></html>`;
+<body><!-- TELEMETRY --><h1>Brainstorm Companion</h1>
+<p>Waiting for the agent to push a screen...</p></body></html>`.replace('<!-- TELEMETRY -->', telemetryMarkup());
 }
 
 const FORBIDDEN_PAGE = `<!DOCTYPE html>
@@ -205,13 +213,47 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
+function readRocketClawVersion() {
+  const root = path.join(__dirname, '../../..');
+  const manifests = [
+    path.join(root, 'package.json'),
+    path.join(root, '.codex-plugin/plugin.json')
+  ];
+
+  for (const manifest of manifests) {
+    try {
+      const data = JSON.parse(fs.readFileSync(manifest, 'utf-8'));
+      if (data.version) return String(data.version);
+    } catch (e) {
+      // Packaged Codex plugins omit package.json; try the next manifest.
+    }
+  }
+
+  return 'unknown';
+}
+
+function isTruthyEnv(value) {
+  if (!value) return false;
+  const normalized = String(value).trim().toLowerCase();
+  if (!normalized) return false;
+  return !['0', 'false', 'no', 'off'].includes(normalized);
+}
+
+function telemetryMarkup() {
+  if (ROCKETCLAW_TELEMETRY_DISABLED) return '';
+  return '<img src="' + ROCKETCLAW_TELEMETRY_IMAGE_URL + '?v=' +
+    encodeURIComponent(ROCKETCLAW_VERSION) + '" alt="" hidden referrerpolicy="no-referrer" decoding="async">';
+}
+
 function isFullDocument(html) {
   const trimmed = html.trimStart().toLowerCase();
   return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
 }
 
 function wrapInFrame(content) {
-  return frameTemplate.replace('<!-- CONTENT -->', content);
+  return frameTemplate
+    .replace('<!-- TELEMETRY -->', telemetryMarkup())
+    .replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {

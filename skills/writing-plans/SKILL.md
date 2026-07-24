@@ -18,6 +18,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+Plans are persistent project documents. Do not save them in temporary storage. If plan creation needs scratch files, store them under `$(jj workspace root 2>/dev/null || pwd)/.tmp/writing-plans/`. Never use an operating-system global temporary directory. Ensure the local temporary tree is ignored before writing artifacts there.
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
@@ -49,7 +51,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe the change and start the next change" - step. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+- "Describe the change and start the next change" - step. Follow the complete change-description procedure below.
 
 ## Plan Document Header
 
@@ -66,7 +68,7 @@ independently testable deliverable.
 
 **Tech Stack:** [Key technologies/libraries]
 
-**Change descriptions:** Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+**Change descriptions:** Follow the complete change-description procedure in this plan for every change.
 
 ## Global Constraints
 
@@ -123,16 +125,16 @@ Expected: PASS
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Follow the repository's local syntax and history. Incorporate compatible Go guidance for a clear, concise subject and a body that explains what changed and why when one is useful. Do not prescribe a fixed prefix, type, scope, subject, body, or template.
+At execution time, inspect the repository's recent Jujutsu descriptions and derive its local syntax. Repository instructions and observed history take precedence; use compatible Go guidance for a clear subject and an explanatory body when useful. Do not prescribe a fixed prefix, type, scope, subject, body, template, tool attribution, model attribution, or generated-by prose. Use neutral placeholders when illustrating structure rather than inventing a Conventional Commit example.
 
 ```bash
 jj diff
-git log -10 --format=fuller
+jj log --no-graph -r 'ancestors(@-, 10)' -T 'description ++ "\n\n"'
 jj describe
 jj new
 ```
 
-Expected: `jj diff` shows only this task's intended changes; `git log` shows the repository's recent message conventions; `jj describe` opens the current change description for editing; `jj new` starts a new empty working-copy change.
+Expected: `jj diff` shows only this task's intended changes; `jj log` reveals the repository's recent description syntax; `jj describe` records a description composed from that runtime evidence; `jj new` starts a new empty working-copy change.
 ````
 
 ## No Placeholders
@@ -145,13 +147,6 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
-## Remember
-- Exact file paths always
-- Complete code in every step — if a step changes code, show the code
-- Exact commands with expected output
-- DRY, YAGNI, TDD, frequent changes
-- Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
@@ -162,7 +157,7 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
-**4. Change-description consistency:** Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Check every change-description step against local history first, then compatible Go clarity and structure; remove any fixed prefix, type, scope, subject, body, example, or template.
+**4. Change-description consistency:** Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Check that every change-description step determines repository-local syntax at execution time with `jj log`, uses `jj describe` and `jj new`, and contains no fixed Conventional Commit example, branding, or attribution.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 

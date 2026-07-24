@@ -41,8 +41,8 @@ Subagent (general-purpose):
     changed file separately unless a hunk you must judge is cut off
     mid-function — and say so in your report. Do not re-run Jujutsu commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj diff --from [BASE_REV] --to [TIP_REV] --stat` and
-    `jj diff --from [BASE_REV] --to [TIP_REV] --git`.
+    `jj --ignore-working-copy diff --from [BASE_REV] --to [TIP_REV] --stat` and
+    `jj --ignore-working-copy diff --from [BASE_REV] --to [TIP_REV] --git`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -179,11 +179,8 @@ Subagent (general-purpose):
 - `[BASE_REV]` — revision before this task
 - `[TIP_REV]` — current task-tip revision
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package BASE TIP` prints the unique path it
-  wrote; the package never enters the controller's context)
+  package to (`scripts/review-package PLAN_FILE BASE TIP` prints the unique
+  path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
 (Critical/Important/Minor), Task quality verdict
-
-A fix dispatch can address spec gaps and quality findings together;
-re-review after fixes covers both verdicts.
