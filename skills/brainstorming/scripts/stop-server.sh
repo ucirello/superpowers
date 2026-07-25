@@ -2,9 +2,8 @@
 # Stop the brainstorm server and clean up
 # Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Only deletes ephemeral session directories under
-# a workspace-local .tmp. Persistent directories (.rocketclaw/) are kept so
-# mockups can be reviewed later.
+# Kills the server process. Sessions created without --project-dir are marked
+# ephemeral and deleted; explicit project sessions remain available for review.
 
 SESSION_DIR="$1"
 
@@ -16,6 +15,7 @@ fi
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
+EPHEMERAL_FILE="${STATE_DIR}/ephemeral"
 
 mark_stopped() {
   local reason="$1"
@@ -109,9 +109,20 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Ephemeral sessions always use a brainstorm-* child of a local .tmp directory.
-  if [[ "$SESSION_DIR" == */.tmp/brainstorm-* ]]; then
-    rm -rf "$SESSION_DIR"
+  # Only delete sessions explicitly marked ephemeral by start-server.sh.
+  if [[ -f "$EPHEMERAL_FILE" ]]; then
+    STORAGE_ROOT="$(jj workspace root 2>/dev/null || true)"
+    if [[ -z "$STORAGE_ROOT" ]]; then
+      STORAGE_ROOT="$PWD"
+    fi
+    EXPECTED_BASE="${STORAGE_ROOT}/.tmp/rocketclaw/brainstorm"
+    SESSION_PARENT="$(cd "$(dirname "$SESSION_DIR")" 2>/dev/null && pwd -P)"
+    CANONICAL_BASE="$(cd "$EXPECTED_BASE" 2>/dev/null && pwd -P)"
+    if [[ -z "$SESSION_PARENT" || "$SESSION_PARENT" != "$CANONICAL_BASE" ]]; then
+      echo '{"status": "failed", "error": "ephemeral session is outside the workspace temporary directory"}'
+      exit 1
+    fi
+    rm -rf -- "$SESSION_DIR"
   fi
 
   echo '{"status": "stopped"}'

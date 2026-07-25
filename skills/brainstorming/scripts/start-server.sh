@@ -6,8 +6,8 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         instead of the workspace-local .tmp. Files persist after server stops.
+#   --project-dir <path>  Store session files under <path>/.tmp/rocketclaw/brainstorm/.
+#                         Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows/Git Bash can reap nohup background processes. Auto-foreground when detected.
+# Windows-like shells may reap nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -110,28 +110,61 @@ fi
 # keep everything this script and the server create owner-only.
 umask 077
 
-# Generate unique session directory
-SESSION_ID="$$-$(date +%s)"
-
 if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
-  # Persist the bound port and key per project so a restart reuses them and an
-  # already-open browser tab reconnects to the same URL with a valid cookie.
-  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
-  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
+  STORAGE_ROOT="$PROJECT_DIR"
+  EPHEMERAL="false"
 else
-  JJ_ROOT="$(jj workspace root 2>/dev/null || true)"
-  TEMP_ROOT="${JJ_ROOT:-$PWD}/.tmp"
-  SESSION_DIR="${TEMP_ROOT}/brainstorm-${SESSION_ID}"
+  STORAGE_ROOT="$(jj workspace root 2>/dev/null || true)"
+  if [[ -z "$STORAGE_ROOT" ]]; then
+    STORAGE_ROOT="$PWD"
+  fi
+  EPHEMERAL="true"
 fi
 
+STORAGE_ROOT="$(cd "$STORAGE_ROOT" 2>/dev/null && pwd -P)" || {
+  echo '{"error": "Could not resolve the storage root"}'
+  exit 1
+}
+TMP_ROOT="${STORAGE_ROOT}/.tmp"
+ROCKETCLAW_ROOT="${TMP_ROOT}/rocketclaw"
+SESSION_BASE="${ROCKETCLAW_ROOT}/brainstorm"
+
+for candidate in "$TMP_ROOT" "$ROCKETCLAW_ROOT" "$SESSION_BASE"; do
+  if [[ -L "$candidate" ]]; then
+    echo '{"error": "Refusing a symlinked temporary-storage component"}'
+    exit 1
+  fi
+  mkdir -p "$candidate"
+done
+
+if [[ -n "$PROJECT_DIR" ]]; then
+  # Persist the bound port and key per project so a restart reuses them and an
+  # already-open browser tab reconnects to the same URL with a valid cookie.
+  export BRAINSTORM_PORT_FILE="${SESSION_BASE}/.last-port"
+  export BRAINSTORM_TOKEN_FILE="${SESSION_BASE}/.last-token"
+fi
+
+# Create a fresh session directory without reusing an existing path.
+for _ in {1..10}; do
+  SESSION_ID="$$-$(date +%s)-${RANDOM:-0}"
+  SESSION_DIR="${SESSION_BASE}/${SESSION_ID}"
+  if mkdir "$SESSION_DIR" 2>/dev/null; then
+    break
+  fi
+  SESSION_DIR=""
+done
+if [[ -z "$SESSION_DIR" ]]; then
+  echo '{"error": "Could not allocate a unique session directory"}'
+  exit 1
+fi
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 LOG_FILE="${STATE_DIR}/server.log"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
-
-# Create fresh session directory with content and state peers
-mkdir -p "${SESSION_DIR}/content" "$STATE_DIR"
+mkdir "${SESSION_DIR}/content" "$STATE_DIR"
+if [[ "$EPHEMERAL" == "true" ]]; then
+  : > "${STATE_DIR}/ephemeral"
+fi
 
 SERVER_ID=""
 if [[ -r /dev/urandom ]]; then

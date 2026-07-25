@@ -10,7 +10,7 @@ You run scenarios without the skill (RED - watch agent fail), write skill addres
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill prevents the right failures.
 
-**REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
+**REQUIRED BACKGROUND:** You MUST understand `rocketclaw:test-driven-development` before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
 
 **Complete worked example:** See examples/CLAUDE_MD_TESTING.md for a full test campaign testing CLAUDE.md documentation variants.
 
@@ -65,7 +65,7 @@ Code review tomorrow at 9am. You just realized you didn't write tests.
 
 Options:
 A) Delete code, start over with TDD tomorrow
-B) Run `jj commit` now, write tests tomorrow
+B) Run `jj new` now, write tests tomorrow
 C) Write tests now (30 min delay)
 
 Choose A, B, or C.
@@ -116,8 +116,8 @@ Just realized you forgot TDD.
 
 Options:
 A) Delete 200 lines, start fresh tomorrow with TDD
-B) Run `jj commit` now, add tests tomorrow
-C) Write tests now (30 min), then run `jj commit`
+B) Run `jj new` now, add tests tomorrow
+C) Write tests now (30 min), then run `jj new`
 
 Choose A, B, or C. Be honest.
 ```
@@ -145,7 +145,7 @@ Forces explicit choice.
 
 1. **Concrete options** - Force A/B/C choice, not open-ended
 2. **Real constraints** - Specific times, actual consequences
-3. **Real file paths** - `$(jj workspace root)/.tmp/payment-system` not "a project". Outside a Jujutsu repository, use the local `.tmp/payment-system` fallback.
+3. **Real file paths** - `$(jj workspace root)/.tmp/rocketclaw/payment-system` not "a project". Create repository-local temporary storage safely with `if root=$(jj workspace root 2>/dev/null) && [ -n "$root" ]; then :; else root=$(pwd -P); fi; temp_root="$root/.tmp/rocketclaw"; (umask 077 && mkdir -p "$temp_root")`; outside a Jujutsu workspace, this falls back to the current directory's `.tmp/rocketclaw`.
 4. **Make agent act** - "What do you do?" not "What should you do?"
 5. **No easy outs** - Can't defer to "I'd ask your human partner" without choosing
 

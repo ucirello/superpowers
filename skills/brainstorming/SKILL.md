@@ -21,14 +21,14 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, and recent changes with `jj log`
+1. **Explore project context** — check files, docs, repository instructions, and recent change descriptions
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`
+6. **Write design doc** — save to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md` and record it as a described Jujutsu change
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file; after approval, describe the current change and finish it with `jj new`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. For Jujutsu operations, inspect recent change descriptions with `jj log`; repository-local instructions and observed history take precedence, and compatible Go guidance improves quality without replacing local syntax.
+8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
@@ -64,7 +64,7 @@ digraph brainstorming {
 
 **Understanding the idea:**
 
-- Inspect the current project state first (files, docs, and recent changes with `jj log`)
+- Inspect the current project state first (files, docs, repository instructions, working-copy changes, and recent change descriptions)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
 - For appropriately-scoped projects, ask questions one at a time to refine the idea
@@ -107,6 +107,8 @@ digraph brainstorming {
 - Write the validated design (spec) to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
+- Keep the design document in its own Jujutsu working-copy change, set that change's description, and then start a new change.
+- At runtime, use Jujutsu to inspect the repository's local instructions and change history before composing the description; do not assume or prescribe a particular command syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Local project instructions and observed history take precedence over compatible Go guidance. Derive any structure from those sources rather than imposing fixed prefixes, types, scopes, subjects, or templates.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
@@ -121,9 +123,9 @@ Fix any issues inline. No need to re-review — just fix and move on.
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:
 
-> "Spec written to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
+> "Spec written and recorded as a described change at `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Once the user approves, inspect the completed spec change with `jj diff`, then inspect recent change descriptions with `jj log`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and observed history take precedence; apply compatible Go guidance to quality, clarity, and structure without replacing local syntax. Record the resulting description with `jj describe`, then use `jj new` to finish it and start a new change.
+Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
 
 **Implementation:**
 

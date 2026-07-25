@@ -4,7 +4,7 @@
 # through the controller's context.
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
-# Default OUTFILE: <workspace-root>/.tmp/sdd/<plan-basename>/task-<N>-brief.md
+# Default OUTFILE: <workspace-root>/.tmp/rocketclaw/sdd/<plan-basename>/task-<N>-brief.md
 # (per plan and per workspace; concurrent runs of the SAME plan in the same
 # workspace share it).
 set -euo pipefail
@@ -25,17 +25,36 @@ else
   out="$dir/task-${n}-brief.md"
 fi
 
+dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+case "$out" in
+  "$dir"/*)
+    leaf=${out#"$dir"/}
+    case "$leaf" in
+      */*|.|..) echo "output must be a direct child of: $dir" >&2; exit 2 ;;
+    esac
+    ;;
+  *) echo "output must be inside the plan's repository-local temporary directory: $dir" >&2; exit 2 ;;
+esac
+[ ! -L "$out" ] || { echo "refusing symlinked output file: $out" >&2; exit 2; }
+
+tmp_out="$out.$$"
+(set -C; : > "$tmp_out") 2>/dev/null \
+  || { echo "could not safely create temporary output: $tmp_out" >&2; exit 2; }
+trap 'rm -f "$tmp_out"' EXIT HUP INT TERM
 awk -v n="$n" '
   /^```/ { infence = !infence }
   !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
     intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
   }
   intask { print }
-' "$plan" > "$out"
+' "$plan" > "$tmp_out"
 
-if [ ! -s "$out" ]; then
+if [ ! -s "$tmp_out" ]; then
   echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
   exit 3
 fi
+
+mv -f "$tmp_out" "$out"
+trap - EXIT HUP INT TERM
 
 echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"

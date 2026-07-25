@@ -212,15 +212,13 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Jujutsu Description Helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing descriptions or reviewing the current change.
+description: Generate descriptive change descriptions by analyzing Jujutsu diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
-Repository-local syntax, instructions, and history win. Inspect `jj diff` and `jj log`; apply compatible Go guidance only to quality, clarity, and structure, without assuming a fixed prefix, type, scope, or template. Use `jj describe` to edit the current change description or `jj commit` to describe it and start a new change.
+Before composing or validating a description, use `jj workspace root` and `jj file list` to locate and read applicable repository instructions. Inspect the current change with `jj status` and `jj diff`, and inspect description history with `jj log -r 'ancestors(@)' -n 20 --no-graph -T 'description.first_line() ++ "\n"'`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Local syntax wins; apply Go quality rules only where compatible with repository instructions and history. Set or revise the description with `jj describe`.
 
 Avoid vague descriptions like these:
 
@@ -654,24 +652,13 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-For Skills where output quality depends on seeing examples or a dynamic shape, provide one that preserves repository-specific variation:
+For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
-````markdown  theme={null}
-## Jujutsu change description quality
+Change descriptions are an exception: do not provide fixed syntax, prefixes, templates, or examples. Before composing, editing, recommending, or validating one, use `jj workspace root` and `jj file list` to locate and read applicable repository instructions. Inspect the current change with `jj status` and `jj diff`.
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Inspect description history with `jj log -r 'ancestors(@)' -n 20 --no-graph -T 'description.first_line() ++ "\n"'`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Before running `jj describe`, `jj commit`, or validating a description:
-
-1. Read repository-local instructions and syntax; they override this guidance.
-2. Inspect the current change with `jj diff` and relevant history with `jj log`.
-3. Derive the message's quality and structure from repository history, applying compatible Go guidance without imposing fixed subjects, bodies, types, scopes, or templates.
-4. Follow repository conventions for issue references and trailers; do not invent them.
-
-Use `jj describe` to edit the current change description and `jj commit` to describe the current change and start a new one.
-````
-
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Local syntax wins. Apply Go quality rules only where they are compatible with repository instructions and history. Preserve the semantic constraints: summarize the change accurately and concisely, explain motivation or important effects when useful, and keep the description consistent with the actual diff. Use `jj describe` to set or revise the description.
 
 ### Conditional workflow pattern
 

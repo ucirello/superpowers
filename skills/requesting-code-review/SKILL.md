@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before integration to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before integrating changes into the target bookmark
+- Before advancing the target bookmark to land the work
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,15 +23,16 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Choose the Jujutsu revision range:**
+**1. Inspect local guidance and choose Jujutsu revisions:**
 ```bash
-jj status  # Snapshot the current working copy before resolving endpoints.
-# For a completed change after `jj commit`; use @- and @ for unfinished work.
-BASE_REV=$(jj log --no-graph -r '@--' -T 'commit_id ++ "\n"')  # or resolve main@origin
-END_REV=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')
+jj --ignore-working-copy file list
+jj --ignore-working-copy file show -r @ path/to/applicable-instructions
+jj --ignore-working-copy log -r '::@ | bookmarks()' -n 20
 ```
 
-Pass immutable commit IDs to the reviewer so its read-only `--ignore-working-copy` commands inspect the snapshotted endpoints exactly. Local instructions and repository history take precedence.
+At runtime, use `jj` to locate and read every applicable local instruction file and inspect the change graph, bookmarks, and recent change descriptions before choosing the review range or composing or editing review messages or change descriptions. Select the revision immediately before the reviewed work as `{BASE_REVISION}` and the revision containing all reviewed work as `{END_REVISION}`; do not assume `@` contains the completed work because `jj commit` creates a new working-copy change. Local conventions take precedence; apply the Go guidance only where it is compatible with them. Do not impose a fixed syntax, template, prefix, or example.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -40,43 +41,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_REV}` - Starting revision
-- `{END_REV}` - Ending revision
+- `{BASE_REVISION}` - Starting revision or revset expression
+- `{END_REVISION}` - Ending revision or revset expression
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
-
-When feedback composes, edits, validates, or recommends a change description: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Inspect repository history with `jj log` at runtime. Repository-local commit-message syntax as established by project instructions and observed history ALWAYS wins when it differs from the Go guidance. Apply compatible Go guidance to message quality, clarity, and structure without replacing repository-local syntax. Use `jj describe -m "<description composed from the standards above>"` when editing a description.
-
-## Example
-
-```
-[Just completed Task 2: Add verification function]
-
-You: Let me request code review before proceeding.
-
-BASE_REV=<resolved parent revision>
-END_REV=<resolved completed revision>
-
-[Dispatch code reviewer subagent]
-  DESCRIPTION: Implemented verifyIndex() and repairIndex()
-  PLAN_OR_REQUIREMENTS: Task 2 from the implementation plan
-  BASE_REV: [Resolved parent revision]
-  END_REV: [Resolved completed revision]
-
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
 
 ## Common Rationalizations
 

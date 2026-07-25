@@ -15,6 +15,8 @@ Subagent (general-purpose):
     **Plan to review:** [PLAN_FILE_PATH]
     **Spec for reference:** [SPEC_FILE_PATH]
 
+    Use `jj workspace root` and `jj file list` to locate the project's local instructions, read each applicable file with `jj file show -r @ <path>`, then inspect relevant history with `jj log`. Local project syntax always wins; compatible Go guidance is for quality only.
+
     ## What to Check
 
     | Category | What to Look For |
@@ -23,8 +25,10 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
-    | Change Descriptions | Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Verify each task determines repository-local syntax at execution time with `jj log`, applies compatible Go guidance only to quality, clarity, and structure, uses `jj describe` and `jj new`, and prescribes no fixed prefix, type, scope, subject, body, template, branding, attribution, generated-by prose, or Conventional Commit example. |
-    | Temporary Storage | Plans use their persistent project path. Scratch artifacts use `$(jj workspace root 2>/dev/null || pwd)/.tmp/writing-plans/` and never an operating-system global temporary directory. |
+    | Jujutsu Workflow | Changes are independently testable, described from local standards, and followed by `jj new` |
+
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Apply this when validating each planned Jujutsu change description. The project's local syntax wins; compatible Go guidance is for quality only.
 
     ## Calibration
 

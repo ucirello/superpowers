@@ -105,13 +105,18 @@ Skip any step = lying, not verifying
 ❌ Trust agent report
 ```
 
-**Publication:**
-```
-✅ Verify the completed revision → Verify the bookmark targets it → Run `jj git push --bookmark <bookmark>`
-❌ Assume `jj git push` publishes an unnamed working-copy revision
-```
+**Change descriptions:**
 
-Jujutsu publishes bookmarks and the revisions reachable from them. Starting a new working-copy change with `jj new` does not publish or make the previous revision immutable.
+Before composing, editing, validating, or recommending a Jujutsu change description:
+
+1. At runtime, use `jj workspace root` to locate the repository root and read every applicable repository instruction file.
+2. Inspect relevant change-description history with `jj log`; repository-local standards take precedence.
+3. Apply only compatible quality guidance from the Go Commit Message wiki. Do not impose fixed syntax, examples, or templates.
+4. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+**Publication:**
+
+Verify the completed revision and confirm that the bookmark being published targets it. Jujutsu publishes bookmarks and the revisions reachable from them; starting a new working-copy change does not publish or make the previous revision immutable.
 
 ## When To Apply
 

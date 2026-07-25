@@ -7,18 +7,16 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent changes.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, well-described changes.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** Before planning, use `jj workspace root` and `jj file list` to locate the project's local instructions, read each applicable file with `jj file show -r @ <path>`, then inspect relevant history with `jj log`. Local project syntax always takes precedence; use Go guidance only when it is compatible and improves quality. If execution needs isolation, create a Jujutsu workspace with `jj workspace add` at execution time.
 
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
-
-Plans are persistent project documents. Do not save them in temporary storage. If plan creation needs scratch files, store them under `$(jj workspace root 2>/dev/null || pwd)/.tmp/writing-plans/`. Never use an operating-system global temporary directory. Ensure the local temporary tree is ignored before writing artifacts there.
 
 ## Scope Check
 
@@ -51,7 +49,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe the change and start the next change" - step. Follow the complete change-description procedure below.
+- "Describe the current change and start the next change" - step
 
 ## Plan Document Header
 
@@ -60,15 +58,13 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use rocketclaw:subagent-driven-development (recommended) or rocketclaw:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
 **Architecture:** [2-3 sentences about approach]
 
 **Tech Stack:** [Key technologies/libraries]
-
-**Change descriptions:** Follow the complete change-description procedure in this plan for every change.
 
 ## Global Constraints
 
@@ -123,18 +119,17 @@ Expected: PASS
 
 - [ ] **Step 5: Describe the change and start the next change**
 
+At execution time, use `jj file list` and `jj file show` to read applicable
+repository instructions and `jj log` to inspect description history. Those
+local standards take precedence; apply Go guidance only where compatible and
+derive the description from the actual change without fixed syntax.
+
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-At execution time, inspect the repository's recent Jujutsu descriptions and derive its local syntax. Repository instructions and observed history take precedence; use compatible Go guidance for a clear subject and an explanatory body when useful. Do not prescribe a fixed prefix, type, scope, subject, body, template, tool attribution, model attribution, or generated-by prose. Use neutral placeholders when illustrating structure rather than inventing a Conventional Commit example.
-
 ```bash
-jj diff
-jj log --no-graph -r 'ancestors(@-, 10)' -T 'description ++ "\n\n"'
-jj describe
+jj describe -m "<description derived from local standards>"
 jj new
 ```
-
-Expected: `jj diff` shows only this task's intended changes; `jj log` reveals the repository's recent description syntax; `jj describe` records a description composed from that runtime evidence; `jj new` starts a new empty working-copy change.
 ````
 
 ## No Placeholders
@@ -157,8 +152,6 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
-**4. Change-description consistency:** Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Check that every change-description step determines repository-local syntax at execution time with `jj log`, uses `jj describe` and `jj new`, and contains no fixed Conventional Commit example, branding, or attribution.
-
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Execution Handoff
@@ -174,9 +167,9 @@ After saving the plan, offer execution choice:
 **Which approach?"**
 
 **If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+- **REQUIRED SUB-SKILL:** Use rocketclaw:subagent-driven-development
 - Fresh subagent per task + two-stage review
 
 **If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
+- **REQUIRED SUB-SKILL:** Use rocketclaw:executing-plans
 - Batch execution with checkpoints for review

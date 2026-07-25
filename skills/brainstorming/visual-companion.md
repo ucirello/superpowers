@@ -39,8 +39,8 @@ scripts/start-server.sh --project-dir /path/to/project --open
 
 # Returns: {"type":"server-started","port":52341,
 #           "url":"http://localhost:52341/?key=ab12…",
-#           "screen_dir":"/path/to/project/.rocketclaw/brainstorm/12345-1706000000/content",
-#           "state_dir":"/path/to/project/.rocketclaw/brainstorm/12345-1706000000/state"}
+#           "screen_dir":"/path/to/project/.tmp/rocketclaw/brainstorm/12345-1706000000/content",
+#           "state_dir":"/path/to/project/.tmp/rocketclaw/brainstorm/12345-1706000000/state"}
 ```
 
 Save `screen_dir` and `state_dir` from the response. With `--open`, the browser opens itself when you push the first screen — you don't need to ask the user to open it, but still share the URL as a fallback (headless/remote setups won't auto-open).
@@ -53,9 +53,9 @@ the network can't read the screens or inject events. After the first load the
 browser remembers the key via a cookie, so reloads and `/files/*` assets work
 without repeating it.
 
-**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.rocketclaw/brainstorm/` for the session directory.
+**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.tmp/rocketclaw/brainstorm/` for the session directory.
 
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go to `$(jj workspace root)/.tmp` and get cleaned up; outside a Jujutsu repository, the local `.tmp` directory is used. Remind the user to add `.rocketclaw/` to the repository's ignore rules if it is not already there.
+**Note:** Pass the project root as `--project-dir` so mockups persist in `.tmp/rocketclaw/brainstorm/` and survive server restarts. Without it, the script uses `$(jj workspace root)/.tmp/rocketclaw/brainstorm/`, falling back to local `.tmp/rocketclaw/brainstorm/` when no Jujutsu workspace is available, and marks the session for cleanup. Remind the user to ignore `.tmp/` in the repository if it is not already ignored.
 
 **Launching the server by platform:**
 
@@ -290,7 +290,7 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 scripts/stop-server.sh $SESSION_DIR
 ```
 
-If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Only sessions under the Jujutsu workspace's `.tmp` directory, or the local `.tmp` fallback outside a Jujutsu repository, get deleted on stop.
+If the session used `--project-dir`, mockup files persist in `.tmp/rocketclaw/brainstorm/` for later reference. Sessions started without it are marked for deletion on stop.
 
 ## Reference
 

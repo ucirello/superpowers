@@ -3,15 +3,13 @@
 # short-lived artifacts: task briefs, implementer reports, review packages,
 # and the progress ledger. Print the plan directory's absolute path.
 #
-# One directory per plan (.tmp/sdd/<plan-basename>/) so a follow-up plan in
-# the same workspace can never read or overwrite another plan's
+# One directory per plan (.tmp/rocketclaw/sdd/<plan-basename>/) so a follow-up
+# plan in the same workspace can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The artifact directory lives under the Jujutsu workspace's local .tmp tree.
-# A self-ignoring .gitignore keeps artifacts out of snapshots without modifying
-# any tracked file. Outside a Jujutsu workspace, use the current directory's
-# local .tmp tree as a fallback. Never use an OS-global temporary directory.
+# The artifacts live under the Jujutsu workspace root. If the command is run
+# outside a Jujutsu workspace, they fall back to the current directory's .tmp.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -31,12 +29,35 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
-if root=$(jj workspace root 2>/dev/null); then
-  base="$root/.tmp/sdd"
+if root=$(jj workspace root 2>/dev/null) && [ -n "$root" ]; then
+  :
 else
-  base="$PWD/.tmp/sdd"
+  root=$(pwd -P)
+  [ -n "$root" ] \
+    || { echo "could not determine a non-empty temporary root" >&2; exit 2; }
 fi
+
+umask 077
+tmp="$root/.tmp"
+rocketclaw="$tmp/rocketclaw"
+base="$rocketclaw/sdd"
 dir="$base/$slug"
+[ ! -L "$tmp" ] || { echo "refusing symlinked temporary root: $tmp" >&2; exit 2; }
+mkdir -p "$tmp"
+[ ! -L "$rocketclaw" ] || { echo "refusing symlinked temporary directory: $rocketclaw" >&2; exit 2; }
+mkdir -p "$rocketclaw"
+[ ! -L "$base" ] || { echo "refusing symlinked temporary directory: $base" >&2; exit 2; }
+mkdir -p "$base"
+[ ! -L "$dir" ] || { echo "refusing symlinked plan directory: $dir" >&2; exit 2; }
 mkdir -p "$dir"
-printf '*\n' > "$base/.gitignore"
+[ "$(cd "$base" && pwd -P)" = "$base" ] \
+  || { echo "temporary directory escapes the workspace: $base" >&2; exit 2; }
+[ "$(cd "$dir" && pwd -P)" = "$dir" ] \
+  || { echo "plan directory escapes the temporary root: $dir" >&2; exit 2; }
+ignore="$rocketclaw/.gitignore"
+[ ! -L "$ignore" ] || { echo "refusing symlinked ignore file: $ignore" >&2; exit 2; }
+if [ ! -e "$ignore" ]; then
+  (set -C; printf '*\n' > "$ignore") 2>/dev/null \
+    || { echo "could not safely create ignore file: $ignore" >&2; exit 2; }
+fi
 cd "$dir" && pwd

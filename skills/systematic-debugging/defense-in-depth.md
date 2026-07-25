@@ -53,25 +53,27 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-import { execFileSync } from 'node:child_process';
-import { isAbsolute, normalize, relative, resolve, sep } from 'node:path';
-
-async function jjGitInit(directory: string) {
-  // In tests, refuse jj git init outside the workspace-local temp directory.
+async function initJjRepository(directory: string) {
+  // In tests, allow repository initialization only in local temporary storage.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    let workspaceRoot = '.';
+    let workspaceRoot: string;
     try {
-      workspaceRoot = execFileSync('jj', ['workspace', 'root'], { encoding: 'utf8' }).trim() || '.';
+      workspaceRoot = execFileSync('jj', ['workspace', 'root'], {
+        encoding: 'utf8',
+      }).trim();
     } catch {
-      // Commands outside a Jujutsu workspace use the local .tmp fallback.
+      workspaceRoot = process.cwd();
     }
-    const tempRoot = normalize(resolve(workspaceRoot, '.tmp'));
-    const relativePath = relative(tempRoot, normalized);
+    const temporaryRoot = normalize(resolve(workspaceRoot, '.tmp', 'rocketclaw'));
+    mkdirSync(temporaryRoot, { recursive: true, mode: 0o700 });
+    const realTemporaryRoot = realpathSync(temporaryRoot);
+    const realParent = realpathSync(dirname(normalized));
+    const temporaryPrefix = `${realTemporaryRoot}${sep}`;
 
-    if (relativePath === '..' || relativePath.startsWith(`..${sep}`) || isAbsolute(relativePath)) {
+    if (realParent !== realTemporaryRoot && !realParent.startsWith(temporaryPrefix)) {
       throw new Error(
-        `Refusing jj git init outside ${tempRoot} during tests: ${directory}`
+        `Refusing jj git init outside ${temporaryRoot} during tests: ${directory}`
       );
     }
   }
@@ -83,7 +85,7 @@ async function jjGitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjGitInit(directory: string) {
+async function initJjRepository(directory: string) {
   const stack = new Error().stack;
   logger.debug('About to run jj git init', {
     directory,
@@ -103,7 +105,10 @@ When you find a bug:
 3. **Add validation at each layer** - Entry, business, environment, debug
 4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
 
-## Example Adapted from a Human Session
+## Historical Example from Session
+
+The incident is mechanically expressed with Jujutsu commands here; its session
+details and results remain historical data from the original case.
 
 Bug: Empty `projectDir` caused `jj git init` in source code
 
@@ -116,10 +121,10 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` as the fallback
+- Layer 3: `WorktreeManager` creates `$(jj workspace root)/.tmp/rocketclaw` safely, falls back to `.tmp/rocketclaw`, and refuses `jj git init` elsewhere in tests
 - Layer 4: Stack trace logging before `jj git init`
 
-**Historical result:** All 1847 tests passed, and the original bug was impossible to reproduce. In this adaptation, initialization outside the allowed workspace-local temporary directory is rejected during tests.
+**Result:** All 1847 tests passed, bug impossible to reproduce
 
 ## Key Insight
 
