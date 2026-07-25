@@ -53,15 +53,27 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function gitInit(directory: string) {
-  // In tests, refuse git init outside temp directories
+async function initJjRepository(directory: string) {
+  // In tests, allow repository initialization only in local temporary storage.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    const tmpDir = normalize(resolve(tmpdir()));
+    let workspaceRoot: string;
+    try {
+      workspaceRoot = execFileSync('jj', ['workspace', 'root'], {
+        encoding: 'utf8',
+      }).trim();
+    } catch {
+      workspaceRoot = process.cwd();
+    }
+    const temporaryRoot = normalize(resolve(workspaceRoot, '.tmp', 'rocketclaw'));
+    mkdirSync(temporaryRoot, { recursive: true, mode: 0o700 });
+    const realTemporaryRoot = realpathSync(temporaryRoot);
+    const realParent = realpathSync(dirname(normalized));
+    const temporaryPrefix = `${realTemporaryRoot}${sep}`;
 
-    if (!normalized.startsWith(tmpDir)) {
+    if (realParent !== realTemporaryRoot && !realParent.startsWith(temporaryPrefix)) {
       throw new Error(
-        `Refusing git init outside temp dir during tests: ${directory}`
+        `Refusing jj git init outside ${temporaryRoot} during tests: ${directory}`
       );
     }
   }
@@ -73,9 +85,9 @@ async function gitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function gitInit(directory: string) {
+async function initJjRepository(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to git init', {
+  logger.debug('About to run jj git init', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -93,21 +105,24 @@ When you find a bug:
 3. **Add validation at each layer** - Entry, business, environment, debug
 4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
 
-## Example from Session
+## Historical Example from Session
 
-Bug: Empty `projectDir` caused `git init` in source code
+The incident is mechanically expressed with Jujutsu commands here; its session
+details and results remain historical data from the original case.
+
+Bug: Empty `projectDir` caused `jj git init` in source code
 
 **Data flow:**
 1. Test setup → empty string
 2. `Project.create(name, '')`
 3. `WorkspaceManager.createWorkspace('')`
-4. `git init` runs in `process.cwd()`
+4. `jj git init` runs in `process.cwd()`
 
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses git init outside tmpdir in tests
-- Layer 4: Stack trace logging before git init
+- Layer 3: `WorktreeManager` creates `$(jj workspace root)/.tmp/rocketclaw` safely, falls back to `.tmp/rocketclaw`, and refuses `jj git init` elsewhere in tests
+- Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
 

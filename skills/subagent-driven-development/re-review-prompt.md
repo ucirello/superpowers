@@ -30,18 +30,32 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_SHA] (the head the previous review saw)
-    **Head:** [HEAD_SHA]
+    **Fix base revision:** [FIX_BASE_REV] (the snapshot the previous review saw)
+    **Target revision:** [TARGET_REV]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. Do not re-run git commands.
+    Read the diff file once — it contains the fix changes, a stat summary,
+    and the fix diff with surrounding context. Do not regenerate the supplied
+    diff unless it is missing.
     If the diff file is missing, fetch the diff yourself:
-    `git diff --stat [FIX_BASE_SHA]..[HEAD_SHA]` and
-    `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
+    `jj --ignore-working-copy diff --from [FIX_BASE_REV] --to [TARGET_REV]
+    --stat` and `jj --ignore-working-copy diff --from [FIX_BASE_REV] --to
+    [TARGET_REV] --context 10`.
+    Keep Jujutsu's native diff output. Prefix every other `jj` inspection command with
+    `jj --ignore-working-copy` as well.
 
-    Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    Your review is read-only in this workspace. Do not mutate the working-copy
+    change, other revisions, bookmarks, or workspace state in any way.
+
+    Validate descriptions of fix changes against applicable project
+    instructions discovered with `jj --ignore-working-copy file list` and read
+    with `jj --ignore-working-copy file show -r @ <instruction-path>`, and
+    relevant history from `jj --ignore-working-copy log`.
+    Local project instructions and history take precedence over general guidance.
+    Apply Go
+    commit-message guidance only where it is compatible with those local
+    conventions; never require a fixed prefix, type, scope, subject form,
+    template, or canned example. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     ## Scope
 
@@ -50,7 +64,7 @@ Subagent (general-purpose):
     re-review code the fix did not touch: if you notice an issue entirely
     outside the fix diff, report it under Out-of-Scope Observations — it
     does not block this task and does not extend the loop. A broad
-    whole-branch review happens after all tasks are complete.
+    whole-change review happens after all tasks are complete.
 
     ## Tests
 
@@ -98,9 +112,10 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_SHA]` — the head the previous review saw
-- `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+- `[FIX_BASE_REV]` — immutable commit ID for the revision snapshot the previous
+  review saw
+- `[TARGET_REV]` — immutable commit ID for the current revision snapshot
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE_REV TARGET_REV` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

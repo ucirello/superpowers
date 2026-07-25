@@ -20,19 +20,39 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Jujutsu Revisions to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Start:** [BASE_REVISION]
+    **End:** [END_REVISION]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --ignore-working-copy diff --from '[BASE_REVISION]' --to '[END_REVISION]' --stat
+    jj --ignore-working-copy diff --from '[BASE_REVISION]' --to '[END_REVISION]'
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in the current workspace. Do not modify files, the working-copy change (`@`), the change graph, change descriptions, bookmarks, workspace registrations, or operation history. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` to inspect revisions and history without snapshotting the working copy. Never run `jj edit` in this workspace.
+
+    If inspecting files in a separate working copy is necessary and registering a temporary workspace is explicitly permitted, keep it inside the repository workspace and base its new working-copy change on the review revision:
+
+    ```bash
+    if WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root 2>/dev/null) && [ -n "$WORKSPACE_ROOT" ]; then
+        :
+    else
+        WORKSPACE_ROOT=.
+    fi
+    TEMP_ROOT="$WORKSPACE_ROOT/.tmp/rocketclaw"
+    (umask 077 && mkdir -p -- "$TEMP_ROOT")
+    REVIEW_WORKSPACE="$TEMP_ROOT/review-[CHANGE_ID]"
+    jj workspace add --revision '[END_REVISION]' "$REVIEW_WORKSPACE"
+    ```
+
+    This creates and registers a separate workspace with a new working-copy change; it does not move `@` in the current workspace. Otherwise, remain read-only and inspect revision contents with `jj --ignore-working-copy file show -r '[END_REVISION]' <path>`.
+
+    Before composing or editing any review message, change description, validation statement, or recommendation, use `jj --ignore-working-copy file list` and `jj --ignore-working-copy file show -r @ <path>` to locate and read applicable local instructions, then inspect recent descriptions with `jj --ignore-working-copy log -r '::[END_REVISION]' -n 20`. Local conventions take precedence; use the Go guidance only where compatible. Do not impose fixed wording, syntax, prefixes, templates, or examples.
+
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     ## What to Check
 
@@ -104,7 +124,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready to land?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -128,45 +148,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REVISION]` — starting revision or revset expression
+- `[END_REVISION]` — ending revision or revset expression
+- `[CHANGE_ID]` — stable Jujutsu change ID used only to name an optional review workspace
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
-
-## Example Output
-
-```
-### Strengths
-- Clean database schema with proper migrations (db.ts:15-42)
-- Comprehensive test coverage (18 tests, all edge cases)
-- Good error handling with fallbacks (summarizer.ts:85-92)
-
-### Issues
-
-#### Important
-1. **Missing help text in CLI wrapper**
-   - File: index-conversations:1-31
-   - Issue: No --help flag, users won't discover --concurrency
-   - Fix: Add --help case with usage examples
-
-2. **Date validation missing**
-   - File: search.ts:25-27
-   - Issue: Invalid dates silently return no results
-   - Fix: Validate ISO format, throw error with example
-
-#### Minor
-1. **Progress indicators**
-   - File: indexer.ts:130
-   - Issue: No "X of Y" counter for long operations
-   - Impact: Users don't know how long to wait
-
-### Recommendations
-- Add progress reporting for user experience
-- Consider config file for excluded projects (portability)
-
-### Assessment
-
-**Ready to merge: With fixes**
-
-**Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
-```

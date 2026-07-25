@@ -11,16 +11,20 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that Superpowers works much better with access to subagents (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note:** Tell your human partner that RocketClaw works much better with access to subagents. If subagents are available, use rocketclaw:subagent-driven-development instead of this skill.
 
 ## The Process
 
 ### Step 1: Load and Review Plan
-1. Ensure an isolated workspace: use superpowers:using-git-worktrees to create one or verify the existing one
-2. Read plan file
-3. Review critically - identify any questions or concerns about the plan
-4. If concerns: Raise them with your human partner before starting
-5. If no concerns: Create todos for the plan items and proceed
+1. Run `jj status`, `jj workspace list`, and `jj log -r '::@'` to inspect the working-copy commit, available workspaces, and revision history
+2. Use `jj file list` to locate repository instruction files and `jj file show -r @ <fileset>` to read every applicable instruction before changing files
+3. Ensure an isolated workspace: use rocketclaw:using-jj-workspaces to create one with `jj workspace add` or verify the existing workspace
+4. Read plan file
+5. Review critically - identify any questions or concerns about the plan
+6. If concerns: Raise them with your human partner before starting
+7. If no concerns: Create todos for the plan items and proceed
+
+Whenever composing, editing, validating, or recommending a change description, inspect applicable repository instructions with `jj file list` and `jj file show -r @ <fileset>`, and inspect past change descriptions with `jj log`. Local repository conventions take precedence over compatible Go advice. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Describe the change's purpose and effect accurately.
 
 ### Step 2: Execute Tasks
 
@@ -34,7 +38,7 @@ For each task:
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+- **REQUIRED SUB-SKILL:** Use rocketclaw:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
@@ -61,4 +65,4 @@ After all tasks complete and verified:
 - Don't skip verifications
 - Reference skills when plan says to
 - Stop when blocked, don't guess
-- Never start implementation on main/master branch without explicit user consent
+- Never rewrite an immutable trunk revision; start a mutable working-copy commit on top with `jj new <trunk-revision>` or create an isolated workspace with `jj workspace add -r <trunk-revision>` unless the user explicitly consents

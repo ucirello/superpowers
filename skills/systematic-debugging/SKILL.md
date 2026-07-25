@@ -63,7 +63,7 @@ You MUST complete each phase before proceeding to the next.
 
 3. **Check Recent Changes**
    - What changed that could cause this?
-   - Git diff, recent commits
+   - Run `jj diff` and inspect recent revisions with `jj log`
    - New dependencies, config changes
    - Environmental differences
 
@@ -174,7 +174,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - Use the `rocketclaw:test-driven-development` skill for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -186,7 +186,7 @@ You MUST complete each phase before proceeding to the next.
    - Test passes now?
    - No other tests broken?
    - Issue actually resolved?
-   - Use the `superpowers:verification-before-completion` skill before claiming success
+   - Use the `rocketclaw:verification-before-completion` skill before claiming success
 
 4. **If Fix Doesn't Work**
    - STOP
@@ -210,6 +210,14 @@ You MUST complete each phase before proceeding to the next.
    **Discuss with your human partner before attempting more fixes**
 
    This is NOT a failed hypothesis - this is a wrong architecture.
+
+### Change Descriptions
+
+Before composing, editing, validating, or recommending a change description, resolve the repository root with `jj workspace root`. Use `jj file list` to locate tracked repository instruction files and also check for applicable local instruction files from that root through the working directory, with the closest instruction taking precedence. Inspect existing descriptions with `jj log`. Local conventions win. Apply guidance from the Go wiki only where it is compatible with those conventions; preserve the guidance's intent without imposing fixed syntax, templates, or stock examples.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Use `jj describe` to edit the working-copy change description, then validate it against the applicable instructions and observed history.
 
 ## Red Flags - STOP and Follow Process
 

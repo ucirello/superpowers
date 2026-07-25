@@ -2,7 +2,7 @@
 
 ## Overview
 
-Bugs often manifest deep in the call stack (git init in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
+Bugs often manifest deep in the call stack (Jujutsu workspace created in the wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
 
 **Core principle:** Trace backward through the call chain until you find the original trigger, then fix at the source.
 
@@ -31,15 +31,18 @@ digraph when_to_use {
 
 ## The Tracing Process
 
+The historical incident below is mechanically expressed with Jujutsu commands;
+its session details and results remain historical data from the original case.
+
 ### 1. Observe the Symptom
 ```
-Error: git init failed in ~/project/packages/core
+Error: jj git init failed in ~/project/packages/core
 ```
 
 ### 2. Find Immediate Cause
 **What code directly causes this?**
 ```typescript
-await execFileAsync('git', ['init'], { cwd: projectDir });
+await execFileAsync('jj', ['git', 'init'], { cwd: projectDir });
 ```
 
 ### 3. Ask: What Called This?
@@ -69,16 +72,16 @@ When you can't trace manually, add instrumentation:
 
 ```typescript
 // Before the problematic operation
-async function gitInit(directory: string) {
+async function initJjRepository(directory: string) {
   const stack = new Error().stack;
-  console.error('DEBUG git init:', {
+  console.error('DEBUG jj git init:', {
     directory,
     cwd: process.cwd(),
     nodeEnv: process.env.NODE_ENV,
     stack,
   });
 
-  await execFileAsync('git', ['init'], { cwd: directory });
+  await execFileAsync('jj', ['git', 'init'], { cwd: directory });
 }
 ```
 
@@ -86,7 +89,7 @@ async function gitInit(directory: string) {
 
 **Run and capture:**
 ```bash
-npm test 2>&1 | grep 'DEBUG git init'
+npm test 2>&1 | grep 'DEBUG jj git init'
 ```
 
 **Analyze stack traces:**
@@ -101,17 +104,17 @@ If something appears during tests but you don't know which test:
 Use the bisection script `find-polluter.sh` in this directory:
 
 ```bash
-./find-polluter.sh '.git' 'src/**/*.test.ts'
+./find-polluter.sh '.jj' 'src/**/*.test.ts'
 ```
 
 Runs tests one-by-one, stops at first polluter. See script for usage.
 
-## Real Example: Empty projectDir
+## Historical Example: Empty projectDir
 
-**Symptom:** `.git` created in `packages/core/` (source code)
+**Symptom:** `.jj` created in `packages/core/` (source code)
 
 **Trace chain:**
-1. `git init` runs in `process.cwd()` ← empty cwd parameter
+1. `jj git init` runs in `process.cwd()` ← empty cwd parameter
 2. WorktreeManager called with empty projectDir
 3. Session.create() passed empty string
 4. Test accessed `context.tempDir` before beforeEach
@@ -119,13 +122,13 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 
 **Root cause:** Top-level variable initialization accessing empty value
 
-**Fix:** Made tempDir a getter that throws if accessed before beforeEach
+**Fix:** Made `tempDir` a getter that throws if accessed before setup. Setup resolves the repository root with `jj workspace root`, falls back to the current directory, and safely creates `.tmp/rocketclaw` there before returning a child path.
 
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses git init outside tmpdir
-- Layer 4: Stack trace logging before git init
+- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp/rocketclaw`, falling back to `.tmp/rocketclaw`
+- Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle
 
