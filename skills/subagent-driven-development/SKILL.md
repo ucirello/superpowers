@@ -74,7 +74,7 @@ digraph process {
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
-    "Use rocketclaw:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: Jujutsu workspace, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
@@ -103,7 +103,7 @@ digraph process {
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use rocketclaw:finishing-a-development-branch";
+    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -422,7 +422,7 @@ snapshot the final working-copy revision as TARGET_REV, run
 printed path in the final review dispatch so the final reviewer reads
 one file instead of re-deriving the change diff. Dispatch
 on the most capable available model (see Model Selection), using
-  rocketclaw:requesting-code-review's workflow and
+  superpowers:requesting-code-review's workflow and
 [code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before integration.
@@ -446,7 +446,7 @@ delete only this plan's artifact directory after verifying its canonical path
 is beneath `$(jj workspace root)/.tmp/rocketclaw/sdd/`; the Jujutsu history is
 the record now. Sibling directories belong to other plans; leave them alone.
 
-Use rocketclaw:finishing-a-development-branch. If publication
+Use superpowers:finishing-a-development-branch. If publication
 requires a bookmark, remember that Jujutsu has no current bookmark: explicitly
 create or move the intended bookmark to the reviewed revision with `jj bookmark
 set <bookmark> -r <revision>`, then use `jj git push --bookmark <bookmark>` or
@@ -529,5 +529,5 @@ Final reviewer: All requirements met. Deferred minors triaged: none block integr
 
 [Delete this plan's workspace — the record now lives in Jujutsu history]
 
-Done! Using rocketclaw:finishing-a-development-branch.
+Done! Using superpowers:finishing-a-development-branch.
 ```

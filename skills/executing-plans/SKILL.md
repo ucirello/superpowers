@@ -11,14 +11,14 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that RocketClaw works much better with access to subagents. If subagents are available, use rocketclaw:subagent-driven-development instead of this skill.
+**Note:** Tell your human partner that RocketClaw works much better with access to subagents. If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
 ## The Process
 
 ### Step 1: Load and Review Plan
 1. Run `jj status`, `jj workspace list`, and `jj log -r '::@'` to inspect the working-copy commit, available workspaces, and revision history
 2. Use `jj file list` to locate repository instruction files and `jj file show -r @ <fileset>` to read every applicable instruction before changing files
-3. Ensure an isolated workspace: use rocketclaw:using-jj-workspaces to create one with `jj workspace add` or verify the existing workspace
+3. Ensure an isolated workspace: use superpowers:using-jj-workspaces to create one with `jj workspace add` or verify the existing workspace
 4. Read plan file
 5. Review critically - identify any questions or concerns about the plan
 6. If concerns: Raise them with your human partner before starting
@@ -38,7 +38,7 @@ For each task:
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use rocketclaw:finishing-a-development-branch
+- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
