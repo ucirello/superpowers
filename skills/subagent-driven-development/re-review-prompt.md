@@ -30,18 +30,19 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_SHA] (the head the previous review saw)
-    **Head:** [HEAD_SHA]
+    **Fix base:** [FIX_BASE_CHANGE_ID] (the change the previous review saw)
+    **Fix head:** [FIX_HEAD_CHANGE_ID]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. Do not re-run git commands.
+    Read the diff file once — it contains the fix revisions, a `jj show`
+    summary of the fix head, a stat summary, and the fix diff with surrounding
+    context. Do not re-run Jujutsu commands.
     If the diff file is missing, fetch the diff yourself:
-    `git diff --stat [FIX_BASE_SHA]..[HEAD_SHA]` and
-    `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
+    `jj diff --stat --from [FIX_BASE_CHANGE_ID] --to [FIX_HEAD_CHANGE_ID]` and
+    `jj diff --git --from [FIX_BASE_CHANGE_ID] --to [FIX_HEAD_CHANGE_ID]`.
 
-    Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    Your review is read-only in this workspace. Do not mutate the working-copy
+    revision, descriptions, bookmarks, workspace, or operation log in any way.
 
     ## Scope
 
@@ -50,7 +51,7 @@ Subagent (general-purpose):
     re-review code the fix did not touch: if you notice an issue entirely
     outside the fix diff, report it under Out-of-Scope Observations — it
     does not block this task and does not extend the loop. A broad
-    whole-branch review happens after all tasks are complete.
+    whole-stack review happens after all tasks are complete.
 
     ## Tests
 
@@ -89,6 +90,11 @@ Subagent (general-purpose):
 
     **Fix round:** [All findings addressed, no new Critical/Important
     breakage | Findings remain open] — list the open ones.
+
+    If the fix changed a revision description, validate it against local
+    repository conventions; local conventions win and no fixed syntax is
+    prescribed.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 ```
 
 **Placeholders:**
@@ -98,9 +104,9 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_SHA]` — the head the previous review saw
-- `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+- `[FIX_BASE_CHANGE_ID]` — stable change ID the previous review saw
+- `[FIX_HEAD_CHANGE_ID]` — stable change ID of the completed fix revision
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE_CHANGE_ID FIX_HEAD_CHANGE_ID` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

@@ -14,25 +14,57 @@ Subagent (general-purpose):
 
     ## What Was Implemented
 
-    [DESCRIPTION]
+    [IMPLEMENTATION_SUMMARY]
 
     ## Requirements / Plan
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## jj Range to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_REVISION]
+    **Head:** [HEAD_REVISION]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --ignore-working-copy log -r '[BASE_REVISION]..[HEAD_REVISION]'
+    jj --ignore-working-copy diff --stat --from '[BASE_REVISION]' --to '[HEAD_REVISION]'
+    jj --ignore-working-copy diff --from '[BASE_REVISION]' --to '[HEAD_REVISION]'
+    jj --ignore-working-copy show -r '[HEAD_REVISION]'
     ```
+
+    The `BASE..HEAD` revset lists revisions reachable from the head but not the
+    base. The `--from`/`--to` diff compares the endpoint trees and therefore
+    includes the complete aggregate delta. Use `jj show -r REVISION` or
+    `jj diff -r REVISION` to inspect one revision and its parent-level change.
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only on this workspace. Do not edit the working copy,
+    rewrite changes, move bookmarks, or alter the current workspace state. Use
+    `jj --ignore-working-copy log`, `jj --ignore-working-copy diff`, and
+    `jj --ignore-working-copy show` to inspect history without snapshotting the
+    current working copy. Revision arguments may be jj change IDs, commit IDs,
+    bookmarks, or unambiguous revision expressions.
+
+    If an executable working copy of another revision is unavoidable, leave the
+    current workspace untouched and create a separate jj workspace. Global
+    temporary paths must live under `$(jj workspace root)/.tmp`. Outside a jj
+    repository, use local `.tmp` for files but report that another jj workspace
+    cannot be created:
+
+    ```bash
+    REVIEW_TMP="$(jj --ignore-working-copy workspace root)/.tmp"
+    REVIEW_WORKSPACE_NAME='<unique-review-workspace-name>'
+    REVIEW_WORKSPACE_PATH="$REVIEW_TMP/$REVIEW_WORKSPACE_NAME"
+    # Before creating a nested workspace, verify `.tmp/` is ignored using the
+    # repository's ignore file and `jj status`; stop if the rule is absent.
+    mkdir -p "$REVIEW_TMP"
+    jj workspace add --name "$REVIEW_WORKSPACE_NAME" --revision '[HEAD_REVISION]' "$REVIEW_WORKSPACE_PATH"
+    ```
+
+    Do not repoint the current workspace. When finished, forget the temporary
+    workspace with `jj workspace forget "$REVIEW_WORKSPACE_NAME"` before
+    deleting its directory.
 
     ## What to Check
 
@@ -47,6 +79,12 @@ Subagent (general-purpose):
     - Type safety where applicable?
     - DRY without premature abstraction?
     - Edge cases handled?
+
+    **Commit history:**
+    - Inspect the reviewed revisions with `jj log` and individual changes with `jj show`.
+    - Validate commit messages against the repository's own syntax and established history; do not impose a fixed template or example format.
+    - Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    - Repository-local syntax and semantic requirements always take precedence over compatible Go guidance.
 
     **Architecture:**
     - Sound design decisions?
@@ -126,10 +164,10 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[DESCRIPTION]` — brief summary of what was built
+- `[IMPLEMENTATION_SUMMARY]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REVISION]` — starting jj change ID, commit ID, bookmark, or revision expression
+- `[HEAD_REVISION]` — ending jj change ID, commit ID, bookmark, or revision expression
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

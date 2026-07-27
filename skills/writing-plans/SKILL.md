@@ -13,10 +13,12 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-jj-workspaces` skill at execution time.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+
+**Temporary files:** In a Jujutsu workspace, use `$(jj workspace root)/.tmp`. Without Jujutsu, use the local `.tmp` directory. Do not use global temporary storage.
 
 ## Scope Check
 
@@ -119,9 +121,17 @@ Expected: PASS
 
 - [ ] **Step 5: Commit**
 
+Jujutsu automatically snapshots and tracks working-copy changes, so do not stage files.
+The message must describe the completed behavior change and why it was needed,
+including important verification or limitations when relevant. Repository-local
+instructions and the syntax used in `git log` always win. Where compatible,
+apply Go's guidance for a clear, concise summary followed by explanatory detail.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
 ```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+jj status
+jj diff
+jj commit -m "<message composed from repository instructions, history, and the completed change>"
 ```
 ````
 
@@ -151,7 +161,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/rocketclaw/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 

@@ -23,21 +23,28 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Choose jj review boundaries:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+if [ "$(jj log --no-graph -r @ -T 'if(empty && !description, "yes", "no")')" = yes ]; then
+  BASE_REVISION=$(jj log --no-graph -r '@--' -T 'commit_id ++ "\n"')
+  HEAD_REVISION=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')
+else
+  BASE_REVISION=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')
+  HEAD_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
+fi
 ```
+
+These commit IDs pin the exact snapshots being reviewed. If the intended work spans another range, select its base and head explicitly instead of assuming the adjacent revisions. Confirm the selected history with `jj log -r "$BASE_REVISION..$HEAD_REVISION"`; this revset includes revisions reachable from the head but not the base. Review the aggregate file delta with `jj diff --from "$BASE_REVISION" --to "$HEAD_REVISION"`, not `jj diff -r "$BASE_REVISION..$HEAD_REVISION"`, which shows the individual changes in the revset.
 
 **2. Dispatch code reviewer subagent:**
 
 Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
 
 **Placeholders:**
-- `{DESCRIPTION}` - Brief summary of what you built
+- `{IMPLEMENTATION_SUMMARY}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{BASE_REVISION}` - Starting jj change ID, commit ID, bookmark, or other revision expression
+- `{HEAD_REVISION}` - Ending jj change ID, commit ID, bookmark, or other revision expression
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +59,15 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+jj log -r '::@'  # inspect history and select the intended completed task
+BASE_REVISION=<commit-id-before-task>
+HEAD_REVISION=<commit-id-at-task-tip>
 
 [Dispatch code reviewer subagent]
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  IMPLEMENTATION_SUMMARY: Added verifyIndex() and repairIndex() with 4 issue types
+  PLAN_OR_REQUIREMENTS: The applicable task from docs/rocketclaw/plans/deployment-plan.md
+  BASE_REVISION: The selected starting jj change or commit ID
+  HEAD_REVISION: The selected ending jj change or commit ID
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Describe and finalize your change with Jujutsu
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,13 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before finalizing the change, not after every edit.
+
+    Before finalizing, inspect `jj status` and `jj diff`. Follow the local
+    repository's revision-description conventions; they override generic
+    guidance. Use `jj describe` to set or edit the description, then `jj new`
+    to leave a fresh empty working-copy revision.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     ## Code Organization
 
@@ -95,6 +101,9 @@ Subagent (general-purpose):
     - Did I avoid overbuilding (YAGNI)?
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
+    - Does each revision description follow the repository's current
+      conventions and accurately describe its semantic change?
+      Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?
@@ -128,7 +137,8 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Revisions created (short change ID + description first line, as shown by
+      `jj log`)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
