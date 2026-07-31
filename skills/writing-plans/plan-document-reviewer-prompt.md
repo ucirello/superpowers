@@ -2,7 +2,7 @@
 
 Use this template when dispatching a plan document reviewer subagent.
 
-**Purpose:** Verify the plan is complete, matches the spec, and has proper task decomposition.
+**Purpose:** Verify the plan is complete, matches the spec, has proper task decomposition, and closes each task with a correctly described Jujutsu change.
 
 **Dispatch after:** The complete plan is written.
 
@@ -23,6 +23,9 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Change Descriptions | Each task includes the standards sentence below, inspects the current change with `jj status` and `jj diff`, and finishes it with a neutral `jj commit -m "<message composed from the standards above>"`; no staging step or fixed message format |
+
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     ## Calibration
 

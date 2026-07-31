@@ -20,19 +20,40 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Jujutsu Revisions to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_REV]
+    **Head:** [HEAD_REV]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --ignore-working-copy diff --from [BASE_REV] --to [HEAD_REV] --stat
+    jj --ignore-working-copy diff --from [BASE_REV] --to [HEAD_REV]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in this workspace. Do not mutate the working copy, changes, or bookmarks. Except for adding the isolated workspace described below when necessary, do not mutate repository operation state. Use `jj --ignore-working-copy show -r [REV]`, `jj --ignore-working-copy diff --from [BASE_REV] --to [HEAD_REV]`, `jj --ignore-working-copy log -r '[REVSET]'`, and `jj --ignore-working-copy file show -r [REV] [FILESET]` to inspect revisions without snapshotting the working copy.
+
+    If you need files for a different revision, create a separate workspace under the required temporary root; never run `jj edit`, `jj next`, or `jj prev` in this workspace:
+
+    ```bash
+    if REPO_ROOT=$(jj --ignore-working-copy workspace root 2>/dev/null); then
+      TEMP_ROOT="$REPO_ROOT/.tmp"
+    else
+      TEMP_ROOT=.tmp
+    fi
+    mkdir -p "$TEMP_ROOT"
+    counter=0
+    while :; do
+      REVIEW_WORKSPACE="[REVIEW_NAMESPACE]-review-[CHANGE_ID]-$$-$counter"
+      REVIEW_PARENT="$TEMP_ROOT/$REVIEW_WORKSPACE"
+      if mkdir "$REVIEW_PARENT" 2>/dev/null; then break; fi
+      counter=$((counter + 1))
+    done
+    jj --ignore-working-copy workspace add --name "$REVIEW_WORKSPACE" --revision [REV] "$REVIEW_PARENT/workspace"
+    ```
+
+    Before creating content under the repository root's `.tmp/`, verify the root ignore rules exclude `.tmp/`; stop and add that rule first if they do not. Derive `[REVIEW_NAMESPACE]` from the user, harness, or session instructions. Without a Jujutsu repository, use the local `.tmp` fallback only for non-workspace review artifacts; `jj workspace add` requires a repository. After review, run `jj workspace forget "$REVIEW_WORKSPACE"` from another workspace, verify `REVIEW_PARENT` is the exact reserved path, and remove only that directory.
 
     ## What to Check
 
@@ -100,7 +121,7 @@ Subagent (general-purpose):
     - How to fix (if not obvious)
 
     ### Recommendations
-    [Improvements for code quality, architecture, or process]
+    [Improvements for code quality, architecture, or process. If recommending a commit or change description, do not require fixed message syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.]
 
     ### Assessment
 
@@ -128,8 +149,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REV]` — starting revision, excluded from the reviewed changes
+- `[HEAD_REV]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

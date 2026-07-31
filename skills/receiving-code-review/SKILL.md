@@ -107,8 +107,11 @@ FOR multi-item feedback:
      - Simple fixes (typos, imports)
      - Complex fixes (refactoring, logic)
   3. Test each fix individually
-  4. Verify no regressions
+  4. Inspect the working-copy commit with `jj status` and `jj diff`
+  5. Verify no regressions
 ```
+
+Jujutsu snapshots working-copy changes automatically. Do not introduce a staging step between review fixes. Use `jj diff -r @` when explicitly naming the working-copy revision is useful.
 
 ## When To Push Back
 

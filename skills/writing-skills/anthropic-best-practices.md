@@ -212,11 +212,18 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Jujutsu Description Helper skill:**
 
-```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
-```
+````markdown  theme={null}
+---
+name: writing-change-descriptions
+description: Draft Jujutsu change descriptions from revision diffs. Use when the user asks for help writing or reviewing a change description.
+---
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and `git log` history always take precedence. Inspect the relevant changes with `jj diff`; do not assume a staging area or impose a universal prefix, type, scope, subject, or body format.
+````
 
 Avoid vague descriptions like these:
 
@@ -650,45 +657,19 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
+For Skills where output quality depends on examples, provide input/output examples that demonstrate the expected result.
+
+For Skills where output quality depends on repository-local conventions, show how to discover and apply those conventions instead of imposing a universal format:
 
 ````markdown  theme={null}
-## Commit message format
+## Jujutsu change descriptions
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
-
-Add login endpoint and token validation middleware
-```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Repository-local instructions and `git log` history always take precedence. Inspect the relevant revision with `jj diff -r <revision>`. Describe the change's purpose and effects, adding rationale or validation details when they help reviewers understand it. Do not impose a fixed prefix, type, scope, subject, body, or other universal template.
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Concrete discovery instructions help agents match the repository's current style and level of detail.
 
 ### Conditional workflow pattern
 

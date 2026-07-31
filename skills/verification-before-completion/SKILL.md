@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before describing a change or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
 ---
 
 # Verification Before Completion
@@ -44,14 +44,14 @@ Skip any step = lying, not verifying
 | Build succeeds | Build command: exit 0 | Linter passing, logs look good |
 | Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
 | Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
+| Agent completed | `jj status` and `jj diff --summary -r @` show the expected working-copy changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
+- About to describe/push/create a PR without verification
 - Trusting agent success reports
 - Relying on partial verification
 - Thinking "just this once"
@@ -99,9 +99,17 @@ Skip any step = lying, not verifying
 
 **Agent delegation:**
 ```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
+✅ Agent reports success → Run `jj status` and inspect `jj diff -r @` → Verify changes → Report actual state
 ❌ Trust agent report
 ```
+
+**Jujutsu change descriptions:**
+
+Before composing, validating, or recommending any change description, use repository instructions and observed history as the authority. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository standards take precedence; do not impose a fixed syntax, prefix, capitalization rule, or line-length rule across repositories. Use `jj describe` to edit the working-copy change description, then inspect it with `jj log -r @` and verify its content against the actual change with `jj diff -r @`.
+
+**Temporary verification artifacts:**
+
+If verification needs temporary artifacts, place them under `$(jj workspace root)/.tmp`. If the current directory is not in a Jujutsu workspace, use the local `./.tmp` directory instead. Do not use an OS-global temporary directory.
 
 ## When To Apply
 
@@ -109,7 +117,7 @@ Skip any step = lying, not verifying
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
-- Committing, PR creation, task completion
+- Describing a change, PR creation, task completion
 - Moving to next task
 - Delegating to agents
 

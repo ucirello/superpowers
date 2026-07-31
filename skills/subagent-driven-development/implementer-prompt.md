@@ -35,8 +35,9 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
-    5. Self-review (see below)
+    4. Self-review (see below) and correct any issues you find
+    5. Finish the current change with `jj commit`, leaving the new working-copy
+       change empty
     6. Report back
 
     Work from: [directory]
@@ -46,6 +47,11 @@ Subagent (general-purpose):
 
     While iterating, run the focused test for what you're changing; run the
     full suite once before committing, not after every edit.
+
+    Before composing or editing the change description, follow the repository's
+    local conventions and describe the change's intent and effect accurately.
+    Repository-local conventions take precedence over generic guidance.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     ## Code Organization
 
@@ -128,7 +134,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Revisions created (short commit ID + description first line)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
