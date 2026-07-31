@@ -34,7 +34,7 @@ Subagent (general-purpose):
     **Target revision:** [TARGET_REV]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix changes, a stat summary,
+    Read the diff file once — it contains the fix revisions, a stat summary,
     and the fix diff with surrounding context. Do not regenerate the supplied
     diff unless it is missing.
     If the diff file is missing, fetch the diff yourself:
@@ -55,7 +55,7 @@ Subagent (general-purpose):
     Apply Go
     commit-message guidance only where it is compatible with those local
     conventions; never require a fixed prefix, type, scope, subject form,
-    template, or canned example. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    template, or canned example.
 
     ## Scope
 

@@ -145,7 +145,7 @@ Forces explicit choice.
 
 1. **Concrete options** - Force A/B/C choice, not open-ended
 2. **Real constraints** - Specific times, actual consequences
-3. **Real file paths** - `$(jj workspace root)/.tmp/rocketclaw/payment-system` not "a project". Create repository-local temporary storage safely with `if root=$(jj workspace root 2>/dev/null) && [ -n "$root" ]; then :; else root=$(pwd -P); fi; temp_root="$root/.tmp/rocketclaw"; (umask 077 && mkdir -p "$temp_root")`; outside a Jujutsu workspace, this falls back to the current directory's `.tmp/rocketclaw`.
+3. **Real file paths** - `$(jj workspace root)/.tmp/payment-system` not "a project". Create repository-local temporary storage safely with `if root=$(jj workspace root 2>/dev/null) && [ -n "$root" ]; then :; else root=$(pwd -P); fi; temp_root="$root/.tmp"; (umask 077 && mkdir -p "$temp_root")`; outside a Jujutsu workspace, this falls back to the current directory's local `.tmp`.
 4. **Make agent act** - "What do you do?" not "What should you do?"
 5. **No easy outs** - Can't defer to "I'd ask your human partner" without choosing
 

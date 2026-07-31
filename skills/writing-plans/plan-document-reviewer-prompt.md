@@ -2,7 +2,7 @@
 
 Use this template when dispatching a plan document reviewer subagent.
 
-**Purpose:** Verify the plan is complete, matches the spec, and has proper task decomposition.
+**Purpose:** Verify the plan is complete, matches the spec, has proper task decomposition, and closes each task with a correctly described Jujutsu change.
 
 **Dispatch after:** The complete plan is written.
 
@@ -15,7 +15,7 @@ Subagent (general-purpose):
     **Plan to review:** [PLAN_FILE_PATH]
     **Spec for reference:** [SPEC_FILE_PATH]
 
-    Use `jj workspace root` and `jj file list` to locate the project's local instructions, read each applicable file with `jj file show -r @ <path>`, then inspect relevant history with `jj log`. Local project syntax always wins; compatible Go guidance is for quality only.
+    Use `jj --ignore-working-copy workspace root` and `jj --ignore-working-copy file list` to locate the project's local instructions, read each applicable file with `jj --ignore-working-copy file show -r @ <path>`, then inspect relevant history with `jj --ignore-working-copy log`. Local project syntax always wins; compatible Go guidance is for quality only.
 
     ## What to Check
 
@@ -25,10 +25,11 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
-    | Jujutsu Workflow | Changes are independently testable, described from local standards, and followed by `jj new` |
+    | Change Descriptions | Each task includes the standards sentence below, inspects the current change with `jj status` and `jj diff`, and finishes it with a neutral `jj commit -m "<message composed from the standards above>"`; no staging step or fixed message format |
 
     Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Apply this when validating each planned Jujutsu change description. The project's local syntax wins; compatible Go guidance is for quality only.
+
+    Apply this when validating each planned Jujutsu change description. The project's local syntax wins; compatible Go guidance is for quality only. Do not require fixed wording, syntax, prefixes, templates, or examples.
 
     ## Calibration
 

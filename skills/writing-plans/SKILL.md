@@ -13,7 +13,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** Before planning, use `jj workspace root` and `jj file list` to locate the project's local instructions, read each applicable file with `jj file show -r @ <path>`, then inspect relevant history with `jj log`. Local project syntax always takes precedence; use Go guidance only when it is compatible and improves quality. If execution needs isolation, create a Jujutsu workspace with `jj workspace add` at execution time.
+**Context:** Before planning, use `jj --ignore-working-copy workspace root` and `jj --ignore-working-copy file list` to locate the project's local instructions, read each applicable file with `jj --ignore-working-copy file show -r @ <path>`, then inspect relevant history with `jj --ignore-working-copy log`. Local project syntax always takes precedence; use Go guidance only when it is compatible and improves quality. If execution needs isolation, create a Jujutsu workspace with `jj workspace add` at execution time.
 
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -119,16 +119,14 @@ Expected: PASS
 
 - [ ] **Step 5: Describe the change and start the next change**
 
-At execution time, use `jj file list` and `jj file show` to read applicable
-repository instructions and `jj log` to inspect description history. Those
-local standards take precedence; apply Go guidance only where compatible and
-derive the description from the actual change without fixed syntax.
+At execution time, use `jj --ignore-working-copy file list` and `jj --ignore-working-copy file show -r @ <path>` to read every applicable repository instruction file and `jj --ignore-working-copy log` to inspect description history. Those local standards take precedence; apply Go guidance only where compatible and derive the description from the actual change without fixed wording, syntax, prefixes, templates, or examples.
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
 ```bash
-jj describe -m "<description derived from local standards>"
-jj new
+jj status
+jj diff
+jj commit -m "<message composed from the standards above>"
 ```
 ````
 

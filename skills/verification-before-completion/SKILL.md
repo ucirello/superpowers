@@ -47,7 +47,7 @@ Skip any step = lying, not verifying
 | Agent completed | Identify its revision with `jj log`; `jj diff -r <revision>` shows the intended changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
-`jj diff` without `-r` inspects only the working-copy revision (`@`). If delegated work is in another revision, locate that revision with `jj log` and inspect it explicitly.
+`jj diff` without `-r` inspects only the working-copy revision (`@`). If delegated work is in another revision, locate that revision with `jj log` and inspect it explicitly. Use `jj status` and `jj diff --summary -r @` when verifying the current working-copy change.
 
 ## Red Flags - STOP
 
@@ -105,18 +105,24 @@ Skip any step = lying, not verifying
 ❌ Trust agent report
 ```
 
-**Change descriptions:**
+**Jujutsu change descriptions:**
 
 Before composing, editing, validating, or recommending a Jujutsu change description:
 
-1. At runtime, use `jj workspace root` to locate the repository root and read every applicable repository instruction file.
-2. Inspect relevant change-description history with `jj log`; repository-local standards take precedence.
-3. Apply only compatible quality guidance from the Go Commit Message wiki. Do not impose fixed syntax, examples, or templates.
+1. At runtime, use `jj --ignore-working-copy workspace root`, `jj --ignore-working-copy file list`, and `jj --ignore-working-copy file show -r @ <path>` to locate the repository root and read every applicable repository instruction file.
+2. Inspect relevant change-description history with `jj --ignore-working-copy log`; repository-local standards take precedence.
+3. Apply only compatible quality guidance from the Go Commit Message wiki. Do not impose fixed wording, syntax, prefixes, capitalization rules, line-length rules, examples, or templates.
 4. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Use `jj describe` to edit the working-copy change description, then inspect it with `jj --ignore-working-copy log -r @` and verify its content against the actual change with `jj --ignore-working-copy diff -r @`.
 
 **Publication:**
 
 Verify the completed revision and confirm that the bookmark being published targets it. Jujutsu publishes bookmarks and the revisions reachable from them; starting a new working-copy change does not publish or make the previous revision immutable.
+
+**Temporary verification artifacts:**
+
+If verification needs temporary artifacts, place them under `$(jj --ignore-working-copy workspace root)/.tmp`. Before creating them, verify the repository root's ignore rules exclude `.tmp/`; if they do not, stop and add that rule first. If the current directory is not in a Jujutsu workspace, use the local `./.tmp` directory instead. Do not use an OS-global temporary directory. Remove only the exact paths created for the verification after it finishes.
 
 ## When To Apply
 

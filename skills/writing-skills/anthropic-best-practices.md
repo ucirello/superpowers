@@ -652,13 +652,17 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
+For Skills where output quality depends on examples, provide input/output examples that demonstrate the expected result.
+
+For Skills where output quality depends on repository-local conventions, show how to discover and apply those conventions instead of imposing a universal format:
 
 Change descriptions are an exception: do not provide fixed syntax, prefixes, templates, or examples. Before composing, editing, recommending, or validating one, use `jj workspace root` and `jj file list` to locate and read applicable repository instructions. Inspect the current change with `jj status` and `jj diff`.
 
 Inspect description history with `jj log -r 'ancestors(@)' -n 20 --no-graph -T 'description.first_line() ++ "\n"'`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
 Local syntax wins. Apply Go quality rules only where they are compatible with repository instructions and history. Preserve the semantic constraints: summarize the change accurately and concisely, explain motivation or important effects when useful, and keep the description consistent with the actual diff. Use `jj describe` to set or revise the description.
+
+Concrete discovery instructions help agents match the repository's current style and level of detail.
 
 ### Conditional workflow pattern
 

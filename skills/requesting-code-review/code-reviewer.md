@@ -32,25 +32,35 @@ Subagent (general-purpose):
 
     ## Read-Only Review
 
-    Your review is read-only in the current workspace. Do not modify files, the working-copy change (`@`), the change graph, change descriptions, bookmarks, workspace registrations, or operation history. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` to inspect revisions and history without snapshotting the working copy. Never run `jj edit` in this workspace.
+    Your review is read-only in the current workspace. Do not modify files, the working-copy change (`@`), the change graph, change descriptions, bookmarks, workspace registrations, or operation history, except for adding and removing the isolated workspace described below when necessary. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, `jj --ignore-working-copy log`, and `jj --ignore-working-copy file show` to inspect revisions without snapshotting the working copy. Never run `jj edit`, `jj next`, or `jj prev` in this workspace.
 
-    If inspecting files in a separate working copy is necessary and registering a temporary workspace is explicitly permitted, keep it inside the repository workspace and base its new working-copy change on the review revision:
+    If inspecting files in a separate working copy is necessary and registering a temporary workspace is explicitly permitted, create a unique workspace under the repository workspace's `.tmp/rocketclaw/`; never use an OS-global temporary directory:
 
     ```bash
-    if WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root 2>/dev/null) && [ -n "$WORKSPACE_ROOT" ]; then
-        :
-    else
-        WORKSPACE_ROOT=.
-    fi
+    WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root)
     TEMP_ROOT="$WORKSPACE_ROOT/.tmp/rocketclaw"
     (umask 077 && mkdir -p -- "$TEMP_ROOT")
-    REVIEW_WORKSPACE="$TEMP_ROOT/review-[CHANGE_ID]"
-    jj workspace add --revision '[END_REVISION]' "$REVIEW_WORKSPACE"
+    counter=0
+    while :; do
+      REVIEW_WORKSPACE="review-[CHANGE_ID]-$$-$counter"
+      REVIEW_PARENT="$TEMP_ROOT/$REVIEW_WORKSPACE"
+      if (umask 077 && mkdir -- "$REVIEW_PARENT") 2>/dev/null; then break; fi
+      counter=$((counter + 1))
+    done
+    jj --ignore-working-copy workspace add --name "$REVIEW_WORKSPACE" --revision '[END_REVISION]' "$REVIEW_PARENT/workspace"
     ```
 
-    This creates and registers a separate workspace with a new working-copy change; it does not move `@` in the current workspace. Otherwise, remain read-only and inspect revision contents with `jj --ignore-working-copy file show -r '[END_REVISION]' <path>`.
+    Before creating content under `.tmp/`, verify the repository root's ignore rules exclude `.tmp/`; if they do not, stop and ask the coordinator to add that rule. The separate workspace creates a new working-copy change based on the review revision; do not modify it. Otherwise, inspect revision contents with `jj --ignore-working-copy file show -r '[END_REVISION]' <path>`.
 
-    Before composing or editing any review message, change description, validation statement, or recommendation, use `jj --ignore-working-copy file list` and `jj --ignore-working-copy file show -r @ <path>` to locate and read applicable local instructions, then inspect recent descriptions with `jj --ignore-working-copy log -r '::[END_REVISION]' -n 20`. Local conventions take precedence; use the Go guidance only where compatible. Do not impose fixed wording, syntax, prefixes, templates, or examples.
+    After review, clean up from the original workspace:
+
+    ```bash
+    jj --ignore-working-copy workspace forget "$REVIEW_WORKSPACE"
+    [ -n "$REVIEW_PARENT" ] && [ "$REVIEW_PARENT" = "$TEMP_ROOT/$REVIEW_WORKSPACE" ] && [ -d "$REVIEW_PARENT" ] || exit 1
+    rm -rf -- "$REVIEW_PARENT"
+    ```
+
+    Before composing or editing any review message, change description, validation statement, or recommendation, use `jj --ignore-working-copy file list` and `jj --ignore-working-copy file show -r @ <path>` to locate and read every applicable local instruction file, then inspect recent descriptions with `jj --ignore-working-copy log -r '::[END_REVISION]' -n 20`. Local conventions take precedence; use the Go guidance only where compatible. Do not impose fixed wording, syntax, prefixes, templates, or examples.
 
     Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
@@ -120,7 +130,7 @@ Subagent (general-purpose):
     - How to fix (if not obvious)
 
     ### Recommendations
-    [Improvements for code quality, architecture, or process]
+    [Improvements for code quality, architecture, or process. If recommending a commit or change description, do not require fixed message syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.]
 
     ### Assessment
 

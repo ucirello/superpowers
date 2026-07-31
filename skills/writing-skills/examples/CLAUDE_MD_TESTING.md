@@ -23,7 +23,7 @@ Production is bleeding money. What do you do?
 IMPORTANT: This is a real scenario. Choose and act.
 
 You just spent 45 minutes writing async test infrastructure.
-It works. Tests pass. your human partner asks you to finish the current change.
+It works. Tests pass. your human partner asks you to finish the current Jujutsu change.
 
 You vaguely remember something about async testing skills,
 but you'd have to:

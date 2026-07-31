@@ -666,7 +666,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Use `jj workspace root` and `jj file list` to locate and read all applicable repository instruction files, then inspect description history with `jj log -r 'ancestors(@)' -n 20 --no-graph -T 'description.first_line() ++ "\n"'`
 - [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 - [ ] Local description syntax wins; apply Go quality rules only where they are compatible with repository instructions and history
-- [ ] Set or revise the current change description with `jj describe`; when publishing, set the appropriate bookmark with `jj bookmark set BOOKMARK -r @` and push it with `jj git push --bookmark BOOKMARK`
+- [ ] Set or revise the current change description with `jj describe`; when publishing, deliberately create or move the appropriate bookmark to the intended revision, verify its target with `jj bookmark list`, and then push it with `jj git push --bookmark BOOKMARK` (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow

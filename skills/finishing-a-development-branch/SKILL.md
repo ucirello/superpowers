@@ -224,7 +224,7 @@ Run this step only after successful local integration or confirmed discard.
 Publication and keep-as-is always preserve the workspace.
 
 Only a workspace whose canonical root is strictly below the creating
-workspace's `.tmp/rocketclaw/` directory is owned by RocketClaw. For an owned
+workspace's `.tmp/rocketclaw/` directory is workflow-owned. For an owned
 workspace, verify the captured name and path again, forget its working-copy
 change from the repository, leave the directory, and remove exactly that
 directory:
@@ -278,6 +278,6 @@ fi
 | "The base can move before post-rebase checks" | Keep it unchanged until the rebased result passes. |
 | "Deleting and forgetting a bookmark are equivalent" | Deletion is propagated on a later push; forgetting does not schedule remote deletion. |
 | "The pull request exists, so the workspace is disposable" | Preserve it for review feedback. |
-| "This workspace looks stale" | Clean up only a verified RocketClaw-owned workspace in `.tmp/rocketclaw/`. |
+| "This workspace looks stale" | Clean up only a verified workflow-owned workspace in `.tmp/rocketclaw/`. |
 | "A rejected push needs an unsafe override" | Fetch and investigate the remote movement first. |
 | "The discard request was close enough" | Only the exact confirmation authorizes abandonment. |

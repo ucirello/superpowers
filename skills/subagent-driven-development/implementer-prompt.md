@@ -35,8 +35,9 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Describe and organize your Jujutsu change or changes
-    5. Self-review (see below)
+    4. Self-review (see below) and correct any issues you find
+    5. Finish the current change with `jj commit`, leaving the new working-copy
+       change empty
     6. Report back
 
     Work from: [directory]
@@ -48,13 +49,17 @@ Subagent (general-purpose):
     Local project instructions and history take precedence over general guidance.
     Apply Go commit-message guidance only where it is compatible with those
     local conventions; never impose a fixed prefix, type, scope, subject form,
-    template, or canned example. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    template, or canned example.
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
     full suite once before finalizing the change, not after every edit.
+
+    Before composing or editing the change description, follow the repository's
+    local conventions and describe the change's intent and effect accurately.
+    Repository-local conventions take precedence over generic guidance.
 
     ## Code Organization
 
@@ -119,7 +124,7 @@ Subagent (general-purpose):
     Local project instructions and history take precedence over general guidance.
     Apply Go commit-message guidance only where it is compatible
     with those local conventions; never impose a fixed prefix, type, scope,
-    subject form, template, or canned example. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    subject form, template, or canned example.
     Set or edit the description with `jj describe`; use `jj new` when another
     independently reviewable change is needed. Do not create or move a bookmark
     unless the controller explicitly requests it.
@@ -130,8 +135,9 @@ Subagent (general-purpose):
     Fix them, re-run the tests that cover the amended code, and append a fix
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Then reply with the same short
-    status contract as your first report.
+    you — your report is the test evidence. Self-review and correct the fix,
+    then finish it with `jj commit`, leaving the new working-copy change empty.
+    Reply with the same short status contract as your first report.
 
     ## Report Format
 
@@ -148,8 +154,8 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Changes created or updated (short change IDs + descriptions)
-    - One-line test summary with the observed result
+    - Revisions created (short commit ID + description first line)
+    - One-line test summary with the observed result (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
 

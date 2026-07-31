@@ -2,7 +2,7 @@
 
 ## Overview
 
-Bugs often manifest deep in the call stack (Jujutsu workspace created in the wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
+Bugs often manifest deep in the call stack (`jj git init` in the wrong directory, file created in the wrong location, database opened with the wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
 
 **Core principle:** Trace backward through the call chain until you find the original trigger, then fix at the source.
 
@@ -42,12 +42,12 @@ Error: jj git init failed in ~/project/packages/core
 ### 2. Find Immediate Cause
 **What code directly causes this?**
 ```typescript
-await execFileAsync('jj', ['git', 'init'], { cwd: projectDir });
+await execFileAsync('jj', ['git', 'init', '--no-colocate'], { cwd: projectDir });
 ```
 
 ### 3. Ask: What Called This?
 ```typescript
-WorktreeManager.createSessionWorktree(projectDir, sessionId)
+WorkspaceManager.createSessionWorkspace(projectDir, sessionId)
   → called by Session.initializeWorkspace()
   → called by Session.create()
   → called by test at Project.create()
@@ -81,7 +81,7 @@ async function initJjRepository(directory: string) {
     stack,
   });
 
-  await execFileAsync('jj', ['git', 'init'], { cwd: directory });
+  await execFileAsync('jj', ['git', 'init', '--no-colocate'], { cwd: directory });
 }
 ```
 
@@ -114,8 +114,8 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Symptom:** `.jj` created in `packages/core/` (source code)
 
 **Trace chain:**
-1. `jj git init` runs in `process.cwd()` ← empty cwd parameter
-2. WorktreeManager called with empty projectDir
+1. `jj git init --no-colocate` runs in `process.cwd()` ← empty cwd parameter
+2. WorkspaceManager called with empty projectDir
 3. Session.create() passed empty string
 4. Test accessed `context.tempDir` before beforeEach
 5. setupCoreTest() returns `{ tempDir: '' }` initially
@@ -127,7 +127,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp/rocketclaw`, falling back to `.tmp/rocketclaw`
+- Layer 3: Environment guard refuses `jj git init` outside `$(jj workspace root)/.tmp/rocketclaw`, falling back to local `.tmp/rocketclaw` when Jujutsu is unavailable
 - Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle

@@ -35,7 +35,7 @@ Subagent (general-purpose):
     **Target revision snapshot:** [TARGET_REV]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the change list, a stat summary,
+    Read the diff file once — it contains the revision list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
@@ -66,7 +66,6 @@ Subagent (general-purpose):
     commit-message guidance only where it is compatible with those local
     conventions; never require a fixed prefix, type, scope, subject form,
     template, or canned example.
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     ## Do Not Trust the Report
 

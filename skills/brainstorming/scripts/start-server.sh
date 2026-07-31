@@ -6,7 +6,7 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.tmp/rocketclaw/brainstorm/.
+#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/.
 #                         Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
@@ -125,11 +125,18 @@ STORAGE_ROOT="$(cd "$STORAGE_ROOT" 2>/dev/null && pwd -P)" || {
   echo '{"error": "Could not resolve the storage root"}'
   exit 1
 }
-TMP_ROOT="${STORAGE_ROOT}/.tmp"
-ROCKETCLAW_ROOT="${TMP_ROOT}/rocketclaw"
-SESSION_BASE="${ROCKETCLAW_ROOT}/brainstorm"
+if [[ "$EPHEMERAL" == "false" ]]; then
+  STORAGE_PARENT="${STORAGE_ROOT}/.rocketclaw"
+else
+  STORAGE_PARENT="${STORAGE_ROOT}/.tmp/rocketclaw"
+fi
+SESSION_BASE="${STORAGE_PARENT}/brainstorm"
 
-for candidate in "$TMP_ROOT" "$ROCKETCLAW_ROOT" "$SESSION_BASE"; do
+STORAGE_COMPONENTS=("$STORAGE_PARENT" "$SESSION_BASE")
+if [[ "$EPHEMERAL" == "true" ]]; then
+  STORAGE_COMPONENTS=("${STORAGE_ROOT}/.tmp" "${STORAGE_COMPONENTS[@]}")
+fi
+for candidate in "${STORAGE_COMPONENTS[@]}"; do
   if [[ -L "$candidate" ]]; then
     echo '{"error": "Refusing a symlinked temporary-storage component"}'
     exit 1
@@ -137,12 +144,10 @@ for candidate in "$TMP_ROOT" "$ROCKETCLAW_ROOT" "$SESSION_BASE"; do
   mkdir -p "$candidate"
 done
 
-if [[ -n "$PROJECT_DIR" ]]; then
-  # Persist the bound port and key per project so a restart reuses them and an
-  # already-open browser tab reconnects to the same URL with a valid cookie.
-  export BRAINSTORM_PORT_FILE="${SESSION_BASE}/.last-port"
-  export BRAINSTORM_TOKEN_FILE="${SESSION_BASE}/.last-token"
-fi
+# Persist the bound port and key so a restart reuses them and an already-open
+# browser tab reconnects to the same URL with a valid cookie.
+export BRAINSTORM_PORT_FILE="${SESSION_BASE}/.last-port"
+export BRAINSTORM_TOKEN_FILE="${SESSION_BASE}/.last-token"
 
 # Create a fresh session directory without reusing an existing path.
 for _ in {1..10}; do

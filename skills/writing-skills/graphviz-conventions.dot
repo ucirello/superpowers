@@ -13,6 +13,7 @@ digraph STYLE_GUIDE {
 
         // Commands are plaintext
         "jj log -r @" [shape=plaintext];
+        "jj describe" [shape=plaintext];
 
         // States are ellipses
         "Current state" [shape=ellipse];
@@ -30,6 +31,7 @@ digraph STYLE_GUIDE {
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
         "NEVER split work accidentally" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "NEVER expect a staging area" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions
@@ -72,6 +74,7 @@ digraph STYLE_GUIDE {
         "Write the test";
         "Search for patterns";
         "Inspect the change";
+        "Finish the current change";
         "Ask for help";
 
         // Commands are literal
