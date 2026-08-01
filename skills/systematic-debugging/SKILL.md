@@ -213,7 +213,7 @@ You MUST complete each phase before proceeding to the next.
 
 ### Change Descriptions
 
-Before composing, editing, validating, or recommending a change description, resolve the repository root with `jj workspace root`. Use `jj file list` to locate tracked repository instruction files and also check for applicable local instruction files from that root through the working directory, with the closest instruction taking precedence. Inspect existing descriptions with `jj log`. Local conventions win. Apply guidance from the Go wiki only where it is compatible with those conventions; preserve the guidance's intent without imposing fixed syntax, templates, or stock examples.
+Before composing, editing, validating, or recommending a change description, resolve the repository root with `jj workspace root`. Use `jj file list` to locate tracked repository instruction files and also check for applicable local instruction files from that root through the working directory, with the closest instruction taking precedence. Inspect existing descriptions with `jj log`. Local conventions win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply guidance from the Go wiki only where it is compatible with those conventions. Derive syntax, vocabulary, structure, and detail from the actual diff, applicable instructions, and observed history without imposing fixed syntax, templates, or stock examples.
 
 Use `jj describe` to edit the working-copy change description, then validate it against the applicable instructions and observed history.
 

@@ -82,7 +82,7 @@ If tests fail, report the failures and ask whether to proceed or investigate. If
 
 ## Changes and Bookmarks
 
-Use `jj status`, `jj diff`, and `jj log` to inspect work. Before composing, editing, validating, or recommending a change description or commit message, apply this instruction:
+Use `jj status`, `jj diff`, and `jj log` to inspect work. Before composing, editing, validating, or recommending a change description or commit message, locate and read applicable repository instructions with `jj file list` and `jj file show -r @ <instruction-path>`, inspect the actual diff, and inspect recent descriptions with `jj log`. Derive syntax, vocabulary, structure, and detail from those sources rather than imposing a fixed format, then apply this instruction:
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
