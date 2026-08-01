@@ -83,6 +83,13 @@ Keep the reserved parent path so cleanup can identify the temporary directory. N
 
 Because Jujutsu automatically tracks new files, **MUST verify the workspace root's ignore rules exclude `.tmp/` before adding the workspace there.** Jujutsu honors `.gitignore`; if `.tmp/` is not ignored, add the project-root rule first and let Jujutsu snapshot that change. When describing that ignore-rule change:
 
+Inspect the actual change with `jj status` and `jj diff`, locate and read
+applicable repository instructions with `jj file list` and `jj file show -r @
+<instruction-path>`, and inspect recent descriptions with `jj log`. Local
+conventions take precedence over compatible Go guidance. Derive syntax,
+vocabulary, structure, and detail from those sources and the actual diff; do
+not impose a fixed format.
+
 > Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
 Use `jj describe` with the composed description. Do not use a canned message or fixed message syntax.
@@ -105,6 +112,13 @@ If creation fails because the name is registered, inspect `jj workspace list` an
 ### Describe The Change
 
 The new workspace has its own working-copy change. Give it a description before implementation, without imposing a message format:
+
+Locate and read applicable repository instructions with `jj file list` and
+`jj file show -r @ <instruction-path>`, inspect recent descriptions with `jj
+log`, and inspect the working-copy change with `jj status` and `jj diff`. Local
+conventions take precedence over compatible Go guidance. Derive syntax,
+vocabulary, structure, and detail from those sources and the intended work; do
+not impose a fixed format.
 
 > Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 

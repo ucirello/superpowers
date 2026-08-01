@@ -60,7 +60,7 @@ Subagent (general-purpose):
     rm -rf -- "$REVIEW_PARENT"
     ```
 
-    Before composing or editing any review message, change description, validation statement, or recommendation, use `jj --ignore-working-copy file list` and `jj --ignore-working-copy file show -r @ <path>` to locate and read every applicable local instruction file, then inspect recent descriptions with `jj --ignore-working-copy log -r '::[END_REVISION]' -n 20`. Local conventions take precedence; use the Go guidance only where compatible. Do not impose fixed wording, syntax, prefixes, templates, or examples.
+    Before composing or editing any review message, change description, validation statement, or recommendation, use `jj --ignore-working-copy file list -r '[END_REVISION]'` and `jj --ignore-working-copy file show -r '[END_REVISION]' <path>` to locate and read every applicable local instruction file, then inspect recent descriptions with `jj --ignore-working-copy log -r '::[END_REVISION]' -n 20`. Local conventions take precedence; use the Go guidance only where compatible. Derive syntax, vocabulary, structure, and detail from the actual diff, applicable instructions, and observed history. Do not impose fixed wording, syntax, prefixes, templates, or examples.
 
     Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 

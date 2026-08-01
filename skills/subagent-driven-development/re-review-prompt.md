@@ -52,10 +52,12 @@ Subagent (general-purpose):
     with `jj --ignore-working-copy file show -r @ <instruction-path>`, and
     relevant history from `jj --ignore-working-copy log`.
     Local project instructions and history take precedence over general guidance.
-    Apply Go
-    commit-message guidance only where it is compatible with those local
-    conventions; never require a fixed prefix, type, scope, subject form,
-    template, or canned example.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Apply Go commit-message guidance only where it is compatible with those
+    local conventions. Derive acceptable syntax, vocabulary, structure, and
+    detail from the actual fix diff, applicable instructions, and observed
+    history; never require a fixed prefix, type, scope, subject form, template,
+    or canned example.
 
     ## Scope
 

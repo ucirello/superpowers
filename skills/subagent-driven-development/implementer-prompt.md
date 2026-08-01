@@ -42,14 +42,16 @@ Subagent (general-purpose):
 
     Work from: [directory]
 
-    Before editing or writing a change description, use `jj workspace root`
+    Whenever composing or editing a change description, use `jj workspace root`
     and `jj file list` to locate the project instructions that govern this
     path, read their working-copy versions with `jj file show -r @
     <instruction-path>`, and inspect relevant history with `jj log`.
     Local project instructions and history take precedence over general guidance.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
     Apply Go commit-message guidance only where it is compatible with those
-    local conventions; never impose a fixed prefix, type, scope, subject form,
-    template, or canned example.
+    local conventions. Derive syntax, vocabulary, structure, and detail from
+    the actual diff, applicable instructions, and observed history; never
+    impose a fixed prefix, type, scope, subject form, template, or canned example.
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
@@ -57,9 +59,8 @@ Subagent (general-purpose):
     While iterating, run the focused test for what you're changing; run the
     full suite once before finalizing the change, not after every edit.
 
-    Before composing or editing the change description, follow the repository's
-    local conventions and describe the change's intent and effect accurately.
-    Repository-local conventions take precedence over generic guidance.
+    Describe the change's intent and effect accurately under the composition
+    rules above.
 
     ## Code Organization
 
@@ -122,9 +123,10 @@ Subagent (general-purpose):
     read the applicable project instructions with `jj file list` and `jj file
     show -r @ <instruction-path>`, and inspect relevant history with `jj log`.
     Local project instructions and history take precedence over general guidance.
-    Apply Go commit-message guidance only where it is compatible
-    with those local conventions; never impose a fixed prefix, type, scope,
-    subject form, template, or canned example.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Apply Go commit-message guidance only where it is compatible with those
+    local conventions. Derive the description from the actual diff; never
+    impose a fixed prefix, type, scope, subject form, template, or canned example.
     Set or edit the description with `jj describe`; use `jj new` when another
     independently reviewable change is needed. Do not create or move a bookmark
     unless the controller explicitly requests it.
@@ -136,7 +138,9 @@ Subagent (general-purpose):
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
     you — your report is the test evidence. Self-review and correct the fix,
-    then finish it with `jj commit`, leaving the new working-copy change empty.
+    then inspect the fix diff and compose its description under the complete
+    standards above before finishing it with `jj commit`, leaving the new
+    working-copy change empty.
     Reply with the same short status contract as your first report.
 
     ## Report Format

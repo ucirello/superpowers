@@ -82,6 +82,13 @@ exclude `.tmp/`; stop and add that root ignore rule first if they do not. Choose
 `SESSION_NAMESPACE` from the user, harness, or session instructions, and verify
 the resulting repository-wide names with `jj workspace list`.
 
+If adding the ignore rule changes the repository, inspect it with `jj status`
+and `jj diff`, locate and read applicable repository instructions with `jj file
+list` and `jj file show -r @ <instruction-path>`, and inspect recent descriptions
+with `jj log`. Local conventions take precedence over compatible Go guidance;
+derive syntax, vocabulary, structure, and detail from those sources and the
+actual diff rather than imposing a fixed format. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply the resulting description with `jj describe`.
+
 Create one workspace per independent domain, with each new working-copy change based on the current change:
 
 ```sh
@@ -139,7 +146,7 @@ These are timing/race condition issues. Your task:
 
 Do NOT just increase timeouts - find the real issue.
 
-Before returning, inspect `jj diff` and use `jj describe` to describe the working-copy change. Repository-local conventions take precedence; do not impose a fixed prefix, layout, or syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Before returning, inspect `jj diff`, locate and read applicable repository instructions with `jj file list` and `jj file show -r @ <instruction-path>`, and inspect recent descriptions with `jj log`. Repository-local conventions take precedence over compatible Go guidance. Derive syntax, vocabulary, structure, and detail from those sources and the actual diff; do not impose a fixed prefix, layout, example, or template. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply the resulting description with `jj describe`.
 
 Return: Summary of what you found and what you fixed, plus the change ID from `jj log -r @ --no-graph -T 'change_id ++ "\n"'`.
 ```

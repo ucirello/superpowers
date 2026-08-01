@@ -154,9 +154,11 @@ At runtime, inspect applicable project instructions with `jj file list` and
 their working-copy contents with `jj file show -r @ <instruction-path>`, then
 inspect relevant history with `jj log`.
 Local project instructions and history take precedence over general guidance.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 Apply Go commit-message guidance only where it is compatible with those local
-conventions; never impose a fixed prefix, type, scope, subject form, template,
-or canned example.
+conventions. Derive syntax, vocabulary, structure, and detail from the actual
+diff, applicable instructions, and observed history; never impose a fixed
+prefix, type, scope, subject form, template, or canned example.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task.
@@ -225,9 +227,9 @@ the full commit ID of the empty working-copy change's single parent:
 package and fix-round diffs need this immutable boundary value, not a mutable
 change ID or a symbolic revset.
 
-The implementer must compose the change description according to local
-conventions, self-review and correct the work, then finish with `jj commit`,
-which leaves a new empty working-copy change.
+The implementer must compose the change description using the runtime-derived
+standards above and the actual task diff, self-review and correct the work,
+then finish with `jj commit`, which leaves a new empty working-copy change.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
@@ -370,7 +372,8 @@ own problem — fresh eyes and a capability bump in one move.
 **Every round, either way:** the implementer fixes, re-runs the tests
 covering the amended code, appends its fix report to the same report file,
 self-reviews and corrects the work, composes a locally conventional description,
-then finishes the fix with `jj commit` and returns the short contract. Before
+using the runtime-derived standards above and the actual fix diff, then finishes
+the fix with `jj commit` and returns the short contract. Before
 re-dispatching the reviewer, confirm
 the fix report contains the covering tests, the command run, and the
 output; dispatch the re-review once all three are present. Name the
@@ -445,7 +448,8 @@ with the complete findings list — not one fixer per finding.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Record FIX_BASE as the current END before dispatch. Require that fixer to use
-local description conventions and finish the fix
+the runtime-derived description standards above, base the description on the
+actual fix diff, and finish the fix
 with `jj commit` after self-review.
 Then verify `@` is empty, record END from `@-`, and run exactly one scoped
 re-review of the fix wave (`scripts/review-package PLAN_FILE FIX_BASE END`,
