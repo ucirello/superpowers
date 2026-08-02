@@ -12,8 +12,7 @@ digraph STYLE_GUIDE {
         "Take an action" [shape=box];
 
         // Commands are plaintext
-        "jj log -r @" [shape=plaintext];
-        "jj describe" [shape=plaintext];
+        "jj describe -m '<change-message>'" [shape=plaintext];
 
         // States are ellipses
         "Current state" [shape=ellipse];
@@ -30,8 +29,7 @@ digraph STYLE_GUIDE {
         "Write test first" [shape=box];
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
-        "NEVER split work accidentally" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
-        "NEVER expect a staging area" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "NEVER use jj file track . without reviewing paths" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions
@@ -73,8 +71,7 @@ digraph STYLE_GUIDE {
         // Actions start with verb
         "Write the test";
         "Search for patterns";
-        "Inspect the change";
-        "Finish the current change";
+        "Describe the change";
         "Ask for help";
 
         // Commands are literal

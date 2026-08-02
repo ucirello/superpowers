@@ -212,13 +212,17 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Jujutsu Change Description Helper skill:**
+**JJ Change Message Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing Jujutsu diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
+description: Generate repository-consistent change messages by analyzing JJ diffs. Use when the user asks for help writing or reviewing a change message.
 ```
 
-Before composing or validating a description, use `jj workspace root` and `jj file list` to locate and read applicable repository instructions. Inspect the current change with `jj status` and `jj diff`, and inspect description history with `jj log -r 'ancestors(@)' -n 20 --no-graph -T 'description.first_line() ++ "\n"'`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Local syntax wins; apply Go quality rules only where compatible with repository instructions and history. Set or revise the description with `jj describe`.
+Repository-local instructions and the repository's existing syntax and conventions always win.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Apply only compatible Go guidance. Inspect the current change with `jj diff`, derive the message structure and detail level from repository-local instructions and visible history, and validate the result against both. Do not impose fixed prefixes, types, scopes, subjects, body formats, or Conventional Commit templates. Use `jj describe -m '<change-message>'` only after validation.
 
 Avoid vague descriptions like these:
 
@@ -652,17 +656,28 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-For Skills where output quality depends on examples, provide input/output examples that demonstrate the expected result.
+For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
-For Skills where output quality depends on repository-local conventions, show how to discover and apply those conventions instead of imposing a universal format:
+````markdown  theme={null}
+## Change message guidance
 
-Change descriptions are an exception: do not provide fixed syntax, prefixes, templates, or examples. Before composing, editing, recommending, or validating one, use `jj workspace root` and `jj file list` to locate and read applicable repository instructions. Inspect the current change with `jj status` and `jj diff`.
+Repository-local instructions and the repository's existing syntax and conventions always win.
 
-Inspect description history with `jj log -r 'ancestors(@)' -n 20 --no-graph -T 'description.first_line() ++ "\n"'`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Local syntax wins. Apply Go quality rules only where they are compatible with repository instructions and history. Preserve the semantic constraints: summarize the change accurately and concisely, explain motivation or important effects when useful, and keep the description consistent with the actual diff. Use `jj describe` to set or revise the description.
+Apply only compatible Go guidance. Inspect the current change with `jj diff`, derive the message structure and detail level from repository-local instructions and visible history, and validate the result against both. Do not impose fixed prefixes, types, scopes, subjects, body formats, or Conventional Commit templates.
 
-Concrete discovery instructions help agents match the repository's current style and level of detail.
+Input: The current JJ change, repository-local instructions, and visible history
+
+Output:
+```
+<repository-consistent change message>
+```
+
+Apply it only after validation with `jj describe -m '<change-message>'`.
+````
+
+Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
 
 ### Conditional workflow pattern
 

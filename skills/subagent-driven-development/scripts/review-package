@@ -1,83 +1,59 @@
 #!/usr/bin/env bash
 # Generate a review package: revision list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. The endpoints are immutable commit IDs captured as revision snapshots;
-# change IDs are stable across rewrites and therefore cannot delimit old state.
+# call. Using the recorded per-task BASE keeps multi-revision tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE_REV TARGET_REV [OUTFILE]
-# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base12>..<target12>.diff
-# Outside Jujutsu, the storage root falls back to .tmp/rocketclaw.
-# (named per range, so a re-review after fixes gets a distinct fresh file).
+# Usage: review-package PLAN_FILE BASE END [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base12>..<end12>.diff
+# (named per revision pair, so a re-review after fixes gets a distinct file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE_REV TARGET_REV [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE END [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
 base=$2
-target=$3
+end=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-resolve_one() {
+# Snapshot once before resolving symbolic revisions; all later reads use the
+# resulting stable commit IDs without touching the working copy.
+jj log -r 'root()' --count >/dev/null
+
+resolve_revision() {
   label=$1
-  revset=$2
-  resolved=$(jj --ignore-working-copy log --no-graph -r "$revset" -T 'commit_id ++ "\n"' 2>/dev/null) \
-    || { echo "bad $label: $revset" >&2; exit 2; }
-  lines=$(printf '%s\n' "$resolved" | wc -l | tr -d ' ')
-  [ -n "$resolved" ] && [ "$lines" -eq 1 ] \
-    || { echo "$label must resolve to exactly one revision: $revset" >&2; exit 2; }
+  revision=$2
+  resolved=$(jj --ignore-working-copy log -r "$revision" --no-graph \
+    -T 'commit_id ++ "\n"' 2>/dev/null) \
+    || { echo "bad ${label}: ${revision}" >&2; exit 2; }
+  [ -n "$resolved" ] && [ "$(printf '%s\n' "$resolved" | wc -l | tr -d ' ')" -eq 1 ] \
+    || { echo "${label} must resolve to exactly one revision: ${revision}" >&2; exit 2; }
   printf '%s\n' "$resolved"
 }
 
-base_id=$(resolve_one BASE_REV "$base")
-target_id=$(resolve_one TARGET_REV "$target")
-base_rev="commit_id(\"$base_id\")"
-target_rev="commit_id(\"$target_id\")"
-range="$base_rev..$target_rev"
-is_descendant=$(jj --ignore-working-copy log --count -r "$base_rev::$target_rev & $target_rev")
-[ "$is_descendant" -eq 1 ] \
-  || { echo "TARGET_REV is not a descendant of BASE_REV: $base..$target" >&2; exit 2; }
-dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+base_id=$(resolve_revision BASE "$base")
+end_id=$(resolve_revision END "$end")
+revision_set="(::${end_id}) ~ (::${base_id})"
 
 if [ $# -eq 4 ]; then
   out=$4
 else
-  out="$dir/review-${base_id:0:12}..${target_id:0:12}.diff"
+  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  out="$dir/review-${base_id:0:12}..${end_id:0:12}.diff"
 fi
 
-case "$out" in
-  "$dir"/*)
-    leaf=${out#"$dir"/}
-    case "$leaf" in
-      */*|.|..) echo "output must be a direct child of: $dir" >&2; exit 2 ;;
-    esac
-    ;;
-  *) echo "output must be inside the plan's repository-local artifact directory: $dir" >&2; exit 2 ;;
-esac
-[ ! -L "$out" ] || { echo "refusing symlinked output file: $out" >&2; exit 2; }
-
-tmp_out="$out.$$"
-(set -C; : > "$tmp_out") 2>/dev/null \
-  || { echo "could not safely create temporary output: $tmp_out" >&2; exit 2; }
-trap 'rm -f "$tmp_out"' EXIT HUP INT TERM
 {
-  echo "# Review package: ${base_id}..${target_id}"
-  echo
-  echo "## Revisions"
-  jj --ignore-working-copy log --no-graph -r "$range" \
+  printf '# Review package: %s..%s\n\n' "$base_id" "$end_id"
+  printf '## Revisions\n'
+  jj --ignore-working-copy log -r "$revision_set" --no-graph --reversed \
     -T 'commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
-  echo
-  echo "## Files changed"
-  jj --ignore-working-copy diff --from "$base_rev" --to "$target_rev" --stat
-  echo
-  echo "## Diff"
-  jj --ignore-working-copy diff --from "$base_rev" --to "$target_rev" --context 10
-} > "$tmp_out"
+  printf '\n## Files changed\n'
+  jj --ignore-working-copy diff --from "$base_id" --to "$end_id" --stat
+  printf '\n## Diff\n'
+  jj --ignore-working-copy diff --from "$base_id" --to "$end_id" --context 10
+} > "$out"
 
-mv -f "$tmp_out" "$out"
-trap - EXIT HUP INT TERM
-
-revisions=$(jj --ignore-working-copy log --count -r "$range")
+revisions=$(jj --ignore-working-copy log -r "$revision_set" --count)
 echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"

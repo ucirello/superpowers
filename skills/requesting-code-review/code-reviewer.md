@@ -22,47 +22,32 @@ Subagent (general-purpose):
 
     ## Jujutsu Revisions to Review
 
-    **Start:** [BASE_REVISION]
-    **End:** [END_REVISION]
+    **From:** [FROM_REV]
+    **To:** [TO_REV]
 
     ```bash
-    jj --ignore-working-copy diff --from '[BASE_REVISION]' --to '[END_REVISION]' --stat
-    jj --ignore-working-copy diff --from '[BASE_REVISION]' --to '[END_REVISION]'
+    jj --ignore-working-copy diff --stat --from '[FROM_REV]' --to '[TO_REV]'
+    jj --ignore-working-copy diff --from '[FROM_REV]' --to '[TO_REV]'
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in the current workspace. Do not modify files, the working-copy change (`@`), the change graph, change descriptions, bookmarks, workspace registrations, or operation history, except for adding and removing the isolated workspace described below when necessary. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, `jj --ignore-working-copy log`, and `jj --ignore-working-copy file show` to inspect revisions without snapshotting the working copy. Never run `jj edit`, `jj next`, or `jj prev` in this workspace.
-
-    If inspecting files in a separate working copy is necessary and registering a temporary workspace is explicitly permitted, create a unique workspace under the repository workspace's `.tmp/rocketclaw/`; never use an OS-global temporary directory:
-
-    ```bash
-    WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root)
-    TEMP_ROOT="$WORKSPACE_ROOT/.tmp/rocketclaw"
-    (umask 077 && mkdir -p -- "$TEMP_ROOT")
-    counter=0
-    while :; do
-      REVIEW_WORKSPACE="review-[CHANGE_ID]-$$-$counter"
-      REVIEW_PARENT="$TEMP_ROOT/$REVIEW_WORKSPACE"
-      if (umask 077 && mkdir -- "$REVIEW_PARENT") 2>/dev/null; then break; fi
-      counter=$((counter + 1))
-    done
-    jj --ignore-working-copy workspace add --name "$REVIEW_WORKSPACE" --revision '[END_REVISION]' "$REVIEW_PARENT/workspace"
-    ```
-
-    Before creating content under `.tmp/`, verify the repository root's ignore rules exclude `.tmp/`; if they do not, stop and ask the coordinator to add that rule. The separate workspace creates a new working-copy change based on the review revision; do not modify it. Otherwise, inspect revision contents with `jj --ignore-working-copy file show -r '[END_REVISION]' <path>`.
-
-    After review, clean up from the original workspace:
+    Your review is read-only in this workspace. Do not mutate the working copy,
+    repository, operation history, revisions, or bookmarks in any way. Use
+    `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and
+    `jj --ignore-working-copy log` to inspect revisions without snapshotting the
+    working copy. If you need a file from another revision, read it without
+    creating or changing a workspace:
 
     ```bash
-    jj --ignore-working-copy workspace forget "$REVIEW_WORKSPACE"
-    [ -n "$REVIEW_PARENT" ] && [ "$REVIEW_PARENT" = "$TEMP_ROOT/$REVIEW_WORKSPACE" ] && [ -d "$REVIEW_PARENT" ] || exit 1
-    rm -rf -- "$REVIEW_PARENT"
+    jj --ignore-working-copy file list -r '[REV]'
+    jj --ignore-working-copy file show -r '[REV]' path/to/file
     ```
 
-    Before composing or editing any review message, change description, validation statement, or recommendation, use `jj --ignore-working-copy file list -r '[END_REVISION]'` and `jj --ignore-working-copy file show -r '[END_REVISION]' <path>` to locate and read every applicable local instruction file, then inspect recent descriptions with `jj --ignore-working-copy log -r '::[END_REVISION]' -n 20`. Local conventions take precedence; use the Go guidance only where compatible. Derive syntax, vocabulary, structure, and detail from the actual diff, applicable instructions, and observed history. Do not impose fixed wording, syntax, prefixes, templates, or examples.
-
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    If another inspection tool requires temporary files, create a unique
+    directory under `$(jj workspace root)/.tmp`, falling back to the current
+    directory's `.tmp` outside a JJ repository, and remove it when the review
+    finishes.
 
     ## What to Check
 
@@ -130,11 +115,11 @@ Subagent (general-purpose):
     - How to fix (if not obvious)
 
     ### Recommendations
-    [Improvements for code quality, architecture, or process. If recommending a commit or change description, do not require fixed message syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.]
+    [Improvements for code quality, architecture, or process]
 
     ### Assessment
 
-    **Ready to land?** [Yes | No | With fixes]
+    **Ready to integrate?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -158,8 +143,45 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_REVISION]` — starting revision or revset expression
-- `[END_REVISION]` — ending revision or revset expression
-- `[CHANGE_ID]` — stable Jujutsu change ID used only to name an optional review workspace
+- `[FROM_REV]` — starting revision
+- `[TO_REV]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
+
+## Example Output
+
+```
+### Strengths
+- Clean database schema with proper migrations (db.ts:15-42)
+- Comprehensive test coverage (18 tests, all edge cases)
+- Good error handling with fallbacks (summarizer.ts:85-92)
+
+### Issues
+
+#### Important
+1. **Missing help text in CLI wrapper**
+   - File: index-conversations:1-31
+   - Issue: No --help flag, users won't discover --concurrency
+   - Fix: Add --help case with usage examples
+
+2. **Date validation missing**
+   - File: search.ts:25-27
+   - Issue: Invalid dates silently return no results
+   - Fix: Validate ISO format, throw error with example
+
+#### Minor
+1. **Progress indicators**
+   - File: indexer.ts:130
+   - Issue: No "X of Y" counter for long operations
+   - Impact: Users don't know how long to wait
+
+### Recommendations
+- Add progress reporting for user experience
+- Consider config file for excluded projects (portability)
+
+### Assessment
+
+**Ready to integrate: With fixes**
+
+**Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
+```

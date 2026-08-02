@@ -7,16 +7,18 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, well-described changes.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, focused JJ changes.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** Before planning, use `jj --ignore-working-copy workspace root` and `jj --ignore-working-copy file list` to locate the project's local instructions, read each applicable file with `jj --ignore-working-copy file show -r @ <path>`, then inspect relevant history with `jj --ignore-working-copy log`. Local project syntax always takes precedence; use Go guidance only when it is compatible and improves quality. If execution needs isolation, create a Jujutsu workspace with `jj workspace add` at execution time.
+**Context:** If working in an isolated JJ workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+
+**Temporary files:** Put temporary planning artifacts under `$(jj workspace root)/.tmp`. If the JJ workspace root cannot be resolved, use `.tmp` in the current directory. Never use a global temporary directory.
 
 ## Scope Check
 
@@ -49,7 +51,15 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe the current change and start the next change" - step
+- "Describe the JJ change and start the next change" - step
+
+## Change Descriptions
+
+Before composing a JJ description, read repository-local instructions and inspect the repository's existing messages. Those repository-local instructions and the observed syntax always win.
+
+**Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.**
+
+Apply the Go guidance only where it is compatible with the repository's present standards. Use it to improve quality, clarity, and structure; do not impose a fixed message type, scope, prefix, or other convention that the repository does not already use. Derive neutral wording from the specific change and its purpose. Plans must use `<message composed from the standards above>` in command templates rather than inventing a fixed example.
 
 ## Plan Document Header
 
@@ -58,7 +68,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For implementation:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -117,16 +127,11 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Describe the change and start the next change**
-
-At execution time, use `jj --ignore-working-copy file list` and `jj --ignore-working-copy file show -r @ <path>` to read every applicable repository instruction file and `jj --ignore-working-copy log` to inspect description history. Those local standards take precedence; apply Go guidance only where compatible and derive the description from the actual change without fixed wording, syntax, prefixes, templates, or examples.
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+- [ ] **Step 5: Describe the JJ change and start the next change**
 
 ```bash
-jj status
-jj diff
-jj commit -m "<message composed from the standards above>"
+jj describe -m "<message composed from the standards above>"
+jj new
 ```
 ````
 

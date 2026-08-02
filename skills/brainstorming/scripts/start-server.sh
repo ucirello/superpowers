@@ -6,8 +6,8 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/.
-#                         Files persist after server stops.
+#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
+#                         instead of workspace-local .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows-like shells may reap nohup background processes. Auto-foreground when detected.
+# Windows POSIX-like shells reap nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -110,66 +110,37 @@ fi
 # keep everything this script and the server create owner-only.
 umask 077
 
+# Generate unique session directory
+SESSION_ID="$$-$(date +%s)"
+
 if [[ -n "$PROJECT_DIR" ]]; then
-  STORAGE_ROOT="$PROJECT_DIR"
-  EPHEMERAL="false"
+  SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
+  # Persist the bound port and key per project so a restart reuses them and an
+  # already-open browser tab reconnects to the same URL with a valid cookie.
+  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
+  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  STORAGE_ROOT="$(jj workspace root 2>/dev/null || true)"
-  if [[ -z "$STORAGE_ROOT" ]]; then
-    STORAGE_ROOT="$PWD"
+  if JJ_ROOT="$(jj workspace root 2>/dev/null)" && [[ -n "$JJ_ROOT" ]]; then
+    TEMP_ROOT="${JJ_ROOT}/.tmp"
+  else
+    TEMP_ROOT="$(pwd -P)/.tmp"
   fi
-  EPHEMERAL="true"
+  SESSION_DIR="${TEMP_ROOT}/brainstorm-${SESSION_ID}"
 fi
 
-STORAGE_ROOT="$(cd "$STORAGE_ROOT" 2>/dev/null && pwd -P)" || {
-  echo '{"error": "Could not resolve the storage root"}'
-  exit 1
+cleanup_ephemeral_session() {
+  if [[ "$SESSION_DIR" == */.tmp/brainstorm-* ]]; then
+    rm -rf "$SESSION_DIR"
+  fi
 }
-if [[ "$EPHEMERAL" == "false" ]]; then
-  STORAGE_PARENT="${STORAGE_ROOT}/.rocketclaw"
-else
-  STORAGE_PARENT="${STORAGE_ROOT}/.tmp/rocketclaw"
-fi
-SESSION_BASE="${STORAGE_PARENT}/brainstorm"
 
-STORAGE_COMPONENTS=("$STORAGE_PARENT" "$SESSION_BASE")
-if [[ "$EPHEMERAL" == "true" ]]; then
-  STORAGE_COMPONENTS=("${STORAGE_ROOT}/.tmp" "${STORAGE_COMPONENTS[@]}")
-fi
-for candidate in "${STORAGE_COMPONENTS[@]}"; do
-  if [[ -L "$candidate" ]]; then
-    echo '{"error": "Refusing a symlinked temporary-storage component"}'
-    exit 1
-  fi
-  mkdir -p "$candidate"
-done
-
-# Persist the bound port and key so a restart reuses them and an already-open
-# browser tab reconnects to the same URL with a valid cookie.
-export BRAINSTORM_PORT_FILE="${SESSION_BASE}/.last-port"
-export BRAINSTORM_TOKEN_FILE="${SESSION_BASE}/.last-token"
-
-# Create a fresh session directory without reusing an existing path.
-for _ in {1..10}; do
-  SESSION_ID="$$-$(date +%s)-${RANDOM:-0}"
-  SESSION_DIR="${SESSION_BASE}/${SESSION_ID}"
-  if mkdir "$SESSION_DIR" 2>/dev/null; then
-    break
-  fi
-  SESSION_DIR=""
-done
-if [[ -z "$SESSION_DIR" ]]; then
-  echo '{"error": "Could not allocate a unique session directory"}'
-  exit 1
-fi
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 LOG_FILE="${STATE_DIR}/server.log"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
-mkdir "${SESSION_DIR}/content" "$STATE_DIR"
-if [[ "$EPHEMERAL" == "true" ]]; then
-  : > "${STATE_DIR}/ephemeral"
-fi
+
+# Create fresh session directory with content and state peers
+mkdir -p "${SESSION_DIR}/content" "$STATE_DIR"
 
 SERVER_ID=""
 if [[ -r /dev/urandom ]]; then
@@ -190,9 +161,9 @@ fi
 
 cd "$SCRIPT_DIR" || exit 1
 
-# Resolve the harness PID (grandparent of this script).
-# $PPID is the ephemeral shell the harness spawned to run us — it dies
-# when this script exits. The harness itself is $PPID's parent.
+# Resolve the owning agent PID (grandparent of this script).
+# $PPID is the ephemeral shell the agent spawned to run us; it dies when this
+# script exits. The owning agent itself is $PPID's parent.
 OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
 if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
   OWNER_PID="$PPID"
@@ -212,7 +183,9 @@ if [[ "$FOREGROUND" == "true" ]]; then
   SERVER_PID=$!
   echo "$SERVER_PID" > "$PID_FILE"
   wait "$SERVER_PID"
-  exit $?
+  status=$?
+  cleanup_ephemeral_session
+  exit "$status"
 fi
 
 # Start server, capturing output to log file
@@ -235,6 +208,7 @@ for _ in {1..50}; do
       sleep 0.1
     done
     if [[ "$alive" != "true" ]]; then
+      cleanup_ephemeral_session
       echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
       exit 1
     fi
@@ -245,5 +219,8 @@ for _ in {1..50}; do
 done
 
 # Timeout - server didn't start
+kill "$SERVER_PID" 2>/dev/null || true
+wait "$SERVER_PID" 2>/dev/null || true
+cleanup_ephemeral_session
 echo '{"error": "Server failed to start within 5 seconds"}'
 exit 1

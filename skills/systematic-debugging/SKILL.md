@@ -63,7 +63,7 @@ You MUST complete each phase before proceeding to the next.
 
 3. **Check Recent Changes**
    - What changed that could cause this?
-   - Run `jj diff` and inspect recent revisions with `jj log`
+   - `jj diff`, recent revisions from `jj log`
    - New dependencies, config changes
    - Environmental differences
 
@@ -207,15 +207,9 @@ You MUST complete each phase before proceeding to the next.
    - Are we "sticking with it through sheer inertia"?
    - Should we refactor architecture vs. continue fixing symptoms?
 
-   **Discuss with your human partner before attempting more fixes**
+   **Discuss with the user before attempting more fixes**
 
    This is NOT a failed hypothesis - this is a wrong architecture.
-
-### Change Descriptions
-
-Before composing, editing, validating, or recommending a change description, resolve the repository root with `jj workspace root`. Use `jj file list` to locate tracked repository instruction files and also check for applicable local instruction files from that root through the working directory, with the closest instruction taking precedence. Inspect existing descriptions with `jj log`. Local conventions win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply guidance from the Go wiki only where it is compatible with those conventions. Derive syntax, vocabulary, structure, and detail from the actual diff, applicable instructions, and observed history without imposing fixed syntax, templates, or stock examples.
-
-Use `jj describe` to edit the working-copy change description, then validate it against the applicable instructions and observed history.
 
 ## Red Flags - STOP and Follow Process
 
@@ -236,7 +230,7 @@ If you catch yourself thinking:
 
 **If 3+ fixes failed:** Question the architecture (see Phase 4.5)
 
-## your human partner's Signals You're Doing It Wrong
+## Signals You're Doing It Wrong
 
 **Watch for these redirections:**
 - "Is that not happening?" - You assumed without verifying

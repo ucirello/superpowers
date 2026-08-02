@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const childProcess = require('child_process');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -100,19 +99,6 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-function defaultSessionDir() {
-  let root;
-  try {
-    root = childProcess.execFileSync('jj', ['workspace', 'root'], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore']
-    }).trim();
-  } catch (e) {
-    root = process.cwd();
-  }
-  return path.join(root, '.tmp', 'rocketclaw', 'brainstorm');
-}
-
 const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
@@ -206,6 +192,18 @@ const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8')
 const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
+
+function defaultSessionDir() {
+  try {
+    const root = require('child_process')
+      .execFileSync('jj', ['workspace', 'root'], { encoding: 'utf8' })
+      .trim();
+    if (root) return path.join(root, '.tmp', 'brainstorm');
+  } catch (e) {
+    // Outside a JJ repository, keep ephemeral state local to the current directory.
+  }
+  return path.join(process.cwd(), '.tmp', 'brainstorm');
+}
 
 function isFullDocument(html) {
   const trimmed = html.trimStart().toLowerCase();

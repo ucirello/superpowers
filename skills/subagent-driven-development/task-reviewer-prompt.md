@@ -15,8 +15,8 @@ Subagent (general-purpose):
   prompt: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
-    not an integration review — a broad whole-change review happens separately after
-    all tasks are complete.
+    not a merge review — a broad whole-branch review happens
+    separately after all tasks are complete.
 
     ## What Was Requested
 
@@ -31,22 +31,18 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base revision snapshot:** [BASE_REV]
-    **Target revision snapshot:** [TARGET_REV]
+    **Base revision:** [BASE_REVISION]
+    **End revision:** [END_REVISION]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the revision list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not regenerate the supplied
-    diff unless it is missing.
+    mid-function — and say so in your report. Do not re-run JJ commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj --ignore-working-copy diff --from [BASE_REV] --to [TARGET_REV]
-    --stat` and `jj --ignore-working-copy diff --from [BASE_REV] --to
-    [TARGET_REV] --context 10`.
-    Keep Jujutsu's native diff output. Prefix every other `jj` inspection command with
-    `jj --ignore-working-copy` as well.
+    `jj --ignore-working-copy diff --from [BASE_REVISION] --to [END_REVISION] --stat` and
+    `jj --ignore-working-copy diff --from [BASE_REVISION] --to [END_REVISION] --context 10`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -54,19 +50,8 @@ Subagent (general-purpose):
     lock ordering, a function or API contract, or shared mutable state,
     checking the call sites is the right method.
 
-    Your review is read-only in this workspace. Do not mutate the working-copy
-    change, other revisions, bookmarks, or workspace state in any way.
-
-    Validate each change description against applicable project instructions
-    discovered with `jj --ignore-working-copy file list` and read with `jj
-    --ignore-working-copy file show -r @ <instruction-path>`, and against
-    relevant history from `jj --ignore-working-copy log`.
-    Local project instructions and history take precedence over general guidance.
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Apply Go commit-message guidance only where it is compatible with those
-    local conventions. Derive acceptable syntax, vocabulary, structure, and
-    detail from the actual diff, applicable instructions, and observed history;
-    never require a fixed prefix, type, scope, subject form, template, or canned example.
+    Your review is read-only in this JJ workspace. Do not mutate the working
+    files, working-copy revision, bookmarks, or operation state in any way.
 
     ## Do Not Trust the Report
 
@@ -141,7 +126,7 @@ Subagent (general-purpose):
     Categorize issues by actual severity. Not everything is Critical.
     Important means this task cannot be trusted until it is fixed: incorrect
     or fragile behavior, a missed requirement, or maintainability damage you
-    would block integration over — verbatim duplication of a logic block,
+    would block a merge over — verbatim duplication of a logic block,
     swallowed errors, tests that assert nothing. "Coverage could be broader"
     and polish suggestions are Minor.
     If the plan or brief explicitly mandates something this rubric calls a
@@ -191,12 +176,10 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_REV]` — immutable commit ID captured before this task as a revision
-  snapshot; it is not a change ID because change IDs survive rewrites
-- `[TARGET_REV]` — immutable commit ID captured after this task as a revision
-  snapshot
+- `[BASE_REVISION]` — stable revision before this task
+- `[END_REVISION]` — completed revision for this task
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE_REV TARGET_REV` prints the unique
+  package to (`scripts/review-package PLAN_FILE BASE END` prints the unique
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

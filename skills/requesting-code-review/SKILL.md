@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before advancing the target bookmark to land the work
+- Before integrating changes into the main bookmark
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,19 +23,13 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Inspect local guidance and choose Jujutsu revisions:**
+**1. Choose Jujutsu revisions:**
 ```bash
-jj --ignore-working-copy file list
-jj --ignore-working-copy file show -r @ path/to/applicable-instructions
-jj --ignore-working-copy log -r '::@ | bookmarks()' -n 20
-jj status  # snapshot the working copy before resolving review endpoints
-BASE_REVISION=$(jj --ignore-working-copy log --no-graph -r 'first_parent(@)' -T 'commit_id ++ "\n"')  # or use trunk()
-END_REVISION=$(jj --ignore-working-copy log --no-graph -r '@' -T 'commit_id ++ "\n"')
+FROM_REV='<recorded-base-revision>'
+TO_REV='<recorded-completed-revision>'
 ```
 
-At runtime, use `jj` to locate and read every applicable local instruction file and inspect the change graph, bookmarks, and recent change descriptions before choosing the review range or composing or editing review messages or change descriptions. Select the revision immediately before the reviewed work as `{BASE_REVISION}` and the revision containing all reviewed work as `{END_REVISION}`; do not assume `@` contains the completed work because `jj commit` creates a new working-copy change. Local conventions take precedence; apply the Go guidance only where it is compatible with them. Do not impose a fixed syntax, template, prefix, or example.
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+`jj diff --from "$FROM_REV" --to "$TO_REV"` compares the tree at the recorded starting revision with the tree at the recorded completed revision. Each endpoint must resolve to one revision. Record stable endpoints when the task begins and ends; after `jj commit`, the completed revision is usually `@-`, while `@` is the new empty working-copy commit. For a merge, choose the exact base tree the work should be compared against instead of using the multi-revision `@-` revset.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -44,8 +38,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_REVISION}` - Starting revision or revset expression
-- `{END_REVISION}` - Ending revision or revset expression
+- `{FROM_REV}` - Starting revision
+- `{TO_REV}` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -60,15 +54,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-jj status
-BASE_REVISION=$(jj --ignore-working-copy log --no-graph -r 'first_parent(@)' -T 'commit_id ++ "\n"')
-END_REVISION=$(jj --ignore-working-copy log --no-graph -r '@' -T 'commit_id ++ "\n"')
+FROM_REV='<recorded-base-revision>'
+TO_REV='<recorded-completed-revision>'
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
   PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  BASE_REVISION: [resolved starting commit ID]
-  END_REVISION: [resolved ending commit ID]
+  FROM_REV: <recorded-base-revision>
+  TO_REV: <recorded-completed-revision>
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

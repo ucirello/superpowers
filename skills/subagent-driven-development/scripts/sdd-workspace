@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
-# Resolve and ensure the workspace directory SDD uses for one plan's
-# short-lived artifacts: task briefs, implementer reports, review packages,
+# Resolve and ensure the artifact directory SDD uses for one plan in the current
+# JJ workspace. It holds short-lived task briefs, implementer reports, review packages,
 # and the progress ledger. Print the plan directory's absolute path.
 #
 # One directory per plan (.rocketclaw/sdd/<plan-basename>/) so a follow-up
-# plan in the same workspace can never read or overwrite another plan's
+# plan in the same JJ workspace can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The artifact directory lives in the workspace (not under .jj/) because
-# agents may treat VCS metadata as a protected path and deny writes
-# there, which would block an implementer subagent from writing its report.
-# A self-ignoring .gitignore keeps artifacts out of status and accidental
-# revisions. Outside Jujutsu, scratch storage falls back to local .tmp.
+# The artifact directory lives in the JJ workspace, not in repository metadata,
+# so every dispatched agent can write its report. A self-ignoring .gitignore at
+# .rocketclaw/sdd/ keeps every plan's artifacts out of snapshots without
+# modifying any tracked file.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -32,34 +31,9 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
-umask 077
-if root=$(jj workspace root 2>/dev/null) && [ -n "$root" ]; then
-  storage="$root/.rocketclaw"
-else
-  root=$(pwd -P)
-  [ -n "$root" ] \
-    || { echo "could not determine a non-empty storage root" >&2; exit 2; }
-  temporary="$root/.tmp"
-  [ ! -L "$temporary" ] || { echo "refusing symlinked temporary root: $temporary" >&2; exit 2; }
-  mkdir -p "$temporary"
-  storage="$temporary/rocketclaw"
-fi
-base="$storage/sdd"
+root=$(jj workspace root)
+base="$root/.rocketclaw/sdd"
 dir="$base/$slug"
-[ ! -L "$storage" ] || { echo "refusing symlinked storage directory: $storage" >&2; exit 2; }
-mkdir -p "$storage"
-[ ! -L "$base" ] || { echo "refusing symlinked storage directory: $base" >&2; exit 2; }
-mkdir -p "$base"
-[ ! -L "$dir" ] || { echo "refusing symlinked plan directory: $dir" >&2; exit 2; }
 mkdir -p "$dir"
-[ "$(cd "$base" && pwd -P)" = "$base" ] \
-  || { echo "storage directory escapes the workspace: $base" >&2; exit 2; }
-[ "$(cd "$dir" && pwd -P)" = "$dir" ] \
-  || { echo "plan directory escapes the storage root: $dir" >&2; exit 2; }
-ignore="$storage/.gitignore"
-[ ! -L "$ignore" ] || { echo "refusing symlinked ignore file: $ignore" >&2; exit 2; }
-if [ ! -e "$ignore" ]; then
-  (set -C; printf '*\n' > "$ignore") 2>/dev/null \
-    || { echo "could not safely create ignore file: $ignore" >&2; exit 2; }
-fi
-cd "$dir" && pwd -P
+printf '*\n' > "$base/.gitignore"
+cd "$dir" && pwd

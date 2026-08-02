@@ -35,32 +35,20 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Self-review (see below) and correct any issues you find
-    5. Finish the current change with `jj commit`, leaving the new working-copy
-       change empty
+    4. Describe and commit your working-copy revision with JJ
+    5. Self-review (see below)
     6. Report back
 
     Work from: [directory]
-
-    Whenever composing or editing a change description, use `jj workspace root`
-    and `jj file list` to locate the project instructions that govern this
-    path, read their working-copy versions with `jj file show -r @
-    <instruction-path>`, and inspect relevant history with `jj log`.
-    Local project instructions and history take precedence over general guidance.
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Apply Go commit-message guidance only where it is compatible with those
-    local conventions. Derive syntax, vocabulary, structure, and detail from
-    the actual diff, applicable instructions, and observed history; never
-    impose a fixed prefix, type, scope, subject form, template, or canned example.
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before finalizing the change, not after every edit.
+    full suite once before committing, not after every edit.
 
-    Describe the change's intent and effect accurately under the composition
-    rules above.
+    Before composing a JJ description, read the repository-local instructions
+    and inspect the existing revision descriptions. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax established by the existing log take precedence. Derive the description's prefix, structure, and wording dynamically from those sources instead of imposing a fixed form or example.
 
     ## Code Organization
 
@@ -119,29 +107,15 @@ Subagent (general-purpose):
 
     If you find issues during self-review, fix them now before reporting.
 
-    Before finalizing each change description, inspect `jj diff`, locate and
-    read the applicable project instructions with `jj file list` and `jj file
-    show -r @ <instruction-path>`, and inspect relevant history with `jj log`.
-    Local project instructions and history take precedence over general guidance.
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Apply Go commit-message guidance only where it is compatible with those
-    local conventions. Derive the description from the actual diff; never
-    impose a fixed prefix, type, scope, subject form, template, or canned example.
-    Set or edit the description with `jj describe`; use `jj new` when another
-    independently reviewable change is needed. Do not create or move a bookmark
-    unless the controller explicitly requests it.
-
     ## After Review Findings
 
     If the task review finds issues, you will be resumed with the findings.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax established by the existing log take precedence. Derive the description's prefix, structure, and wording dynamically from those sources instead of imposing a fixed form or example.
     Fix them, re-run the tests that cover the amended code, and append a fix
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Self-review and correct the fix,
-    then inspect the fix diff and compose its description under the complete
-    standards above before finishing it with `jj commit`, leaving the new
-    working-copy change empty.
-    Reply with the same short status contract as your first report.
+    you — your report is the test evidence. Then reply with the same short
+    status contract as your first report.
 
     ## Report Format
 
@@ -159,7 +133,7 @@ Subagent (general-purpose):
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - Revisions created (short commit ID + description first line)
-    - One-line test summary with the observed result (e.g. "14/14 passing, output pristine")
+    - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
 

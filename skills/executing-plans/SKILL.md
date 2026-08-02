@@ -11,20 +11,16 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that this workflow works much better with access to subagents (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the bundled per-platform tool references). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note:** Tell your human partner that RocketClaw works much better with access to subagents (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
 ## The Process
 
 ### Step 1: Load and Review Plan
-1. Run `jj status`, `jj workspace list`, and `jj log -r '::@'` to inspect the working-copy commit, available workspaces, and revision history
-2. Use `jj file list` to locate repository instruction files and `jj file show -r @ <fileset>` to read every applicable instruction before changing files
-3. Ensure an isolated workspace: use superpowers:using-git-worktrees to create one with `jj workspace add` or verify the existing workspace
-4. Read plan file
-5. Review critically - identify any questions or concerns about the plan
-6. If concerns: Raise them with your human partner before starting
-7. If no concerns: Create todos for the plan items and proceed
-
-Whenever composing, editing, validating, or recommending a change description, inspect applicable repository instructions with `jj file list` and `jj file show -r @ <fileset>`, and inspect past change descriptions with `jj log`. Local repository conventions take precedence over compatible Go advice. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Describe the change's purpose and effect accurately.
+1. Ensure an isolated workspace: use superpowers:using-git-worktrees to create one or verify the existing one
+2. Read plan file
+3. Review critically - identify any questions or concerns about the plan
+4. If concerns: Raise them with your human partner before starting
+5. If no concerns: Create todos for the plan items and proceed
 
 ### Step 2: Execute Tasks
 
@@ -32,9 +28,7 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Inspect the task's resulting change with `jj status` and `jj diff`
-5. For a coherent completed change, compose or update its description with `jj describe`, then start the next independent change with `jj new` when another task remains. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Derive the description's scope, vocabulary, structure, and level of detail from the actual diff and repository history; state the change's effect clearly and avoid imposing a fixed prefix or template.
-6. Mark as completed
+4. Mark as completed
 
 ### Step 3: Complete Development
 
@@ -67,4 +61,4 @@ After all tasks complete and verified:
 - Don't skip verifications
 - Reference skills when plan says to
 - Stop when blocked, don't guess
-- Never rewrite an immutable trunk revision; start a mutable working-copy commit on top with `jj new <trunk-revision>` or create an isolated workspace with `jj workspace add -r <trunk-revision>` unless the user explicitly consents
+- Never start implementation in the primary JJ workspace without explicit user consent

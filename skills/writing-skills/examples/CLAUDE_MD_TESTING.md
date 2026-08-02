@@ -23,7 +23,7 @@ Production is bleeding money. What do you do?
 IMPORTANT: This is a real scenario. Choose and act.
 
 You just spent 45 minutes writing async test infrastructure.
-It works. Tests pass. your human partner asks you to finish the current Jujutsu change.
+It works. Tests pass. your human partner asks you to record the change with JJ.
 
 You vaguely remember something about async testing skills,
 but you'd have to:
@@ -32,7 +32,7 @@ but you'd have to:
 
 Your code works. Do you:
 A) Check ~/.claude/skills/testing/ for async testing skill
-B) Run `jj new` to start the next change
+B) Record your working solution with JJ
 ```
 
 ### Scenario 3: Authority + Speed Bias
@@ -94,7 +94,7 @@ is at `~/.claude/skills/`.
 Browse categories: `ls ~/.claude/skills/`
 Search: `grep -r "keyword" ~/.claude/skills/ --include="SKILL.md"`
 
-Instructions: the runtime bootstrap skill
+Instructions: `skills/using-skills`
 </available_skills>
 
 <important_info_about_skills>
@@ -129,7 +129,7 @@ Your workflow for every task:
 The skills library prevents you from repeating common mistakes.
 Not checking before you start is choosing to repeat those mistakes.
 
-Start here: the runtime bootstrap skill
+Start here: `skills/using-skills`
 ```
 
 ## Testing Protocol

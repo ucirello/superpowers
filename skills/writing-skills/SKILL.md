@@ -9,13 +9,13 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills live in your runtime's skills directory** (`~/.claude/skills/` on Claude Code) — see the bundled Codex or Gemini runtime reference for the path on those runtimes. Codex, Copilot CLI, and Gemini CLI all also recognize `~/.agents/skills/` as a cross-runtime alias.
+**Personal skills live in your runtime's skills directory** (`~/.claude/skills/` on Claude Code) — see [codex-tools.md](../using-superpowers/references/codex-tools.md) or [gemini-tools.md](../using-superpowers/references/gemini-tools.md) for the path on those runtimes. Codex, Copilot CLI, and Gemini CLI all also recognize `~/.agents/skills/` as a cross-runtime alias.
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
-**REQUIRED BACKGROUND:** You MUST understand `superpowers:test-driven-development` before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
+**REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
 **Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
 
@@ -390,7 +390,7 @@ Edit skill without testing? Same violation.
 - Don't "adapt" while running tests
 - Delete means delete
 
-**REQUIRED BACKGROUND:** The `superpowers:test-driven-development` skill explains why this matters. Same principles apply to documentation.
+**REQUIRED BACKGROUND:** The superpowers:test-driven-development skill explains why this matters. Same principles apply to documentation.
 
 ## Testing All Skill Types
 
@@ -662,12 +662,12 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Supporting files only for tools or heavy reference
 
 **Deployment:**
-- [ ] Run `jj status` and `jj diff` to inspect the current change; Jujutsu snapshots working-copy files automatically
-- [ ] Use `jj workspace root` and `jj file list` to locate and read all applicable repository instruction files, then inspect description history with `jj log -r 'ancestors(@)' -n 20 --no-graph -T 'description.first_line() ++ "\n"'`
-- [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-- [ ] Local description syntax wins; apply Go quality rules only where they are compatible with repository instructions and history
-- [ ] Set or revise the current change description with `jj describe`; when publishing, deliberately create or move the appropriate bookmark to the intended revision, verify its target with `jj bookmark list`, and then push it with `jj git push --bookmark BOOKMARK` (if configured)
+- [ ] Review the change with `jj status` and `jj diff`
+- [ ] Describe the change with `jj describe`; create a new empty change with `jj new` when more work follows
+- [ ] Push the relevant bookmark with `jj git push --bookmark <bookmark>` (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
+
+**Change messages:** Repository-local instructions and the repository's existing syntax and conventions always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance, and derive the message structure dynamically; do not impose fixed prefixes, types, scopes, subjects, or body templates. Validate the final text against the repository instructions and visible history before passing it to `jj describe -m '<change-message>'`.
 
 ## Discovery Workflow
 
