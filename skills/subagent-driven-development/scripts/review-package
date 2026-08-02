@@ -1,46 +1,59 @@
 #!/usr/bin/env bash
-# Generate a review package: commit list, stat summary, and the net
+# Generate a review package: revision list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
-# tasks intact.
+# call. Using the recorded per-task BASE keeps multi-revision tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
-# Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/review-<base7>..<head7>.diff
-# (named per range, so a re-review after fixes gets a distinct fresh file).
+# Usage: review-package PLAN_FILE BASE END [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base12>..<end12>.diff
+# (named per revision pair, so a re-review after fixes gets a distinct file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE HEAD [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE END [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
 base=$2
-head=$3
+end=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+# Snapshot once before resolving symbolic revisions; all later reads use the
+# resulting stable commit IDs without touching the working copy.
+jj log -r 'root()' --count >/dev/null
+
+resolve_revision() {
+  label=$1
+  revision=$2
+  resolved=$(jj --ignore-working-copy log -r "$revision" --no-graph \
+    -T 'commit_id ++ "\n"' 2>/dev/null) \
+    || { echo "bad ${label}: ${revision}" >&2; exit 2; }
+  [ -n "$resolved" ] && [ "$(printf '%s\n' "$resolved" | wc -l | tr -d ' ')" -eq 1 ] \
+    || { echo "${label} must resolve to exactly one revision: ${revision}" >&2; exit 2; }
+  printf '%s\n' "$resolved"
+}
+
+base_id=$(resolve_revision BASE "$base")
+end_id=$(resolve_revision END "$end")
+revision_set="(::${end_id}) ~ (::${base_id})"
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+  out="$dir/review-${base_id:0:12}..${end_id:0:12}.diff"
 fi
 
 {
-  echo "# Review package: ${base}..${head}"
-  echo
-  echo "## Commits"
-  git log --oneline "${base}..${head}"
-  echo
-  echo "## Files changed"
-  git diff --stat "${base}..${head}"
-  echo
-  echo "## Diff"
-  git diff -U10 "${base}..${head}"
+  printf '# Review package: %s..%s\n\n' "$base_id" "$end_id"
+  printf '## Revisions\n'
+  jj --ignore-working-copy log -r "$revision_set" --no-graph --reversed \
+    -T 'commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
+  printf '\n## Files changed\n'
+  jj --ignore-working-copy diff --from "$base_id" --to "$end_id" --stat
+  printf '\n## Diff\n'
+  jj --ignore-working-copy diff --from "$base_id" --to "$end_id" --context 10
 } > "$out"
 
-commits=$(git rev-list --count "${base}..${head}")
-echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+revisions=$(jj --ignore-working-copy log -r "$revision_set" --count)
+echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"

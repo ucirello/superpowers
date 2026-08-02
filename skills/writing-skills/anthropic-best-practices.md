@@ -212,11 +212,17 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**JJ Change Message Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate repository-consistent change messages by analyzing JJ diffs. Use when the user asks for help writing or reviewing a change message.
 ```
+
+Repository-local instructions and the repository's existing syntax and conventions always win.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Apply only compatible Go guidance. Inspect the current change with `jj diff`, derive the message structure and detail level from repository-local instructions and visible history, and validate the result against both. Do not impose fixed prefixes, types, scopes, subjects, body formats, or Conventional Commit templates. Use `jj describe -m '<change-message>'` only after validation.
 
 Avoid vague descriptions like these:
 
@@ -653,39 +659,22 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Change message guidance
 
-Generate commit messages following these examples:
+Repository-local instructions and the repository's existing syntax and conventions always win.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Apply only compatible Go guidance. Inspect the current change with `jj diff`, derive the message structure and detail level from repository-local instructions and visible history, and validate the result against both. Do not impose fixed prefixes, types, scopes, subjects, body formats, or Conventional Commit templates.
+
+Input: The current JJ change, repository-local instructions, and visible history
+
 Output:
 ```
-feat(auth): implement JWT-based authentication
-
-Add login endpoint and token validation middleware
+<repository-consistent change message>
 ```
 
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Apply it only after validation with `jj describe -m '<change-message>'`.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

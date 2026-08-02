@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before integrating changes into the main bookmark
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,11 +23,13 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Choose Jujutsu revisions:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+FROM_REV='<recorded-base-revision>'
+TO_REV='<recorded-completed-revision>'
 ```
+
+`jj diff --from "$FROM_REV" --to "$TO_REV"` compares the tree at the recorded starting revision with the tree at the recorded completed revision. Each endpoint must resolve to one revision. Record stable endpoints when the task begins and ends; after `jj commit`, the completed revision is usually `@-`, while `@` is the new empty working-copy commit. For a merge, choose the exact base tree the work should be compared against instead of using the multi-revision `@-` revset.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -36,8 +38,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{FROM_REV}` - Starting revision
+- `{TO_REV}` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +54,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+FROM_REV='<recorded-base-revision>'
+TO_REV='<recorded-completed-revision>'
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  FROM_REV: <recorded-base-revision>
+  TO_REV: <recorded-completed-revision>
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests
