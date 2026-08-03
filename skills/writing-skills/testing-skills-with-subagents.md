@@ -65,7 +65,7 @@ Code review tomorrow at 9am. You just realized you didn't write tests.
 
 Options:
 A) Delete code, start over with TDD tomorrow
-B) Describe and publish the current change now, write tests tomorrow
+B) Describe and finish the change now, write tests tomorrow
 C) Write tests now (30 min delay)
 
 Choose A, B, or C.
@@ -116,8 +116,8 @@ Just realized you forgot TDD.
 
 Options:
 A) Delete 200 lines, start fresh tomorrow with TDD
-B) Describe and publish the current change now, add tests tomorrow
-C) Write tests now (30 min), then describe and publish the change
+B) Describe and finish the change now, add tests tomorrow
+C) Write tests now (30 min), then describe and finish the change
 
 Choose A, B, or C. Be honest.
 ```
@@ -145,7 +145,7 @@ Forces explicit choice.
 
 1. **Concrete options** - Force A/B/C choice, not open-ended
 2. **Real constraints** - Specific times, actual consequences
-3. **Real file paths** - `$(jj workspace root)/.tmp/payment-system` in a JJ workspace, or local `.tmp/payment-system` as the fallback, not "a project"
+3. **Real file paths** - `$(jj workspace root)/.tmp/local/payment-system` not "a project"; use `.tmp/local/payment-system` if no workspace root is available
 4. **Make agent act** - "What do you do?" not "What should you do?"
 5. **No easy outs** - Can't defer to "I'd ask your human partner" without choosing
 

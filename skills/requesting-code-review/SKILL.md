@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before integrating changes into the main bookmark
+- Before advancing the `main` bookmark
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,13 +23,11 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Choose Jujutsu revisions:**
+**1. Get jj revision IDs:**
 ```bash
-FROM_REV='<recorded-base-revision>'
-TO_REV='<recorded-completed-revision>'
+BASE_REVISION=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')  # or main@origin
+END_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 ```
-
-`jj diff --from "$FROM_REV" --to "$TO_REV"` compares the tree at the recorded starting revision with the tree at the recorded completed revision. Each endpoint must resolve to one revision. Record stable endpoints when the task begins and ends; after `jj commit`, the completed revision is usually `@-`, while `@` is the new empty working-copy commit. For a merge, choose the exact base tree the work should be compared against instead of using the multi-revision `@-` revset.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -38,8 +36,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{FROM_REV}` - Starting revision
-- `{TO_REV}` - Ending revision
+- `{BASE_REVISION}` - Starting revision
+- `{END_REVISION}` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -54,14 +52,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-FROM_REV='<recorded-base-revision>'
-TO_REV='<recorded-completed-revision>'
+BASE_REVISION=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')
+END_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  FROM_REV: <recorded-base-revision>
-  TO_REV: <recorded-completed-revision>
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
+  BASE_REVISION: a7981ec
+  END_REVISION: 3df7661
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

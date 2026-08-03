@@ -7,18 +7,16 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, focused JJ changes.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent changes.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated JJ workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
-**Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
-
-**Temporary files:** Put temporary planning artifacts under `$(jj workspace root)/.tmp`. If the JJ workspace root cannot be resolved, use `.tmp` in the current directory. Never use a global temporary directory.
 
 ## Scope Check
 
@@ -51,15 +49,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe the JJ change and start the next change" - step
-
-## Change Descriptions
-
-Before composing a JJ description, read repository-local instructions and inspect the repository's existing messages. Those repository-local instructions and the observed syntax always win.
-
-**Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.**
-
-Apply the Go guidance only where it is compatible with the repository's present standards. Use it to improve quality, clarity, and structure; do not impose a fixed message type, scope, prefix, or other convention that the repository does not already use. Derive neutral wording from the specific change and its purpose. Plans must use `<message composed from the standards above>` in command templates rather than inventing a fixed example.
+- "Describe the change and start the next one" - step
 
 ## Plan Document Header
 
@@ -68,7 +58,7 @@ Apply the Go guidance only where it is compatible with the repository's present 
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For implementation:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -127,7 +117,18 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Describe the JJ change and start the next change**
+- [ ] **Step 5: Describe the change and start the next one**
+
+Before composing the change description, read the repository-local instructions and
+recent history using the syntax prescribed by that repository. Repository-local
+instructions and the message syntax observed in repository history always win.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Where compatible with those higher-priority standards, use Go-style clarity and
+structure: start with a concise imperative summary, capitalize it, omit trailing
+punctuation, and add a body explaining motivation and important behavior when the
+summary is insufficient. Do not impose fixed message types, scopes, or formats.
 
 ```bash
 jj describe -m "<message composed from the standards above>"
@@ -161,7 +162,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/rocketclaw/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 

@@ -212,17 +212,15 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**JJ Change Message Helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate repository-consistent change messages by analyzing JJ diffs. Use when the user asks for help writing or reviewing a change message.
+description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help describing changes or reviewing the working-copy change.
 ```
-
-Repository-local instructions and the repository's existing syntax and conventions always win.
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Apply only compatible Go guidance. Inspect the current change with `jj diff`, derive the message structure and detail level from repository-local instructions and visible history, and validate the result against both. Do not impose fixed prefixes, types, scopes, subjects, body formats, or Conventional Commit templates. Use `jj describe -m '<change-message>'` only after validation.
+Repository-local instructions and the syntax and style visible in `git log` always take precedence. Where compatible, keep the first line short, phrase it to complete “This change modifies the project to …”, omit trailing punctuation, and use a wrapped plain-text body to explain what changed and why when useful. Do not impose fixed types, scopes, prefixes, subjects, bodies, or templates. Apply the result with `jj describe -m '<description>'`.
 
 Avoid vague descriptions like these:
 
@@ -656,28 +654,23 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
+When repository conventions govern an output, show the discovery and composition process instead of fixed input/output pairs that may contradict local standards:
 
 ````markdown  theme={null}
-## Change message guidance
-
-Repository-local instructions and the repository's existing syntax and conventions always win.
+## Change description guidance
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Apply only compatible Go guidance. Inspect the current change with `jj diff`, derive the message structure and detail level from repository-local instructions and visible history, and validate the result against both. Do not impose fixed prefixes, types, scopes, subjects, body formats, or Conventional Commit templates.
+Repository-local instructions and the syntax and style visible in `git log` always take precedence. Inspect the current work with `jj diff` and relevant history with `jj log`. Where compatible with repository precedent, apply the Go guidance: keep the first line short, phrase it to complete “This change modifies the project to …”, omit trailing punctuation, and add a wrapped plain-text body explaining what changed and why when that context is useful. Do not impose fixed types, scopes, prefixes, subjects, bodies, or templates.
 
-Input: The current JJ change, repository-local instructions, and visible history
+Apply the resulting description without prescribing its content:
 
-Output:
+```bash
+jj describe -m '<description>'
 ```
-<repository-consistent change message>
-```
-
-Apply it only after validation with `jj describe -m '<change-message>'`.
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+This workflow demonstrates how to discover the desired style and level of detail without hard-coding a conflicting description format.
 
 ### Conditional workflow pattern
 

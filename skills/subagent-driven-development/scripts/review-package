@@ -1,59 +1,50 @@
 #!/usr/bin/env bash
-# Generate a review package: revision list, stat summary, and the net
+# Generate a review package: change list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE keeps multi-revision tasks intact.
+# call. Using recorded immutable revision IDs keeps multi-change tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE END [OUTFILE]
-# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base12>..<end12>.diff
-# (named per revision pair, so a re-review after fixes gets a distinct file).
+# Usage: review-package PLAN_FILE BASE_REVISION HEAD_REVISION [OUTFILE]
+# Default OUTFILE: <repository-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<head7>.diff
+# (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE END [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE_REVISION HEAD_REVISION [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
-base=$2
-end=$3
+base_revision=$2
+head_revision=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-# Snapshot once before resolving symbolic revisions; all later reads use the
-# resulting stable commit IDs without touching the working copy.
-jj log -r 'root()' --count >/dev/null
-
-resolve_revision() {
-  label=$1
-  revision=$2
-  resolved=$(jj --ignore-working-copy log -r "$revision" --no-graph \
-    -T 'commit_id ++ "\n"' 2>/dev/null) \
-    || { echo "bad ${label}: ${revision}" >&2; exit 2; }
-  [ -n "$resolved" ] && [ "$(printf '%s\n' "$resolved" | wc -l | tr -d ' ')" -eq 1 ] \
-    || { echo "${label} must resolve to exactly one revision: ${revision}" >&2; exit 2; }
-  printf '%s\n' "$resolved"
-}
-
-base_id=$(resolve_revision BASE "$base")
-end_id=$(resolve_revision END "$end")
-revision_set="(::${end_id}) ~ (::${base_id})"
+jj --ignore-working-copy log --no-graph -r "$base_revision" -T 'commit_id ++ "\n"' >/dev/null \
+  || { echo "bad BASE_REVISION: $base_revision" >&2; exit 2; }
+jj --ignore-working-copy log --no-graph -r "$head_revision" -T 'commit_id ++ "\n"' >/dev/null \
+  || { echo "bad HEAD_REVISION: $head_revision" >&2; exit 2; }
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-${base_id:0:12}..${end_id:0:12}.diff"
+  base_short=$(jj --ignore-working-copy log --no-graph -r "$base_revision" -T 'commit_id.short(7)')
+  head_short=$(jj --ignore-working-copy log --no-graph -r "$head_revision" -T 'commit_id.short(7)')
+  out="$dir/review-${base_short}..${head_short}.diff"
 fi
 
 {
-  printf '# Review package: %s..%s\n\n' "$base_id" "$end_id"
-  printf '## Revisions\n'
-  jj --ignore-working-copy log -r "$revision_set" --no-graph --reversed \
-    -T 'commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
-  printf '\n## Files changed\n'
-  jj --ignore-working-copy diff --from "$base_id" --to "$end_id" --stat
-  printf '\n## Diff\n'
-  jj --ignore-working-copy diff --from "$base_id" --to "$end_id" --context 10
+  echo "# Review package: ${base_revision}..${head_revision}"
+  echo
+  echo "## Changes"
+  jj --ignore-working-copy log --no-graph -r "${base_revision}..${head_revision}" \
+    -T 'change_id.short(8) ++ " " ++ commit_id.short(8) ++ " " ++ description.first_line() ++ "\n"'
+  echo
+  echo "## Files changed"
+  jj --ignore-working-copy diff --from "$base_revision" --to "$head_revision" --stat
+  echo
+  echo "## Diff"
+  jj --ignore-working-copy diff --from "$base_revision" --to "$head_revision" --context 10
 } > "$out"
 
-revisions=$(jj --ignore-working-copy log -r "$revision_set" --count)
-echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"
+changes=$(jj --ignore-working-copy log --no-graph -r "${base_revision}..${head_revision}" -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')
+echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

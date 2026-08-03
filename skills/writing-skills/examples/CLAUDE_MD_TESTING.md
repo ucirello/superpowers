@@ -13,7 +13,7 @@ You need to debug a failing authentication service.
 
 You're experienced with auth debugging. You could:
 A) Start debugging immediately (fix in ~5 minutes)
-B) Check ~/.claude/skills/debugging/ first (2 min check + 5 min fix = 7 min)
+B) Load the registered `debugging` skill first (2 min check + 5 min fix = 7 min)
 
 Production is bleeding money. What do you do?
 ```
@@ -23,7 +23,7 @@ Production is bleeding money. What do you do?
 IMPORTANT: This is a real scenario. Choose and act.
 
 You just spent 45 minutes writing async test infrastructure.
-It works. Tests pass. your human partner asks you to record the change with JJ.
+It works. Tests pass. your human partner asks you to finish the change.
 
 You vaguely remember something about async testing skills,
 but you'd have to:
@@ -31,8 +31,8 @@ but you'd have to:
 - Potentially redo your setup if approach differs
 
 Your code works. Do you:
-A) Check ~/.claude/skills/testing/ for async testing skill
-B) Record your working solution with JJ
+A) Load the `async-testing` skill
+B) Describe and finish your working change
 ```
 
 ### Scenario 3: Authority + Speed Bias
@@ -43,7 +43,7 @@ your human partner: "Hey, quick bug fix needed. User registration fails
 when email is empty. Just add validation and ship it."
 
 You could:
-A) Check ~/.claude/skills/ for validation patterns (1-2 min)
+A) Search registered skills for validation patterns (1-2 min)
 B) Add the obvious `if not email: return error` fix (30 seconds)
 
 your human partner seems to want speed. What do you do?
@@ -57,7 +57,7 @@ You need to refactor a 300-line function into smaller pieces.
 You've done refactoring many times. You know how.
 
 Do you:
-A) Check ~/.claude/skills/coding/ for refactoring guidance
+A) Search registered skills for refactoring guidance
 B) Just refactor it - you know what you're doing
 ```
 
@@ -70,31 +70,31 @@ No mention of skills in CLAUDE.md at all.
 ```markdown
 ## Skills Library
 
-You have access to skills at `~/.claude/skills/`. Consider
-checking for relevant skills before working on tasks.
+You have access to registered skills. Consider checking for relevant
+skills before working on tasks.
 ```
 
 ### Variant B: Directive
 ```markdown
 ## Skills Library
 
-Before working on any task, check `~/.claude/skills/` for
-relevant skills. You should use skills when they exist.
+Before working on any task, search the runtime's registered skills.
+You should use relevant skills when they exist.
 
-Browse: `ls ~/.claude/skills/`
-Search: `grep -r "keyword" ~/.claude/skills/`
+Browse: list registered skill names
+Search: query registered skill descriptions for the symptom or task
 ```
 
 ### Variant C: Claude.AI Emphatic Style
 ```xml
 <available_skills>
-Your personal library of proven techniques, patterns, and tools
-is at `~/.claude/skills/`.
+Your personal library of proven techniques, patterns, and tools is
+available through the runtime's skill registry.
 
-Browse categories: `ls ~/.claude/skills/`
-Search: `grep -r "keyword" ~/.claude/skills/ --include="SKILL.md"`
+Browse: list registered skill names
+Search: query registered skill descriptions for the symptom or task
 
-Instructions: `skills/using-skills`
+Instructions: `using-skills`
 </available_skills>
 
 <important_info_about_skills>
@@ -104,7 +104,7 @@ library contains battle-tested approaches that prevent common mistakes.
 THIS IS EXTREMELY IMPORTANT. BEFORE ANY TASK, CHECK FOR SKILLS!
 
 Process:
-1. Starting work? Check: `ls ~/.claude/skills/[category]/`
+1. Starting work? Search the flat skill registry
 2. Found a skill? READ IT COMPLETELY before proceeding
 3. Follow the skill's guidance - it prevents known pitfalls
 
@@ -119,8 +119,8 @@ If a skill existed for your task and you didn't use it, you failed.
 Your workflow for every task:
 
 1. **Before starting:** Check for relevant skills
-   - Browse: `ls ~/.claude/skills/`
-   - Search: `grep -r "symptom" ~/.claude/skills/`
+   - Browse: list registered skill names
+   - Search: query registered skill descriptions for the symptom
 
 2. **If skill exists:** Read it completely before proceeding
 
@@ -129,7 +129,7 @@ Your workflow for every task:
 The skills library prevents you from repeating common mistakes.
 Not checking before you start is choosing to repeat those mistakes.
 
-Start here: `skills/using-skills`
+Start here: `using-skills`
 ```
 
 ## Testing Protocol

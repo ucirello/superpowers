@@ -54,14 +54,19 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 
 ```typescript
 async function jjGitInit(directory: string) {
-  // In tests, refuse repository initialization outside local scratch storage.
+  // In tests, refuse jj git init outside workspace-local temporary storage.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    const tmpDir = normalize(resolve(process.cwd(), '.tmp'));
+    let root = process.cwd();
+    try {
+      root = execFileSync('jj', ['workspace', 'root'], { encoding: 'utf8' }).trim();
+    } catch { /* use local .tmp outside a Jujutsu repository */ }
+    const tmpDir = normalize(resolve(root, '.tmp'));
+    const relativePath = relative(tmpDir, normalized);
 
-    if (normalized !== tmpDir && !normalized.startsWith(tmpDir + sep)) {
+    if (!relativePath || relativePath.startsWith('..') || isAbsolute(relativePath)) {
       throw new Error(
-        `Refusing jj git init outside local .tmp during tests: ${directory}`
+        `Refusing jj git init outside workspace-local .tmp during tests: ${directory}`
       );
     }
   }
@@ -106,7 +111,7 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp`, falling back to local `.tmp` outside a JJ repository, in tests
+- Layer 3: `JjWorkspaceManager` refuses `jj git init` outside workspace-local `.tmp` storage in tests
 - Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce

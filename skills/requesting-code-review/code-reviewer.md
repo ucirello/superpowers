@@ -20,34 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Jujutsu Revisions to Review
+    ## jj Revisions to Review
 
-    **From:** [FROM_REV]
-    **To:** [TO_REV]
+    **Base:** [BASE_REVISION]
+    **End:** [END_REVISION]
 
     ```bash
-    jj --ignore-working-copy diff --stat --from '[FROM_REV]' --to '[TO_REV]'
-    jj --ignore-working-copy diff --from '[FROM_REV]' --to '[TO_REV]'
+    jj --ignore-working-copy diff --stat --from [BASE_REVISION] --to [END_REVISION]
+    jj --ignore-working-copy diff --from [BASE_REVISION] --to [END_REVISION]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate the working copy,
-    repository, operation history, revisions, or bookmarks in any way. Use
-    `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and
-    `jj --ignore-working-copy log` to inspect revisions without snapshotting the
-    working copy. If you need a file from another revision, read it without
-    creating or changing a workspace:
-
-    ```bash
-    jj --ignore-working-copy file list -r '[REV]'
-    jj --ignore-working-copy file show -r '[REV]' path/to/file
-    ```
-
-    If another inspection tool requires temporary files, create a unique
-    directory under `$(jj workspace root)/.tmp`, falling back to the current
-    directory's `.tmp` outside a JJ repository, and remove it when the review
-    finishes.
+    Your review is read-only in this workspace. Do not mutate the working copy, revisions, operation history, workspaces, or bookmarks in any way. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` with revision IDs or revsets to inspect revisions and history without snapshotting the working copy. If materializing a different revision is unavoidable, ask the controller to prepare a separate workspace under `$(jj workspace root)/.tmp/` (or local `.tmp/` outside a Jujutsu repository) before dispatch; never create it or edit a different revision during review.
 
     ## What to Check
 
@@ -143,8 +128,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[FROM_REV]` — starting revision
-- `[TO_REV]` — ending revision
+- `[BASE_REVISION]` — starting revision ID or revset
+- `[END_REVISION]` — ending revision ID or revset
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

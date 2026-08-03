@@ -2,9 +2,8 @@
 # Stop the brainstorm server and clean up
 # Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Only deletes generated session directories under a
-# workspace-local .tmp. Persistent directories (.rocketclaw/) are kept so
-# mockups can be reviewed later.
+# Kills the server process. Ephemeral sessions under the workspace's .tmp are
+# deleted. Persistent directories (.rocketclaw/) are kept for later review.
 
 SESSION_DIR="$1"
 
@@ -16,20 +15,6 @@ fi
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
-
-cleanup_ephemeral_session() {
-  [[ -f "$SERVER_ID_FILE" ]] || return 0
-  local session_path scratch_root workspace_root
-  session_path="$(cd "$SESSION_DIR" 2>/dev/null && pwd -P)" || return 0
-  if workspace_root="$(jj -R "$SESSION_DIR" workspace root 2>/dev/null)"; then
-    scratch_root="$(cd "$workspace_root/.tmp" 2>/dev/null && pwd -P)" || return 0
-  else
-    scratch_root="$(cd .tmp 2>/dev/null && pwd -P)" || return 0
-  fi
-  [[ "$(dirname "$session_path")" == "$scratch_root" ]] || return 0
-  [[ "$(basename "$session_path")" == brainstorm-* ]] || return 0
-  rm -rf "$session_path"
-}
 
 mark_stopped() {
   local reason="$1"
@@ -90,9 +75,8 @@ if [[ -f "$PID_FILE" ]]; then
   # Refuse to signal a PID we can't prove is our server. A stale pid file may
   # point at an unrelated process after a reboot/PID wraparound.
   if ! is_brainstorm_server "$pid"; then
-    mark_stopped "stale_pid"
-    cleanup_ephemeral_session
     rm -f "$PID_FILE" "$SERVER_ID_FILE"
+    mark_stopped "stale_pid"
     echo '{"status": "stale_pid"}'
     exit 0
   fi
@@ -121,12 +105,15 @@ if [[ -f "$PID_FILE" ]]; then
     exit 1
   fi
 
-  mark_stopped "stop-server.sh"
-  cleanup_ephemeral_session
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
+  mark_stopped "stop-server.sh"
+
+  # Only delete sessions explicitly marked ephemeral by start-server.sh.
+  if [[ -f "${STATE_DIR}/ephemeral-session" ]]; then
+    rm -rf "$SESSION_DIR"
+  fi
 
   echo '{"status": "stopped"}'
 else
-  cleanup_ephemeral_session
   echo '{"status": "not_running"}'
 fi

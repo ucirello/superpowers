@@ -7,7 +7,7 @@
 #
 # Options:
 #   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         instead of workspace-local .tmp. Files persist after server stops.
+#                         instead of the workspace's .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows POSIX-like shells reap nohup background processes. Auto-foreground when detected.
+# Windows/MSYS shells reap nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -119,20 +119,12 @@ if [[ -n "$PROJECT_DIR" ]]; then
   # already-open browser tab reconnects to the same URL with a valid cookie.
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
+  EPHEMERAL_SESSION="false"
 else
-  if JJ_ROOT="$(jj workspace root 2>/dev/null)" && [[ -n "$JJ_ROOT" ]]; then
-    TEMP_ROOT="${JJ_ROOT}/.tmp"
-  else
-    TEMP_ROOT="$(pwd -P)/.tmp"
-  fi
-  SESSION_DIR="${TEMP_ROOT}/brainstorm-${SESSION_ID}"
+  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
+  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/rocketclaw/brainstorm-${SESSION_ID}"
+  EPHEMERAL_SESSION="true"
 fi
-
-cleanup_ephemeral_session() {
-  if [[ "$SESSION_DIR" == */.tmp/brainstorm-* ]]; then
-    rm -rf "$SESSION_DIR"
-  fi
-}
 
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
@@ -141,6 +133,9 @@ SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
 
 # Create fresh session directory with content and state peers
 mkdir -p "${SESSION_DIR}/content" "$STATE_DIR"
+if [[ "$EPHEMERAL_SESSION" == "true" ]]; then
+  : > "${STATE_DIR}/ephemeral-session"
+fi
 
 SERVER_ID=""
 if [[ -r /dev/urandom ]]; then
@@ -161,9 +156,8 @@ fi
 
 cd "$SCRIPT_DIR" || exit 1
 
-# Resolve the owning agent PID (grandparent of this script).
-# $PPID is the ephemeral shell the agent spawned to run us; it dies when this
-# script exits. The owning agent itself is $PPID's parent.
+# Resolve the owner PID (grandparent of this script).
+# $PPID is the ephemeral shell that launched us; its parent owns the session.
 OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
 if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
   OWNER_PID="$PPID"
@@ -183,9 +177,7 @@ if [[ "$FOREGROUND" == "true" ]]; then
   SERVER_PID=$!
   echo "$SERVER_PID" > "$PID_FILE"
   wait "$SERVER_PID"
-  status=$?
-  cleanup_ephemeral_session
-  exit "$status"
+  exit $?
 fi
 
 # Start server, capturing output to log file
@@ -208,7 +200,6 @@ for _ in {1..50}; do
       sleep 0.1
     done
     if [[ "$alive" != "true" ]]; then
-      cleanup_ephemeral_session
       echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
       exit 1
     fi
@@ -219,8 +210,5 @@ for _ in {1..50}; do
 done
 
 # Timeout - server didn't start
-kill "$SERVER_PID" 2>/dev/null || true
-wait "$SERVER_PID" 2>/dev/null || true
-cleanup_ephemeral_session
 echo '{"error": "Server failed to start within 5 seconds"}'
 exit 1
