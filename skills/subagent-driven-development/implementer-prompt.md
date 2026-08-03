@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Describe your Jujutsu change and leave it as the current working-copy change
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,13 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before finalizing the change, not after every edit.
+
+    Before composing or editing the change description, follow this guidance.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Repository-local instructions and the existing history take precedence;
+    apply compatible Go guidance. Use `jj describe` with a neutral description
+    derived from the completed work, not a fixed prefix or supplied template.
 
     ## Code Organization
 
@@ -110,8 +116,12 @@ Subagent (general-purpose):
     Fix them, re-run the tests that cover the amended code, and append a fix
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Then reply with the same short
-    status contract as your first report.
+    you — your report is the test evidence. Update the change description
+    with `jj describe` if the amended scope makes it inaccurate. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Use a neutral description derived from the amended work, with
+    repository-local instructions and existing history taking precedence and
+    compatible Go guidance applied. Then reply with the same short status
+    contract as your first report.
 
     ## Report Format
 
@@ -128,7 +138,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Changes created (short change ID + short revision ID + description first line)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

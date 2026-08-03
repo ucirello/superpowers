@@ -63,7 +63,8 @@ You MUST complete each phase before proceeding to the next.
 
 3. **Check Recent Changes**
    - What changed that could cause this?
-   - Git diff, recent commits
+   - Inspect the current change with `jj -R "$(jj root)" diff`
+   - Inspect recent change descriptions with `jj -R "$(jj root)" log -r 'ancestors(@, 10)'`
    - New dependencies, config changes
    - Environmental differences
 

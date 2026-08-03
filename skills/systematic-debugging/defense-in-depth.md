@@ -53,15 +53,20 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function gitInit(directory: string) {
-  // In tests, refuse git init outside temp directories
+async function jjGitInit(directory: string) {
+  // In tests, refuse jj git init outside workspace-local temporary storage.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    const tmpDir = normalize(resolve(tmpdir()));
+    let root = process.cwd();
+    try {
+      root = execFileSync('jj', ['workspace', 'root'], { encoding: 'utf8' }).trim();
+    } catch { /* use local .tmp outside a Jujutsu repository */ }
+    const tmpDir = normalize(resolve(root, '.tmp'));
+    const relativePath = relative(tmpDir, normalized);
 
-    if (!normalized.startsWith(tmpDir)) {
+    if (!relativePath || relativePath.startsWith('..') || isAbsolute(relativePath)) {
       throw new Error(
-        `Refusing git init outside temp dir during tests: ${directory}`
+        `Refusing jj git init outside workspace-local .tmp during tests: ${directory}`
       );
     }
   }
@@ -73,9 +78,9 @@ async function gitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function gitInit(directory: string) {
+async function jjGitInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to git init', {
+  logger.debug('About to run jj git init', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -95,19 +100,19 @@ When you find a bug:
 
 ## Example from Session
 
-Bug: Empty `projectDir` caused `git init` in source code
+Bug: Empty `projectDir` caused `jj git init` in source code
 
 **Data flow:**
 1. Test setup → empty string
 2. `Project.create(name, '')`
 3. `WorkspaceManager.createWorkspace('')`
-4. `git init` runs in `process.cwd()`
+4. `jj git init` runs in `process.cwd()`
 
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses git init outside tmpdir in tests
-- Layer 4: Stack trace logging before git init
+- Layer 3: `JjWorkspaceManager` refuses `jj git init` outside workspace-local `.tmp` storage in tests
+- Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
 
