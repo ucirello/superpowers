@@ -20,19 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## jj Revisions to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_REVISION]
+    **End:** [END_REVISION]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --ignore-working-copy diff --stat --from [BASE_REVISION] --to [END_REVISION]
+    jj --ignore-working-copy diff --from [BASE_REVISION] --to [END_REVISION]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in this workspace. Do not mutate the working copy, revisions, operation history, workspaces, or bookmarks in any way. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` with revision IDs or revsets to inspect revisions and history without snapshotting the working copy. If materializing a different revision is unavoidable, ask the controller to prepare a separate workspace under `$(jj workspace root)/.tmp/` (or local `.tmp/` outside a Jujutsu repository) before dispatch; never create it or edit a different revision during review.
 
     ## What to Check
 
@@ -104,7 +104,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready to integrate?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -128,8 +128,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REVISION]` — starting revision ID or revset
+- `[END_REVISION]` — ending revision ID or revset
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -166,7 +166,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready to integrate: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

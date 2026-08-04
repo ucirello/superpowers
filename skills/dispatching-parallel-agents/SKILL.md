@@ -7,7 +7,7 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 ## Overview
 
-You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+You delegate tasks to specialized agents with isolated context and, when they edit files, isolated Jujutsu workspaces. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
@@ -42,7 +42,7 @@ digraph when_to_use {
 **Don't use when:**
 - Failures are related (fix one might fix others)
 - Need to understand full system state
-- Agents would interfere with each other
+- Agents would interfere through the same external resources
 
 ## The Pattern
 
@@ -61,16 +61,50 @@ Each agent gets:
 - **Specific scope:** One test file or subsystem
 - **Clear goal:** Make these tests pass
 - **Constraints:** Don't change other code
-- **Expected output:** Summary of what you found and fixed
+- **Workspace:** Its isolated working directory
+- **Expected output:** Summary of what you found and fixed, plus its Jujutsu change ID
 
 ### 3. Dispatch in Parallel
+
+When agents will edit files in a Jujutsu repository, give each agent a workspace. First choose the temporary base directory. Use `$(jj workspace root)/.tmp` inside a Jujutsu workspace and the local `.tmp` directory when `jj workspace root` fails:
+
+```sh
+if workspace_root=$(jj workspace root 2>/dev/null); then
+  workspace_base="$workspace_root/.tmp"
+else
+  workspace_base=.tmp
+fi
+mkdir -p "$workspace_base"
+```
+
+Before creating anything under a workspace root, verify its root ignore rules
+exclude `.tmp/`; stop and add that root ignore rule first if they do not. Choose
+`SESSION_NAMESPACE` from the user, harness, or session instructions, and verify
+the resulting repository-wide names with `jj workspace list`.
+
+If adding the ignore rule changes the repository, inspect it with `jj status`
+and `jj diff`, locate and read applicable repository instructions with `jj file
+list` and `jj file show -r @ <instruction-path>`, and inspect recent descriptions
+with `jj log`. Local conventions take precedence over compatible Go guidance;
+derive syntax, vocabulary, structure, and detail from those sources and the
+actual diff rather than imposing a fixed format. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply the resulting description with `jj describe`.
+
+Create one workspace per independent domain, with each new working-copy change based on the current change:
+
+```sh
+jj workspace add --name "$SESSION_NAMESPACE-agent-abort" -r @ "$workspace_base/$SESSION_NAMESPACE-agent-abort"
+jj workspace add --name "$SESSION_NAMESPACE-agent-batch" -r @ "$workspace_base/$SESSION_NAMESPACE-agent-batch"
+jj workspace add --name "$SESSION_NAMESPACE-agent-approval" -r @ "$workspace_base/$SESSION_NAMESPACE-agent-approval"
+```
+
+`-r @` makes each workspace's working-copy change a child of the same starting change. Give each agent its workspace path and require it to stay there. Outside a Jujutsu repository, use separate directories under the local `.tmp` fallback if the environment can provide isolated copies; otherwise dispatch only non-editing investigations or tasks whose file scopes cannot overlap.
 
 Issue all three subagent dispatches in the same response — they run in parallel:
 
 ```text
-Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
-Subagent (general-purpose): "Fix batch-completion-behavior.test.ts failures"
-Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
+Subagent (general-purpose): "In workspace <agent-abort-path>, fix agent-tool-abort.test.ts failures"
+Subagent (general-purpose): "In workspace <agent-batch-path>, fix batch-completion-behavior.test.ts failures"
+Subagent (general-purpose): "In workspace <agent-approval-path>, fix tool-approval-race-conditions.test.ts failures"
 # All three run concurrently.
 ```
 
@@ -80,9 +114,12 @@ Multiple dispatch calls in one response = parallel execution. One per response =
 
 When agents return:
 - Read each summary
-- Verify fixes don't conflict
+- Inspect each returned change with `jj show <change-id>`
+- Verify the changes don't overlap or conflict
+- Integrate the changes with `jj new <change-id>...`, which creates a merge change with all agent changes as parents
+- Run `jj status` and resolve any conflicts in the merge change
 - Run full test suite
-- Integrate all changes
+- Forget each temporary workspace with `jj workspace forget <workspace-name>`, then delete its directory
 
 ## Agent Prompt Structure
 
@@ -109,7 +146,9 @@ These are timing/race condition issues. Your task:
 
 Do NOT just increase timeouts - find the real issue.
 
-Return: Summary of what you found and what you fixed.
+Before returning, inspect `jj diff`, locate and read applicable repository instructions with `jj file list` and `jj file show -r @ <instruction-path>`, and inspect recent descriptions with `jj log`. Repository-local conventions take precedence over compatible Go guidance. Derive syntax, vocabulary, structure, and detail from those sources and the actual diff; do not impose a fixed prefix, layout, example, or template. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply the resulting description with `jj describe`.
+
+Return: Summary of what you found and what you fixed, plus the change ID from `jj log -r @ --no-graph -T 'change_id ++ "\n"'`.
 ```
 
 ## Common Mistakes
@@ -120,18 +159,18 @@ Return: Summary of what you found and what you fixed.
 **❌ No context:** "Fix the race condition" - agent doesn't know where
 **✅ Context:** Paste the error messages and test names
 
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
+**❌ No constraints:** Agent might refactor everything or leave its assigned workspace
+**✅ Constraints:** "Do NOT change production code," "Fix tests only," and "Work only in the assigned workspace"
 
 **❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
+**✅ Specific:** "Return summary of root cause and changes, plus the Jujutsu change ID"
 
 ## When NOT to Use
 
 **Related failures:** Fixing one might fix others - investigate together first
 **Need full context:** Understanding requires seeing entire system
 **Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
+**Shared state:** Agents would interfere through the same external resources; isolate file edits with Jujutsu workspaces
 
 ## Real Example from Session
 
@@ -146,9 +185,9 @@ Return: Summary of what you found and what you fixed.
 
 **Dispatch:**
 ```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
+Agent 1 → Fix agent-tool-abort.test.ts in its Jujutsu workspace
+Agent 2 → Fix batch-completion-behavior.test.ts in its Jujutsu workspace
+Agent 3 → Fix tool-approval-race-conditions.test.ts in its Jujutsu workspace
 ```
 
 **Results:**
@@ -156,12 +195,15 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 - Agent 2: Fixed event structure bug (threadId in wrong place)
 - Agent 3: Added wait for async tool execution to complete
 
-**Integration:** All fixes independent, no conflicts, full suite green
+**Integration:** Reviewed each change ID, created a merge change with all three as parents, found no conflicts, and ran the full suite successfully
 
 ## Verification
 
 After agents return:
 1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
+2. **Inspect each change** - Use `jj show <change-id>` before integration
+3. **Create the merge change** - Run `jj new <change-id>...`
+4. **Check for conflicts** - Did agents edit the same code?
+5. **Run full suite** - Verify all fixes work together
+6. **Spot check** - Agents can make systematic errors
+7. **Clean up workspaces** - Forget them with `jj workspace forget` and remove their directories

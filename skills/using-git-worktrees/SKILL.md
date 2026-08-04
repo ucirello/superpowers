@@ -1,103 +1,100 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback
+description: Use when starting feature work that needs isolation from the current workspace or before executing implementation plans - ensures an isolated Jujutsu workspace exists via native tools or jj workspace fallback
 ---
 
-# Using Git Worktrees
+# Using Jujutsu Workspaces
 
 ## Overview
 
-Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual git worktrees only when no native tool is available.
+Ensure work happens in an isolated workspace. Prefer the harness's native isolation tools. Fall back to `jj workspace` commands only when no native tool is available.
 
-**Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never fight the harness.
+**Core principle:** Detect existing isolation first. Then use native tools. Then fall back to `jj workspace add`. Never fight the harness.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
 ## Step 0: Detect Existing Isolation
 
-**Before creating anything, check if you are already in an isolated workspace.**
+**Before creating anything, check whether the harness already placed the session in an isolated workspace.** Session instructions or a harness-managed workspace are authoritative; do not create another workspace inside one.
+
+Confirm that the current directory belongs to a Jujutsu workspace and inspect the registered workspaces:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+jj workspace root
+jj workspace list
 ```
 
-**Submodule guard:** `GIT_DIR != GIT_COMMON` is also true inside git submodules. Before concluding "already in a worktree," verify you are not in a submodule:
+`jj workspace root` prints the current workspace root. `jj workspace list` shows every workspace registered with the repository and its working-copy commit.
 
-```bash
-# If this returns a path, you're in a submodule, not a worktree — treat as normal repo
-git rev-parse --show-superproject-working-tree 2>/dev/null
-```
+If the session is already isolated, skip to Step 2. Report:
 
-**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 2 (Project Setup). Do NOT create another worktree.
+> "Already in isolated workspace at `<path>`."
 
-Report with branch state:
-- On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
-- Detached HEAD: "Already in isolated workspace at `<path>` (detached HEAD, externally managed). Branch creation needed at finish time."
+Merely being in a Jujutsu repository does not prove that the current workspace was created for this task. If the harness and instructions do not establish isolation, check whether the user already declared a workspace preference. If not, ask for consent:
 
-**If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout.
-
-Has the user already indicated their worktree preference in your instructions? If not, ask for consent before creating a worktree:
-
-> "Would you like me to set up an isolated worktree? It protects your current branch from changes."
+> "Would you like me to set up an isolated workspace? It protects your current workspace from task changes."
 
 Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
 
 ## Step 1: Create Isolated Workspace
 
-**You have two mechanisms. Try them in this order.**
+**Use these mechanisms in order.**
 
-### 1a. Native Worktree Tools (preferred)
+### 1a. Native Isolation Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+If the harness provides a native command or tool for entering an isolated workspace, use it and skip to Step 2.
 
-Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
+Native tools own directory placement, lifecycle, and cleanup. Creating a workspace manually when a native tool is available can produce state the harness cannot see or manage.
 
-Only proceed to Step 1b if you have no native worktree tool available.
+Only proceed to Step 1b when no native isolation tool is available.
 
-### 1b. Git Worktree Fallback
+### 1b. Jujutsu Workspace Fallback
 
-**Only use this if Step 1a does not apply** — you have no native worktree tool available. Create a worktree manually using git.
+Use `jj workspace add` to create a working copy backed by the current repository.
 
 #### Directory Selection
 
-Follow this priority order. Explicit user preference always beats observed filesystem state.
-
-1. **Check your instructions for a declared worktree directory preference.** If the user has already specified one, use it without asking.
-
-2. **Check for an existing project-local worktree directory:**
-   ```bash
-   ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-   ls -d worktrees 2>/dev/null      # Alternative
-   ```
-   If found, use it. If both exist, `.worktrees` wins.
-
-3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
-
-#### Safety Verification (project-local directories only)
-
-**MUST verify directory is ignored before creating worktree:**
+Explicit user preferences always win. Otherwise, place temporary workspaces under `.tmp` at the current workspace root:
 
 ```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+root=$(jj workspace root 2>/dev/null || pwd)
+path="$root/.tmp/$WORKSPACE_NAME"
 ```
 
-**If NOT ignored:** Add to .gitignore, commit the change, then proceed.
+Use a unique, filesystem-safe workspace name. Jujutsu defaults the workspace name to the destination directory's basename; pass `--name` when those should differ.
 
-**Why critical:** Prevents accidentally committing worktree contents to repository.
+#### Ignore Verification
 
-#### Create the Worktree
+Before creating a project-local workspace, verify that the root `.tmp/` directory is ignored by the repository's ignore rules. Jujutsu honors `.gitignore` files; there is no `.jjignore`.
+
+If `.tmp/` is not ignored, add it to the root `.gitignore` and record that change according to the project's normal workflow before proceeding.
+
+**Why critical:** Jujutsu automatically tracks new files by default. Ignoring `.tmp/` prevents one workspace from tracking another workspace's files.
+
+#### Choose the Starting Revision
+
+Ask for or infer the intended base revision from the task and repository conventions. A local bookmark, a remote bookmark such as `main@origin`, or another unambiguous revset can identify the base. Do not create a bookmark merely to create a workspace; workspaces and bookmarks are independent concepts.
+
+If no base is specified, `jj workspace add` creates the new working-copy commit with the same parent or parents as the current working-copy commit. Prefer an explicit `-r` when the task has a known base.
+
+#### Create the Workspace
 
 ```bash
-# Determine path based on chosen location
-path="$LOCATION/$BRANCH_NAME"
-
-git worktree add "$path" -b "$BRANCH_NAME"
+if [ -n "${BASE_REVISION:-}" ]; then
+  jj workspace add --name "$WORKSPACE_NAME" -r "$BASE_REVISION" "$path"
+else
+  jj workspace add --name "$WORKSPACE_NAME" "$path"
+fi
 cd "$path"
+jj workspace root
+jj status
 ```
 
-**Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
+`jj workspace add -r` creates a new working-copy commit whose parent is the specified revision. It does not check out that revision directly and does not create or move a bookmark.
+
+If the workflow later requires a bookmark for publishing, create it at the completed change with `jj bookmark create "$BOOKMARK_NAME" -r @`. Use `jj bookmark set` only when intentionally creating or updating a bookmark under the repository's conventions.
+
+**Sandbox fallback:** If `jj workspace add` fails because the sandbox denies directory creation, tell the user that the sandbox blocked workspace creation and work in the current directory instead. Then run setup and baseline tests in place.
 
 ## Step 2: Project Setup
 
@@ -120,48 +117,79 @@ if [ -f go.mod ]; then go mod download; fi
 
 ## Step 3: Verify Clean Baseline
 
-Run tests to ensure workspace starts clean:
+Run tests to ensure the workspace starts clean:
 
 ```bash
 # Use project-appropriate command
 npm test / cargo test / pytest / go test ./...
 ```
 
-**If tests fail:** Report failures, ask whether to proceed or investigate.
+**If tests fail:** Report failures and ask whether to proceed or investigate.
 
 **If tests pass:** Report ready.
 
 ### Report
 
-```
-Worktree ready at <full-path>
+```text
+Workspace ready at <full-path>
 Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
+
+## Descriptions and Commit Messages
+
+When composing a Jujutsu change description or a commit message, follow runtime-local conventions rather than imposing a fixed syntax:
+
+> Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Inspect repository-local instructions and relevant history at runtime. Their
+syntax and style always win; apply the Go guidance only where compatible by
+keeping the first line concise and using a plain-text body to explain what
+changed and why when useful. Never impose a fixed type, scope, prefix, subject,
+body, or template.
+
+## Cleanup
+
+When a manually created workspace is no longer needed, first identify its registered name and root:
+
+```bash
+jj workspace list
+jj workspace root --name "$WORKSPACE_NAME"
+```
+
+From another workspace, stop tracking its working-copy commit:
+
+```bash
+jj workspace forget "$WORKSPACE_NAME"
+```
+
+`jj workspace forget` does not modify or delete files on disk. Remove the workspace directory separately only after confirming it contains nothing that must be retained. Harness-managed workspaces must be cleaned up with the harness's native lifecycle tools instead.
 
 ## Quick Reference
 
 | Situation | Action |
 |-----------|--------|
-| Already in linked worktree | Skip creation (Step 0) |
-| In a submodule | Treat as normal repo (Step 0 guard) |
-| Native worktree tool available | Use it (Step 1a) |
-| No native tool | Git worktree fallback (Step 1b) |
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check instruction file, then default `.worktrees/` |
-| Directory not ignored | Add to .gitignore + commit |
-| Permission error on create | Sandbox fallback, work in place |
-| Tests fail during baseline | Report failures + ask |
+| Harness already provides isolation | Skip creation (Step 0) |
+| Native isolation tool available | Use it (Step 1a) |
+| No native tool | Use `jj workspace add` (Step 1b) |
+| User specifies a location | Use it |
+| No location preference | Use root `.tmp/<workspace-name>` |
+| Root `.tmp/` is not ignored | Add it to root `.gitignore` and record the change |
+| Task has a known base | Pass it to `jj workspace add -r` |
+| Publishing requires a bookmark | Create or set one explicitly at the intended revision |
+| Permission error on create | Sandbox fallback; work in place |
+| Tests fail during baseline | Report failures and ask |
+| Workspace is finished | `jj workspace forget`, then separately remove files |
 | No package.json/Cargo.toml | Skip dependency install |
 
 ## Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|
-| "I'm obviously not in a worktree — no need to check" | Run Step 0. Harness-created isolation and submodules both fool eyeballing; the detection commands settle it. |
-| "`git worktree add` is quicker than hunting for a native tool" | A native tool (e.g. `EnterWorktree`) owns placement, branching, and cleanup. Bypassing it is the #1 mistake — it creates phantom state your harness can't see or manage. |
-| "The worktree directory is surely ignored already" | Run `git check-ignore`. An unignored worktree directory commits the whole tree into the repo. |
-| "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
-| "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
+| "I can tell this is the main workspace without checking" | Run `jj workspace root` and `jj workspace list`, and honor harness context. Filesystem appearance alone does not establish isolation. |
+| "Manual creation is quicker than finding the native tool" | The harness owns native workspace placement and cleanup. Bypassing it can create state the harness cannot manage. |
+| "A workspace needs a matching bookmark" | Workspaces track working-copy commits. Bookmarks are separate references and are needed only for workflows such as publishing. |
+| "Omitting `-r` starts from the current change" | By default, the new working-copy commit gets the current working-copy commit's parents, not the current working-copy commit itself. Pass the intended base explicitly. |
+| "The `.tmp` directory is surely ignored" | Verify it. Jujutsu automatically tracks new files unless ignore rules exclude them. |
+| "Forgetting a workspace deletes it" | `jj workspace forget` only removes repository tracking. Files remain on disk until removed separately. |
+| "The workspace is fresh, so baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is the user's call. |

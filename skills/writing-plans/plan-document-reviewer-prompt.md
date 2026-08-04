@@ -23,6 +23,7 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | JJ Changes | Tasks use focused JJ changes, repository-specific descriptions, `jj describe`, and `jj new` |
 
     ## Calibration
 

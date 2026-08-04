@@ -79,7 +79,7 @@ skills/
     supporting-file.*     # Only if needed
 ```
 
-**Flat namespace** - all skills in one searchable namespace
+**Flat namespace** - all skills share one searchable namespace. Route to another skill by its exact registered name, not by a filesystem path or an invented category prefix.
 
 **Separate files for:**
 1. **Heavy reference** (100+ lines) - API docs, comprehensive syntax
@@ -662,7 +662,10 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Supporting files only for tools or heavy reference
 
 **Deployment:**
-- [ ] Commit skill to git and push to your fork (if configured)
+- [ ] Inspect the change with `jj diff`
+- [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+- [ ] Repository-local instructions and the syntax and style visible in `git log` always take precedence. Where compatible, keep the first line short, phrase it to complete “This change modifies the project to …”, omit trailing punctuation, and use a wrapped plain-text body to explain what changed and why when useful. Do not impose fixed types, scopes, prefixes, subjects, bodies, or templates.
+- [ ] Describe the change with `jj describe -m '<description>'`, explicitly create or move the selected bookmark to `@`, and push it with `jj git push --bookmark <bookmark>` (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow

@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before advancing the `main` bookmark
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,10 +23,18 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Get jj revision IDs:**
+
+Choose the starting revision from the plan, task boundary, or known base
+bookmark. It must resolve to exactly one revision. Use `@-` only after
+confirming that the working-copy change has one parent; a merge change can
+have multiple parents and requires an explicitly selected review base.
+
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REVSET=<plan-task-or-bookmark-base>
+[ "$(jj log --no-graph -r "$BASE_REVSET" -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')" -eq 1 ] || { printf 'review base must resolve to one revision\n' >&2; exit 1; }
+BASE_REVISION=$(jj log --no-graph -r "$BASE_REVSET" -T 'commit_id ++ "\n"')
+END_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -36,8 +44,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{BASE_REVISION}` - Starting revision
+- `{END_REVISION}` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +60,15 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REVSET=<Task-2-starting-revision>
+BASE_REVISION=$(jj log --no-graph -r "$BASE_REVSET" -T 'commit_id ++ "\n"')
+END_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
+  BASE_REVISION: a7981ec
+  END_REVISION: 3df7661
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests
