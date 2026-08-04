@@ -107,9 +107,9 @@ digraph brainstorming {
 - Write the validated design (spec) to `docs/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Finalize the design document as a jj change with `jj commit <design-doc-path>`.
 - Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 - Repo-local instructions and existing messages take precedence. Where compatible, make the subject a short summary that completes "this change modifies the project to ...", use lowercase after any scope prefix, omit a trailing period, and add a wrapped plain-text body when the rationale is useful.
+- Finalize the design document as a jj change with `jj commit -m "<message composed from the standards above>" <design-doc-path>`.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:

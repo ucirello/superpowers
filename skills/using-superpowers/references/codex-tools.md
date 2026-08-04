@@ -15,13 +15,19 @@ Skills that create workspaces or finish bookmarks should detect their
 environment with read-only JJ commands before proceeding:
 
 ```bash
-jj root
-jj workspace list
-jj status
-jj bookmark list
+jj --ignore-working-copy root
+jj --ignore-working-copy workspace list
+jj --ignore-working-copy status
+jj --ignore-working-copy bookmark list
 ```
 
-- The current workspace is already listed → skip workspace creation
+If `jj --ignore-working-copy root` fails, the harness has not provided a JJ
+repository. Do not infer bookmark or workspace state from that failure; use the
+harness's native isolation controls and local `.tmp` storage until the
+repository is available through JJ.
+
+- Runtime instructions or harness context identify the current workspace as task-isolated → skip workspace creation
+- The current workspace merely appears in `jj workspace list` → this proves registration, not isolation; follow `using-git-worktrees` Step 0
 - No bookmark points to `@` → create one before pushing or opening a PR
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`

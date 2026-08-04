@@ -33,17 +33,32 @@ workspace. Step 5 may change directory before Step 6 needs these values.
 ```bash
 WORKSPACE_ROOT=$(jj workspace root)
 WORKSPACE_PARENT=$(dirname "$WORKSPACE_ROOT")
-WORKSPACE_NAME=$(jj workspace list -T 'if(current_working_copy, name)')
+WORKSPACE_OWNED=false
+WORKSPACE_NAME=
+while IFS= read -r candidate; do
+  candidate_root=$(jj workspace root --name "$candidate")
+  if [ "$candidate_root" = "$WORKSPACE_ROOT" ]; then
+    WORKSPACE_NAME=$candidate
+    break
+  fi
+done < <(jj workspace list -T 'name ++ "\n"')
+[ -n "$WORKSPACE_NAME" ] || { printf 'current workspace is not registered\n' >&2; exit 1; }
 FEATURE_REV=@
 jj status
 jj bookmark list
 ```
 
+Set `WORKSPACE_OWNED=true` only when the conversation or plan confirms this
+workspace was created manually by the `using-git-worktrees` Jujutsu fallback
+for this task. A path under a conventional temporary directory is not proof of
+ownership. Native and harness-managed workspaces remain host-owned.
+
 Determine the feature bookmark from the plan or conversation and verify where
 it points with `jj bookmark list`. If it is not known, ask. A bookmark may point
 to `@`, to `@-` when `@` is an intentionally empty working-copy change, or to
 another revision explicitly identified as the completed feature revision.
-Set `FEATURE_REV` to that revision and verify it with:
+Set `FEATURE_BOOKMARK` to its name, or leave it unset for an anonymous change.
+Set `FEATURE_REV` to the completed revision and verify it with:
 
 ```bash
 jj log -r "$FEATURE_REV"
@@ -72,6 +87,11 @@ If the base is not already known, ask: "This change split from <your best
 guess> - is that correct?" Confirm before integrating; moving the wrong
 bookmark is expensive to undo.
 
+Determine the remote from repository-local instructions and the bookmark's
+tracked remote shown above. Inspect configured remotes with `jj git remote
+list`. If more than one remote is plausible, ask rather than guessing. Set
+`REMOTE` to the confirmed remote name and use it consistently below.
+
 ## Step 4: Present Options
 
 **Present exactly these 3 options:**
@@ -99,7 +119,7 @@ First update remote bookmark state and inspect both revisions. Fetching does
 not rewrite the completed change:
 
 ```bash
-jj git fetch --remote origin
+jj git fetch --remote "$REMOTE"
 jj log -r "$BASE_BOOKMARK | $FEATURE_REV"
 ```
 
@@ -123,7 +143,14 @@ parents:
 ```bash
 jj new "$BASE_BOOKMARK" "$FEATURE_REV"
 INTEGRATED_REV=@
+jj status
+jj resolve --list
 ```
+
+Jujutsu records merge conflicts in the new change instead of interrupting the
+operation. If `jj status` or `jj resolve --list` reports conflicts, resolve
+them and repeat both commands. Do not describe the merge or move the base
+bookmark until `jj resolve --list` is empty.
 
 For this new merge change only, write a description before moving the base
 bookmark. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
@@ -184,7 +211,7 @@ completed revision:
 ```bash
 jj bookmark create "$FEATURE_BOOKMARK" -r "$FEATURE_REV"  # anonymous change only
 jj bookmark set "$FEATURE_BOOKMARK" -r "$FEATURE_REV"     # existing bookmark only
-jj git push --remote origin --bookmark "$FEATURE_BOOKMARK"
+jj git push --remote "$REMOTE" --bookmark "$FEATURE_BOOKMARK"
 ```
 
 Never push `all:` or an incidental set of bookmarks. If the push is rejected,
@@ -249,8 +276,9 @@ Then clean up an owned workspace in Step 6.
 **Runs for Option 1 and confirmed discards.** Options 2 and 3 always preserve
 the workspace. Run cleanup from outside `WORKSPACE_ROOT`.
 
-**If `WORKSPACE_ROOT` is under `.tmp/`, `.workspaces/`, or `workspaces/`:** This workflow
-owns cleanup. Make the repository forget the workspace, then remove its files:
+**If `WORKSPACE_OWNED=true` and `WORKSPACE_ROOT` is under `.tmp/`,
+`.workspaces/`, or `workspaces/`:** Make the repository forget the workspace,
+then remove its files:
 
 ```bash
 cd "$WORKSPACE_PARENT"
@@ -258,8 +286,8 @@ jj -R "$WORKSPACE_ROOT" workspace forget "$WORKSPACE_NAME"
 rm -rf -- "$WORKSPACE_ROOT"
 ```
 
-**Otherwise:** The host environment owns this workspace. Leave it in place. If
-the platform provides a workspace-exit tool, use it.
+**Otherwise:** Ownership is absent or the host environment owns this workspace.
+Leave it in place. If the platform provides a workspace-exit tool, use it.
 
 ## Quick Reference
 

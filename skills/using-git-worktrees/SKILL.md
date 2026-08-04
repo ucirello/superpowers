@@ -80,7 +80,11 @@ If no base is specified, `jj workspace add` creates the new working-copy commit 
 #### Create the Workspace
 
 ```bash
-jj workspace add --name "$WORKSPACE_NAME" -r "$BASE_REVISION" "$path"
+if [ -n "${BASE_REVISION:-}" ]; then
+  jj workspace add --name "$WORKSPACE_NAME" -r "$BASE_REVISION" "$path"
+else
+  jj workspace add --name "$WORKSPACE_NAME" "$path"
+fi
 cd "$path"
 jj workspace root
 jj status

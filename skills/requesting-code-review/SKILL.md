@@ -24,8 +24,16 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 ## How to Request
 
 **1. Get jj revision IDs:**
+
+Choose the starting revision from the plan, task boundary, or known base
+bookmark. It must resolve to exactly one revision. Use `@-` only after
+confirming that the working-copy change has one parent; a merge change can
+have multiple parents and requires an explicitly selected review base.
+
 ```bash
-BASE_REVISION=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')  # or main@origin
+BASE_REVSET=<plan-task-or-bookmark-base>
+[ "$(jj log --no-graph -r "$BASE_REVSET" -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')" -eq 1 ] || { printf 'review base must resolve to one revision\n' >&2; exit 1; }
+BASE_REVISION=$(jj log --no-graph -r "$BASE_REVSET" -T 'commit_id ++ "\n"')
 END_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 ```
 
@@ -52,7 +60,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_REVISION=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')
+BASE_REVSET=<Task-2-starting-revision>
+BASE_REVISION=$(jj log --no-graph -r "$BASE_REVSET" -T 'commit_id ++ "\n"')
 END_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]

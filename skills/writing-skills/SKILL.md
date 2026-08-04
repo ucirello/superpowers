@@ -9,7 +9,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills live in your runtime's configured skills directory.** Let the runtime discover them; do not depend on a runtime-specific installation path.
+**Personal skills live in your runtime's skills directory** (`~/.claude/skills/` on Claude Code) — see [codex-tools.md](../using-superpowers/references/codex-tools.md) or [gemini-tools.md](../using-superpowers/references/gemini-tools.md) for the path on those runtimes. Codex, Copilot CLI, and Gemini CLI all also recognize `~/.agents/skills/` as a cross-runtime alias.
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
@@ -665,7 +665,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Inspect the change with `jj diff`
 - [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 - [ ] Repository-local instructions and the syntax and style visible in `git log` always take precedence. Where compatible, keep the first line short, phrase it to complete “This change modifies the project to …”, omit trailing punctuation, and use a wrapped plain-text body to explain what changed and why when useful. Do not impose fixed types, scopes, prefixes, subjects, bodies, or templates.
-- [ ] Describe the change with `jj describe -m '<description>'` and push the appropriate bookmark with `jj git push` (if configured)
+- [ ] Describe the change with `jj describe -m '<description>'`, explicitly create or move the selected bookmark to `@`, and push it with `jj git push --bookmark <bookmark>` (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow
