@@ -33,7 +33,7 @@ digraph when_to_use {
 
 ### 1. Observe the Symptom
 ```
-Error: jj git init failed in <repo-root>/packages/core
+Error: jj git init failed in ~/project/packages/core
 ```
 
 ### 2. Find Immediate Cause
@@ -44,7 +44,7 @@ await execFileAsync('jj', ['git', 'init'], { cwd: projectDir });
 
 ### 3. Ask: What Called This?
 ```typescript
-JjWorkspaceManager.createSessionWorkspace(projectDir, sessionId)
+WorkspaceManager.createSessionWorkspace(projectDir, sessionId)
   → called by Session.initializeWorkspace()
   → called by Session.create()
   → called by test at Project.create()
@@ -108,11 +108,11 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 
 ## Real Example: Empty projectDir
 
-**Symptom:** `.jj` created in `packages/core/` (source code)
+**Symptom:** `.jj` (and, by default, colocated `.git`) created in `packages/core/` source code
 
 **Trace chain:**
 1. `jj git init` runs in `process.cwd()` ← empty cwd parameter
-2. JjWorkspaceManager called with empty projectDir
+2. WorkspaceManager called with empty projectDir
 3. Session.create() passed empty string
 4. Test accessed `context.tempDir` before beforeEach
 5. setupCoreTest() returns `{ tempDir: '' }` initially
@@ -124,7 +124,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside workspace-local `.tmp` storage
+- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp/rocketclaw`, or local `.tmp/rocketclaw` when no Jujutsu workspace exists
 - Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle

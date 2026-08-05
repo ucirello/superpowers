@@ -146,6 +146,8 @@ When feedback IS correct:
 ❌ ANY gratitude expression
 ```
 
+The review reply describes the fix; it does not replace the Jujutsu change description. If the feedback also requires composing, editing, or validating that description, use `jj describe`; repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when needed. Do not impose a fixed prefix, type, scope, template, or example.
+
 **Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
 
 **If you catch yourself about to write "Thanks":** DELETE IT. State the fix instead.

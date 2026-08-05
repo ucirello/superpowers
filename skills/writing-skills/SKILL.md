@@ -79,7 +79,7 @@ skills/
     supporting-file.*     # Only if needed
 ```
 
-**Flat namespace** - all skills share one searchable namespace. Route to another skill by its exact registered name, not by a filesystem path or an invented category prefix.
+**Flat namespace** - all skills in one searchable namespace
 
 **Separate files for:**
 1. **Heavy reference** (100+ lines) - API docs, comprehensive syntax
@@ -662,10 +662,11 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Supporting files only for tools or heavy reference
 
 **Deployment:**
-- [ ] Inspect the change with `jj diff`
+- [ ] Read repo-local instructions and inspect existing message syntax with `git log`; both always override general description advice
 - [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-- [ ] Repository-local instructions and the syntax and style visible in `git log` always take precedence. Where compatible, keep the first line short, phrase it to complete “This change modifies the project to …”, omit trailing punctuation, and use a wrapped plain-text body to explain what changed and why when useful. Do not impose fixed types, scopes, prefixes, subjects, bodies, or templates.
-- [ ] Describe the change with `jj describe -m '<description>'`, explicitly create or move the selected bookmark to `@`, and push it with `jj git push --bookmark <bookmark>` (if configured)
+- [ ] When compatible with those higher-priority standards, keep the subject concise and clear and add a wrapped plain-text body that explains what changed and why when needed
+- [ ] Do not impose a fixed prefix, type, scope, or template; use only syntax established by repo-local instructions or `git log`
+- [ ] Describe and finish the current Jujutsu change with `jj commit`, then push it through the configured Git transport with `jj git push --remote <fork-remote> --change @-` (if a fork remote is configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow

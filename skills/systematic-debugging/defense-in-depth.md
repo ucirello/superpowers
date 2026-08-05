@@ -53,20 +53,26 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
+function testTempRoot(): string {
+  try {
+    const workspaceRoot = execFileSync('jj', ['workspace', 'root'], {
+      encoding: 'utf8',
+    }).trim();
+    return resolve(workspaceRoot, '.tmp', 'rocketclaw');
+  } catch {
+    return resolve('.tmp', 'rocketclaw');
+  }
+}
+
 async function jjGitInit(directory: string) {
-  // In tests, refuse jj git init outside workspace-local temporary storage.
+  // In tests, refuse repository initialization outside the workspace-local temp tree.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    let root = process.cwd();
-    try {
-      root = execFileSync('jj', ['workspace', 'root'], { encoding: 'utf8' }).trim();
-    } catch { /* use local .tmp outside a Jujutsu repository */ }
-    const tmpDir = normalize(resolve(root, '.tmp'));
-    const relativePath = relative(tmpDir, normalized);
+    const tempRoot = normalize(testTempRoot());
 
-    if (!relativePath || relativePath.startsWith('..') || isAbsolute(relativePath)) {
+    if (normalized !== tempRoot && !normalized.startsWith(`${tempRoot}${sep}`)) {
       throw new Error(
-        `Refusing jj git init outside workspace-local .tmp during tests: ${directory}`
+        `Refusing jj git init outside ${tempRoot} during tests: ${directory}`
       );
     }
   }
@@ -80,7 +86,7 @@ async function jjGitInit(directory: string) {
 ```typescript
 async function jjGitInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to run jj git init', {
+  logger.debug('About to jj git init', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -111,7 +117,7 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `JjWorkspaceManager` refuses `jj git init` outside workspace-local `.tmp` storage in tests
+- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp/rocketclaw`, with local `.tmp/rocketclaw` fallback when no Jujutsu workspace exists; `.tmp/` remains excluded through `.gitignore`
 - Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce

@@ -215,12 +215,10 @@ description: Analyze Excel spreadsheets, create pivot tables, generate charts. U
 **Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help describing changes or reviewing the working-copy change.
+description: Draft clear Jujutsu change descriptions from the current diff. Use when asked to write or review a change description.
 ```
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
-Repository-local instructions and the syntax and style visible in `git log` always take precedence. Where compatible, keep the first line short, phrase it to complete “This change modifies the project to …”, omit trailing punctuation, and use a wrapped plain-text body to explain what changed and why when useful. Do not impose fixed types, scopes, prefixes, subjects, bodies, or templates. Apply the result with `jj describe -m '<description>'`.
+Repo-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. When compatible, prefer a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Never impose a fixed prefix, type, scope, example, or template unless the repository requires it.
 
 Avoid vague descriptions like these:
 
@@ -654,23 +652,19 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-When repository conventions govern an output, show the discovery and composition process instead of fixed input/output pairs that may contradict local standards:
+For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Change description guidance
+## Jujutsu change description
+
+Read repo-local instructions, inspect the current change with `jj diff`, and inspect the repository's existing message syntax with `git log`. Repo-local instructions and `git log` always win.
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Repository-local instructions and the syntax and style visible in `git log` always take precedence. Inspect the current work with `jj diff` and relevant history with `jj log`. Where compatible with repository precedent, apply the Go guidance: keep the first line short, phrase it to complete “This change modifies the project to …”, omit trailing punctuation, and add a wrapped plain-text body explaining what changed and why when that context is useful. Do not impose fixed types, scopes, prefixes, subjects, bodies, or templates.
-
-Apply the resulting description without prescribing its content:
-
-```bash
-jj describe -m '<description>'
-```
+When compatible with those standards, write a concise, clear subject and add a wrapped plain-text body explaining what changed and why when needed. Do not prescribe a fixed prefix, type, scope, example, or template. Apply the description with `jj describe`.
 ````
 
-This workflow demonstrates how to discover the desired style and level of detail without hard-coding a conflicting description format.
+Examples help agents understand desired output, but commit-message examples can accidentally prescribe repository-incompatible syntax. For Jujutsu descriptions, observed repository standards are safer than a fixed example.
 
 ### Conditional workflow pattern
 

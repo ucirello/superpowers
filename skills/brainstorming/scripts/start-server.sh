@@ -7,7 +7,7 @@
 #
 # Options:
 #   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         instead of the workspace's .tmp. Files persist after server stops.
+#                         instead of workspace-local .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows/MSYS shells reap nohup background processes. Auto-foreground when detected.
+# Windows POSIX-like shells reap nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -119,11 +119,17 @@ if [[ -n "$PROJECT_DIR" ]]; then
   # already-open browser tab reconnects to the same URL with a valid cookie.
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
-  EPHEMERAL_SESSION="false"
 else
-  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
+  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || true)"
+  if [[ -n "$WORKSPACE_ROOT" ]]; then
+    if [[ ! -f "$WORKSPACE_ROOT/.gitignore" ]] || ! grep -Eq '^[[:space:]]*/?\.tmp(/.*)?[[:space:]]*$' "$WORKSPACE_ROOT/.gitignore"; then
+      echo "error: add .tmp/ to $WORKSPACE_ROOT/.gitignore before starting the companion" >&2
+      exit 1
+    fi
+  else
+    WORKSPACE_ROOT="$PWD"
+  fi
   SESSION_DIR="${WORKSPACE_ROOT}/.tmp/rocketclaw/brainstorm-${SESSION_ID}"
-  EPHEMERAL_SESSION="true"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
@@ -133,9 +139,6 @@ SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
 
 # Create fresh session directory with content and state peers
 mkdir -p "${SESSION_DIR}/content" "$STATE_DIR"
-if [[ "$EPHEMERAL_SESSION" == "true" ]]; then
-  : > "${STATE_DIR}/ephemeral-session"
-fi
 
 SERVER_ID=""
 if [[ -r /dev/urandom ]]; then
@@ -156,8 +159,9 @@ fi
 
 cd "$SCRIPT_DIR" || exit 1
 
-# Resolve the owner PID (grandparent of this script).
-# $PPID is the ephemeral shell that launched us; its parent owns the session.
+# Resolve the harness PID (grandparent of this script).
+# $PPID is the ephemeral shell the harness spawned to run us — it dies
+# when this script exits. The harness itself is $PPID's parent.
 OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
 if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
   OWNER_PID="$PPID"

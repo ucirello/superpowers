@@ -20,19 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## jj Revisions to Review
+    ## Jujutsu Range to Review
 
-    **Base:** [BASE_REVISION]
-    **End:** [END_REVISION]
+    **Base:** [BASE_REV]
+    **End:** [END_REV]
 
     ```bash
-    jj --ignore-working-copy diff --stat --from [BASE_REVISION] --to [END_REVISION]
-    jj --ignore-working-copy diff --from [BASE_REVISION] --to [END_REVISION]
+    jj diff --ignore-working-copy --stat --from [BASE_REV] --to [END_REV]
+    jj diff --ignore-working-copy --from [BASE_REV] --to [END_REV]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate the working copy, revisions, operation history, workspaces, or bookmarks in any way. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` with revision IDs or revsets to inspect revisions and history without snapshotting the working copy. If materializing a different revision is unavoidable, ask the controller to prepare a separate workspace under `$(jj workspace root)/.tmp/` (or local `.tmp/` outside a Jujutsu repository) before dispatch; never create it or edit a different revision during review.
+    Your review is read-only in this workspace. Do not mutate the reviewed working copy, revisions, bookmarks, workspaces, or operation state. Use commands like `jj show --ignore-working-copy`, `jj diff --ignore-working-copy`, `jj file show --ignore-working-copy`, and `jj log --ignore-working-copy` to inspect any revision without creating or editing another working copy.
 
     ## What to Check
 
@@ -102,6 +102,8 @@ Subagent (general-purpose):
     ### Recommendations
     [Improvements for code quality, architecture, or process]
 
+    For any commit-message composition, edit, validation, or recommendation, repository instructions and the message syntax visible in `git log` always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose fixed messages, prefixes, types, scopes, templates, or examples.
+
     ### Assessment
 
     **Ready to integrate?** [Yes | No | With fixes]
@@ -128,8 +130,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_REVISION]` — starting revision ID or revset
-- `[END_REVISION]` — ending revision ID or revset
+- `[BASE_REV]` — starting revision
+- `[END_REV]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

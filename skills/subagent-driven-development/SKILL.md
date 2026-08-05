@@ -5,7 +5,7 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-change-stack review at the end.
+Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-stack review at the end.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
@@ -53,7 +53,7 @@ digraph process {
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
-        "Implementer implements, tests, describes the change, self-reviews" [shape=box];
+        "Implementer implements, tests, commits, self-reviews" [shape=box];
         "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [shape=box];
         "Spec ✅ and quality approved?" [shape=diamond];
         "Finding conflicts with plan text?" [shape=diamond];
@@ -73,15 +73,15 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
-    "Final review clean: delete this plan's artifact directory" [shape=box];
+    "Final review clean: delete this plan's RocketClaw artifacts" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: Jujutsu workspace, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Implementer implements, tests, describes the change, self-reviews";
-    "Implementer asks questions?" -> "Implementer implements, tests, describes the change, self-reviews" [label="no"];
-    "Implementer implements, tests, describes the change, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
+    "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
+    "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
+    "Implementer implements, tests, commits, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
     "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" -> "Spec ✅ and quality approved?";
     "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "Spec ✅ and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
@@ -102,32 +102,31 @@ digraph process {
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
-    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's artifact directory";
-    "Final review clean: delete this plan's artifact directory" -> "Use superpowers:finishing-a-development-branch";
+    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's RocketClaw artifacts";
+    "Final review clean: delete this plan's RocketClaw artifacts" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
 ## Setup
 
-Ensure the work happens in an isolated Jujutsu workspace. Create one with
-`jj workspace add <path> -r <starting-revision>` or verify the current one
-with `jj workspace root` and `jj workspace list`. Never start implementation
-directly on a revision targeted by the repository's trunk bookmark without
-your human partner's explicit consent.
-
-Resolve and record STARTING_REVISION before Task 1. Ensure `@` is an empty
-working-copy change whose sole parent is STARTING_REVISION; otherwise create
-that fresh change with `jj new "$STARTING_REVISION"`. If existing unrelated
-work makes that unsafe, stop and ask rather than including it in Task 1.
+Ensure the work happens in an isolated Jujutsu workspace: use
+superpowers:using-git-worktrees for the functional isolation route, while
+creating or verifying the actual workspace with `jj workspace list` and
+`jj workspace add`.
+Before implementation, confirm `@` is a mutable change dedicated to this work
+and is a descendant of `trunk()`; never edit `trunk()` directly without your
+human partner's explicit consent.
+Use `jj git fetch` and `jj git push` for remote transport when transport is
+needed, and preserve `gh` for GitHub operations.
 
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
-- Each plan owns a workspace: at skill start, run this skill's
+- Each plan owns a RocketClaw artifact directory: at skill start, run this skill's
   `scripts/sdd-workspace PLAN_FILE` — it prints the plan's ignored
-  directory (`<repository-root>/.rocketclaw/sdd/<plan-basename>/`), home to
+  directory (`<workspace-root>/.rocketclaw/sdd/<plan-basename>/`), home to
   every artifact for THIS plan: ledger, briefs, reports, review packages.
   Another plan's directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
@@ -139,12 +138,16 @@ a ledger file, not only in todos.
   plan's progress: leave it in place and start your own, fresh.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`.
-- The ledger is your recovery map: the change IDs and revision IDs it names
-  exist in the repository even when your context no longer remembers creating
-  them. After compaction, trust the ledger and `jj log` over your own
-  recollection.
-- Removing ignored files will destroy the artifact directory; if that happens,
-  recover from `jj log` and `jj show <revision-id>`.
+- Before Task 1, resolve the full commit ID of the revision on which this
+  execution workspace is based and record it as `Stack base: <commit-id>` in
+  the ledger. This recorded base, not an inferred trunk fork point, defines
+  the final review range.
+- The ledger is your recovery map: the commit IDs it names exist in Jujutsu even
+  when your context no longer remembers creating them. After compaction,
+  trust the ledger and `jj log -r ::@` over your own recollection.
+- External cleanup can destroy the ignored artifact directory; if that
+  happens, recover commit history with `jj log -r ::@` and operation history
+  with `jj op log`.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task.
@@ -170,7 +173,7 @@ Use the least powerful model that can handle each role to conserve cost and incr
 **Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
 
 **Architecture and design tasks**: use the most capable available model.
-The final whole-change-stack review is one of these — dispatch it on the most
+The final whole-stack review is one of these — dispatch it on the most
 capable available model, not the session default.
 
 **Review tasks**: choose the model with the same judgment, scaled to the
@@ -206,14 +209,10 @@ and is re-read on every later turn. Hand artifacts over as files.
 
 ### 1. Dispatch the implementer
 
-Begin each task on a fresh working-copy change based on the last accepted
-revision (`jj new @`; the workspace created during setup already supplies the
-first fresh change). Record BASE_REVISION as the immutable parent revision ID
-(`jj log --no-graph -r @- -T 'commit_id ++ "\n"'`) and record the fresh
-working-copy change ID (`jj log --no-graph -r @ -T 'change_id ++ "\n"'`).
-After implementation, record HEAD_REVISION with the same `commit_id` template
-at `@`. Review packages and fix-round diffs require immutable revision IDs;
-the ledger uses the stable change ID to follow rewrites.
+Record BASE before dispatching as the full commit ID of `@-`:
+`jj log --no-graph -r @- -T 'commit_id ++ "\n"'`. Do not record `@`: the
+working-copy commit is mutable and the implementer will rewrite it. The review
+package and fix-round diffs need the stable completed parent.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
@@ -230,13 +229,9 @@ the ledger uses the stable change ID to follow rewrites.
 - **Report file:** name the implementer's report file after the brief
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
-  returns only status, change IDs and revision IDs, a one-line test summary,
-  and concerns.
-- **Change description:** tell the implementer to derive a neutral description
-  from the completed work and apply it with `jj describe`; do not supply a
-  fixed prefix or message template. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-  Repository-local instructions and existing history take precedence, with
-  compatible Go guidance applied.
+  returns only status, commits, a one-line test summary, and concerns.
+- **Change descriptions:** repository-local instructions and the message syntax
+  visible in `git log` always override generic advice. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Compatible quality guidance is a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form. Do not prescribe a fixed prefix, tense, punctuation rule, line length, trailer, or example syntax. The implementer must finish with `jj commit`, leaving a new empty `@`; the latest completed task commit is then `@-`.
 - A dispatch prompt describes one task, not the session's history. Do not
   paste accumulated prior-task summaries ("state after Tasks 1-3") into
   later dispatches — a real session's dispatch hit 42k chars of which 99%
@@ -254,12 +249,12 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Record HEAD_REVISION, then generate the review package
-(`scripts/review-package PLAN_FILE BASE_REVISION HEAD_REVISION`, from this
-skill's directory — it prints the unique file path it wrote; BASE_REVISION is
-the immutable parent revision recorded before dispatching the implementer,
-which preserves every change in a stacked task), then dispatch the task
-reviewer with the printed path.
+**DONE:** Record TIP as the full commit ID of `@-` with
+`jj log --no-graph -r @- -T 'commit_id ++ "\n"'`. Generate the review package
+(`scripts/review-package PLAN_FILE BASE TIP`, from this skill's directory; it
+prints the unique file path it wrote). BASE is the completed commit recorded
+before dispatch, not `@--`, which would silently drop all but the last commit
+of a multi-commit task. Then dispatch the task reviewer with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -280,21 +275,21 @@ rush it into implementation.
 ### 3. Review the task
 
 Per-task reviews are task-scoped gates. The broad review happens once, at the
-final whole-change-stack review. Never skip the task review, and never accept a
+final whole-stack review. Never skip the task review, and never accept a
 report missing either verdict — spec compliance AND task quality are both
 required. Implementer self-review never replaces the task review; both are
 needed.
 
 - Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package PLAN_FILE BASE_REVISION HEAD_REVISION` and pass the reviewer the file path
-  it prints (or, without the script: `jj log --no-graph -r
-  'BASE_REVISION..HEAD_REVISION'`, `jj diff --from BASE_REVISION --to
-  HEAD_REVISION --stat`, and `jj diff --from BASE_REVISION --to HEAD_REVISION
-  --context 10`, redirected to one uniquely named
+  `scripts/review-package PLAN_FILE BASE TIP` and pass the reviewer the file path
+  it prints (or, without bash: `jj --ignore-working-copy log --no-graph -r
+  'BASE..TIP'`, `jj --ignore-working-copy diff --from BASE --to TIP --stat`,
+  and `jj --ignore-working-copy diff --from BASE --to TIP --git --context 10`,
+  redirected to one uniquely named
   file). The output never enters your own context, and the reviewer sees
-  the change list, stat summary, and full diff with context in one Read
-  call. Use the immutable BASE_REVISION recorded before dispatching the
-  implementer so stacked tasks are not truncated. Never
+  the commit list, stat summary, and full diff with context in one Read
+  call. Use the BASE you recorded before dispatching the implementer —
+  never `@--`, which silently truncates multi-commit tasks. Never
   dispatch a task reviewer without a diff file.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
@@ -334,7 +329,7 @@ Before the loop starts, two routes leave it immediately:
 
 - Record Minor findings in the progress ledger as you go
   (`Task <N>: minor (deferred): <one-liner>`), and point the final
-  whole-change-stack review at that list so it can triage which must be fixed
+  whole-stack review at that list so it can triage which must be fixed
   before integration. A roll-up nobody reads is a silent discard. Minor findings
   never enter the loop.
 - A finding labeled plan-mandated — or any finding that conflicts with
@@ -364,17 +359,11 @@ and returns the short contract. Before re-dispatching the reviewer, confirm
 the fix report contains the covering tests, the command run, and the
 output; dispatch the re-review once all three are present. Name the
 covering test files in the fix message — a one-line fix does not need the
-whole suite. If the fix changes the scope represented by the change
-description, have the implementer update it with `jj describe` using a neutral
-description derived from the amended work, not a fixed prefix or template.
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-Repository-local instructions and existing history take precedence; apply the
-Go guidance only where compatible, and do not impose fixed syntax.
+whole suite.
 
-**The re-review is scoped.** Record the amended task's new immutable revision
-ID as HEAD_REVISION, run `scripts/review-package PLAN_FILE
-FIX_BASE_REVISION HEAD_REVISION` where FIX_BASE_REVISION is the immutable
-revision ID the previous review saw, and dispatch
+**The re-review is scoped.** Before fixing, record FIX_BASE as the full commit
+ID of the tip the previous review saw. After the implementer finishes, record
+TIP from `@-`, then run `scripts/review-package PLAN_FILE FIX_BASE TIP` and dispatch
 [re-review-prompt.md](re-review-prompt.md) with the findings list, the
 brief, the report file, and the printed diff path. The re-reviewer verdicts
 each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix
@@ -383,7 +372,7 @@ findings list. Out-of-scope observations go to the ledger as deferred
 minors — they never extend the loop.
 
 **After each round,** append to the ledger:
-`Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; change <change-id>; revisions <before-id>..<after-id>)`
+`Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; commits <base-id>..<tip-id>)`
 
 Never fix findings yourself in the controller session — your context stays
 clean for coordination, and controller fixes skip review.
@@ -413,53 +402,48 @@ When the review comes back clean — or every open finding is parked with a
 ruling at the cap — append the completion line to the ledger in the same
 message as your other bookkeeping:
 
-- `Task <N>: complete (change <change-id>; base <revision-id>; head <revision-id>; review clean)`
-- `Task <N>: complete (change <change-id>; base <revision-id>; head <revision-id>; <K> parked)` after a
+- `Task <N>: complete (commits <base-id>..<tip-id>, review clean)`
+- `Task <N>: complete (commits <base-id>..<tip-id>, <K> parked)` after a
   tripped breaker
 
 Then mark the todo complete and move on. Never move to the next task while
 the review has open Critical/Important issues that are neither fixed nor
 parked-with-ruling at the cap.
 
-After recording completion, if another task remains, run `jj new @` to create
-its fresh working-copy change. Do not move a bookmark during the task loop.
-
 ## Final Review
 
-The final whole-change-stack review gets a package too. Resolve the trunk
-bookmark according to repository-local instructions, then record
-STACK_BASE_REVISION as the immutable revision ID selected by
-`jj log --no-graph -r 'exactly(fork_point(@ | <trunk-bookmark>), 1)' -T
-'commit_id ++ "\n"'`. Record HEAD_REVISION from `@`, run
-`scripts/review-package PLAN_FILE STACK_BASE_REVISION HEAD_REVISION`, and
-include the printed path in the final review dispatch, so the final reviewer
-reads one file instead of re-deriving the stack diff with Jujutsu commands. Dispatch
+The final whole-stack review gets a package too: run
+`scripts/review-package PLAN_FILE STACK_BASE TIP`. Resolve STACK_BASE from the
+ledger's recorded `Stack base` commit ID, and resolve TIP as the full commit ID
+of `@-`. Include the
+printed path in the final review dispatch, so the final reviewer reads
+one file instead of re-deriving the stack diff with Jujutsu commands. Dispatch
 on the most capable available model (see Model Selection), using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before integration.
+Tell the final reviewer that repository-local instructions and the message
+syntax visible in `git log` always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with local standards, it may expect a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form, but it must not impose a fixed prefix, tense, punctuation rule, line length, trailer, or example syntax.
 
-If the final whole-change-stack review returns findings, dispatch ONE fix subagent
+If the final whole-stack review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
-(`scripts/review-package PLAN_FILE FIX_BASE_REVISION HEAD_REVISION` over the fix range,
+(`scripts/review-package PLAN_FILE FIX_BASE TIP` over the fix range,
 [re-review-prompt.md](re-review-prompt.md)).
 Adjudicate any residual findings as in the task loop's breaker: park with
 rulings, or stop on load-bearing ones. There is no second fix wave —
 residual load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+superpowers:finishing-a-development-branch presents the options.
 
 ## Finish
 
-When the final whole-change-stack review is clean and its fixes are integrated,
-delete this plan's artifact directory (`rm -rf <artifact-directory>`) — the
-Jujutsu history is the record now. Sibling directories belong to other plans;
-leave them alone. Move or create bookmarks only as directed by the finishing
-workflow and repository-local instructions, using `jj bookmark create` or
-`jj bookmark move`; bookmarks identify revisions and are not workspaces.
+When the final whole-stack review is clean and its fixes are integrated,
+delete this plan's artifact directory (`rm -rf <workspace>`) — Jujutsu history is
+the record now. Sibling directories belong to other plans; leave them
+alone.
 
 Use superpowers:finishing-a-development-branch.
 
@@ -482,8 +466,8 @@ Use superpowers:finishing-a-development-branch.
 You: I'm using Subagent-Driven Development to execute this plan.
 
 [Setup: Jujutsu workspace verified]
-[Read plan file once: docs/plans/feature-plan.md]
-[Resolve artifact directory: scripts/sdd-workspace docs/plans/feature-plan.md — no ledger inside, fresh start]
+[Read plan file once: docs/rocketclaw/plans/feature-plan.md]
+[Resolve workspace: scripts/sdd-workspace docs/rocketclaw/plans/feature-plan.md — no ledger inside, fresh start]
 [Create todos for all tasks]
 
 Task 1: Hook installation script
@@ -492,19 +476,19 @@ Task 1: Hook installation script
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
-You: "User level (~/.config/project/hooks/)"
+You: "User level (~/.config/rocketclaw/hooks/)"
 
 Implementer: [Later]
   - Implemented install-hook command
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
-  - Described the current change; reported its change ID and revision ID
+  - Finished Jujutsu commit
 
-[Run review-package PLAN_FILE BASE_REVISION HEAD_REVISION; dispatch task reviewer with the printed path]
+[Run review-package PLAN_FILE BASE TIP; dispatch task reviewer with the printed path]
 Task reviewer: Spec ✅ - all requirements met, nothing extra.
   Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
 
-[Ledger: Task 1: complete (change <change-id>; base <revision-id>; head <revision-id>; review clean)]
+[Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review clean)]
 
 Task 2: Recovery modes
 
@@ -513,9 +497,9 @@ Task 2: Recovery modes
 Implementer: [No questions]
   - Added verify/repair modes
   - 8/8 tests passing
-  - Described the current change; reported its change ID and revision ID
+  - Finished Jujutsu commit
 
-[Run review-package PLAN_FILE BASE_REVISION HEAD_REVISION; dispatch task reviewer with the printed path]
+[Run review-package PLAN_FILE BASE TIP; dispatch task reviewer with the printed path]
 Task reviewer: Spec ❌:
   - Missing: Progress reporting (spec says "report every 100 items")
   Issues (Important): Magic number (100)
@@ -524,21 +508,21 @@ Task reviewer: Spec ❌:
 Implementer: Added progress reporting, extracted PROGRESS_INTERVAL constant.
   Re-ran test/recovery.test.js — 10/10 passing. Fix report appended.
 
-[Run review-package PLAN_FILE FIX_BASE_REVISION HEAD_REVISION; dispatch scoped re-review]
+[Run review-package PLAN_FILE FIX_BASE TIP; dispatch scoped re-review]
 Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
   Magic number — ADDRESSED (src/recovery.js:7). New breakage: none.
   Verdict: all findings addressed.
 
-[Ledger: Task 2: fix round 1/5 (2 addressed, 0 open; change <change-id>; revisions <before-id>..<after-id>)]
-[Ledger: Task 2: complete (change <change-id>; base <revision-id>; head <revision-id>; review clean)]
+[Ledger: Task 2: fix round 1/5 (2 addressed, 0 open; commits d4e5f6a..b7c8d9e)]
+[Ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, review clean)]
 
 ...
 
 [After all tasks]
-[Run review-package PLAN_FILE STACK_BASE_REVISION HEAD_REVISION; dispatch final code-reviewer, most capable model]
+[Run review-package PLAN_FILE STACK_BASE TIP; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block integration.
 
-[Delete this plan's artifact directory — the record now lives in Jujutsu]
+[Delete this plan's RocketClaw artifacts — the record now lives in Jujutsu]
 
 Done! Using superpowers:finishing-a-development-branch.
 ```

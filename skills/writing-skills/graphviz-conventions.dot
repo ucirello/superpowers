@@ -12,7 +12,7 @@ digraph STYLE_GUIDE {
         "Take an action" [shape=box];
 
         // Commands are plaintext
-        "jj status" [shape=plaintext];
+        "jj log" [shape=plaintext];
 
         // States are ellipses
         "Current state" [shape=ellipse];
@@ -29,7 +29,7 @@ digraph STYLE_GUIDE {
         "Write test first" [shape=box];
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
-        "NEVER stage files; jj snapshots the working copy" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "Jujutsu has no staging-area step" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions
@@ -71,7 +71,7 @@ digraph STYLE_GUIDE {
         // Actions start with verb
         "Write the test";
         "Search for patterns";
-        "Describe the change";
+        "Finalize the change";
         "Ask for help";
 
         // Commands are literal
@@ -152,12 +152,12 @@ digraph STYLE_GUIDE {
         "Test failed" [shape=ellipse];
         "Read error message" [shape=box];
         "Can reproduce?" [shape=diamond];
-        "jj diff -r @" [shape=plaintext];
+        "jj diff --from @- --to @" [shape=plaintext];
         "NEVER ignore errors" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
 
         "Test failed" -> "Read error message";
         "Read error message" -> "Can reproduce?";
-        "Can reproduce?" -> "jj diff -r @" [label="yes"];
+        "Can reproduce?" -> "jj diff --from @- --to @" [label="yes"];
 
         // Bad: vague and wrong shapes
         bad_1 [label="Something wrong", shape=box];  // Should be ellipse (state)

@@ -1,50 +1,55 @@
 #!/usr/bin/env bash
-# Generate a review package: change list, stat summary, and the net
+# Generate a review package: commit list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using recorded immutable revision IDs keeps multi-change tasks intact.
+# call. Using the recorded per-task BASE (not @--) keeps multi-commit
+# tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE_REVISION HEAD_REVISION [OUTFILE]
-# Default OUTFILE: <repository-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<head7>.diff
+# Usage: review-package PLAN_FILE BASE TIP [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<tip7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE_REVISION HEAD_REVISION [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE TIP [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
-base_revision=$2
-head_revision=$3
+base=$2
+tip=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-jj --ignore-working-copy log --no-graph -r "$base_revision" -T 'commit_id ++ "\n"' >/dev/null \
-  || { echo "bad BASE_REVISION: $base_revision" >&2; exit 2; }
-jj --ignore-working-copy log --no-graph -r "$head_revision" -T 'commit_id ++ "\n"' >/dev/null \
-  || { echo "bad HEAD_REVISION: $head_revision" >&2; exit 2; }
+base_id=$(jj --ignore-working-copy log --no-graph -r "exactly($base, 1)" \
+  -T 'commit_id ++ "\n"') || { echo "bad BASE: $base" >&2; exit 2; }
+tip_id=$(jj --ignore-working-copy log --no-graph -r "exactly($tip, 1)" \
+  -T 'commit_id ++ "\n"') || { echo "bad TIP: $tip" >&2; exit 2; }
+jj --ignore-working-copy log --no-graph \
+  -r "exactly($base_id & ::$tip_id, 1)" -T 'commit_id' >/dev/null \
+  || { echo "BASE is not an ancestor of TIP: ${base}..${tip}" >&2; exit 2; }
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  base_short=$(jj --ignore-working-copy log --no-graph -r "$base_revision" -T 'commit_id.short(7)')
-  head_short=$(jj --ignore-working-copy log --no-graph -r "$head_revision" -T 'commit_id.short(7)')
-  out="$dir/review-${base_short}..${head_short}.diff"
+  base_short=$(jj --ignore-working-copy log --no-graph -r "$base_id" -T 'commit_id.short(7)')
+  tip_short=$(jj --ignore-working-copy log --no-graph -r "$tip_id" -T 'commit_id.short(7)')
+  out="$dir/review-${base_short}..${tip_short}.diff"
 fi
 
 {
-  echo "# Review package: ${base_revision}..${head_revision}"
+  echo "# Review package: ${base_id}..${tip_id}"
   echo
-  echo "## Changes"
-  jj --ignore-working-copy log --no-graph -r "${base_revision}..${head_revision}" \
-    -T 'change_id.short(8) ++ " " ++ commit_id.short(8) ++ " " ++ description.first_line() ++ "\n"'
+  echo "## Commits"
+  jj --ignore-working-copy log --no-graph -r "${base_id}..${tip_id}" \
+    -T 'commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  jj --ignore-working-copy diff --from "$base_revision" --to "$head_revision" --stat
+  jj --ignore-working-copy diff --from "$base_id" --to "$tip_id" --stat
   echo
   echo "## Diff"
-  jj --ignore-working-copy diff --from "$base_revision" --to "$head_revision" --context 10
+  jj --ignore-working-copy diff --from "$base_id" --to "$tip_id" --git --context 10
 } > "$out"
 
-changes=$(jj --ignore-working-copy log --no-graph -r "${base_revision}..${head_revision}" -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')
-echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"
+commits=$(jj --ignore-working-copy log --no-graph -r "${base_id}..${tip_id}" \
+  -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')
+echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"

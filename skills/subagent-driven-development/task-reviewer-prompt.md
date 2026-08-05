@@ -15,7 +15,7 @@ Subagent (general-purpose):
   prompt: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
-    not an integration review — a broad whole-change-stack review happens separately after
+    not an integration review — a broad whole-stack review happens separately after
     all tasks are complete.
 
     ## What Was Requested
@@ -31,18 +31,18 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base revision:** [BASE_REVISION_ID]
-    **Head revision:** [HEAD_REVISION_ID]
+    **Base:** [BASE_ID]
+    **Tip:** [TIP_ID]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the change list, a stat summary,
+    Read the diff file once — it contains the commit list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not re-run Jujutsu commands.
-    If the diff file is missing, fetch the diff yourself:
-    `jj --ignore-working-copy diff --from [BASE_REVISION_ID] --to [HEAD_REVISION_ID] --stat` and
-    `jj --ignore-working-copy diff --from [BASE_REVISION_ID] --to [HEAD_REVISION_ID]`.
+    mid-function — and say so in your report. Do not re-run Jujutsu commands
+    unless the diff file is missing; in that case, fetch the diff yourself:
+    `jj --ignore-working-copy diff --from [BASE_ID] --to [TIP_ID] --stat` and
+    `jj --ignore-working-copy diff --from [BASE_ID] --to [TIP_ID] --git --context 10`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -50,8 +50,13 @@ Subagent (general-purpose):
     lock ordering, a function or API contract, or shared mutable state,
     checking the call sites is the right method.
 
-    Your review is read-only on this workspace. Do not mutate the working
-    copy, current revision, operation history, workspace, or bookmark state in any way.
+    Your review is read-only in this workspace. Do not mutate the working
+    copy, commit graph, descriptions, bookmarks, or operation state in
+    any way. Use `--ignore-working-copy` for any read-only Jujutsu inspection.
+
+    Validate the descriptions included in the package against repository-local
+    instructions and the message syntax visible in `git log`; those sources
+    always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with local standards, expect a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form. Do not require a fixed prefix, tense, punctuation rule, line length, trailer, or example syntax. Report a description issue only when it materially violates the governing local standard; do not block task quality for harmless stylistic preference.
 
     ## Do Not Trust the Report
 
@@ -176,10 +181,10 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_REVISION_ID]` — immutable revision ID before this task
-- `[HEAD_REVISION_ID]` — immutable revision ID of the task change
+- `[BASE_ID]` — full commit ID of the completed commit before this task
+- `[TIP_ID]` — full commit ID of the task's latest completed commit
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE_REVISION HEAD_REVISION` prints the unique
+  package to (`scripts/review-package PLAN_FILE BASE TIP` prints the unique
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Resolve and ensure the repository-local directory SDD uses for one plan's
+# Resolve and ensure the RocketClaw directory SDD uses for one plan's
 # short-lived artifacts: task briefs, implementer reports, review packages,
-# and the progress ledger. Print the plan directory's absolute path.
+# and the progress ledger. Print the artifact directory's absolute path.
 #
 # One directory per plan (.rocketclaw/sdd/<plan-basename>/) so a follow-up
 # plan in the same Jujutsu workspace can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The artifact directory lives in the Jujutsu workspace (not in Jujutsu's
-# internal store) so implementer subagents can write their report files. A
-# self-ignoring .gitignore at .rocketclaw/sdd/ keeps every plan's artifacts
-# out of `jj status` and accidental changes without modifying a tracked file.
+# The artifact directory lives in the working copy rather than repository internals so
+# implementer subagents can write report files. A self-ignoring .gitignore at
+# .rocketclaw/sdd/ keeps every plan's workspace out of `jj status` and out of
+# accidental commits without modifying any tracked file.
 #
-# Single source of truth for the workspace location, so task-brief and
+# Single source of truth for the artifact location, so task-brief and
 # review-package cannot drift to different directories.
 #
 # Usage: sdd-workspace PLAN_FILE

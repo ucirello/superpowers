@@ -2,8 +2,9 @@
 # Stop the brainstorm server and clean up
 # Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Ephemeral sessions under the workspace's .tmp are
-# deleted. Persistent directories (.rocketclaw/) are kept for later review.
+# Kills the server process. Only deletes session directories under
+# workspace-local .tmp/rocketclaw/. Persistent directories (.rocketclaw/)
+# are kept so mockups can be reviewed later.
 
 SESSION_DIR="$1"
 
@@ -108,8 +109,8 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Only delete sessions explicitly marked ephemeral by start-server.sh.
-  if [[ -f "${STATE_DIR}/ephemeral-session" ]]; then
+  # Only delete workspace-local scratch sessions.
+  if [[ "$SESSION_DIR" == */.tmp/rocketclaw/brainstorm-* || "$SESSION_DIR" == .tmp/rocketclaw/brainstorm-* ]]; then
     rm -rf "$SESSION_DIR"
   fi
 
