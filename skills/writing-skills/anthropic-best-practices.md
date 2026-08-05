@@ -212,11 +212,13 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Draft clear Jujutsu change descriptions from the current diff. Use when asked to write or review a change description.
 ```
+
+Repo-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. When compatible, prefer a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Never impose a fixed prefix, type, scope, example, or template unless the repository requires it.
 
 Avoid vague descriptions like these:
 
@@ -653,42 +655,16 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Jujutsu change description
 
-Generate commit messages following these examples:
+Read repo-local instructions, inspect the current change with `jj diff`, and inspect the repository's existing message syntax with `git log`. Repo-local instructions and `git log` always win.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Add login endpoint and token validation middleware
-```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+When compatible with those standards, write a concise, clear subject and add a wrapped plain-text body explaining what changed and why when needed. Do not prescribe a fixed prefix, type, scope, example, or template. Apply the description with `jj describe`.
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Examples help agents understand desired output, but commit-message examples can accidentally prescribe repository-incompatible syntax. For Jujutsu descriptions, observed repository standards are safer than a fixed example.
 
 ### Conditional workflow pattern
 

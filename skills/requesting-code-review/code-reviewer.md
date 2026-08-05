@@ -20,19 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Jujutsu Range to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_REV]
+    **End:** [END_REV]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj diff --ignore-working-copy --stat --from [BASE_REV] --to [END_REV]
+    jj diff --ignore-working-copy --from [BASE_REV] --to [END_REV]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in this workspace. Do not mutate the reviewed working copy, revisions, bookmarks, workspaces, or operation state. Use commands like `jj show --ignore-working-copy`, `jj diff --ignore-working-copy`, `jj file show --ignore-working-copy`, and `jj log --ignore-working-copy` to inspect any revision without creating or editing another working copy.
 
     ## What to Check
 
@@ -102,9 +102,11 @@ Subagent (general-purpose):
     ### Recommendations
     [Improvements for code quality, architecture, or process]
 
+    For any commit-message composition, edit, validation, or recommendation, repository instructions and the message syntax visible in `git log` always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose fixed messages, prefixes, types, scopes, templates, or examples.
+
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready to integrate?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -128,8 +130,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REV]` — starting revision
+- `[END_REV]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -166,7 +168,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready to integrate: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

@@ -19,10 +19,21 @@ Subagent (general-purpose):
 
     | Category | What to Look For |
     |----------|------------------|
-    | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
+    | Completeness | TODOs, incomplete tasks, missing steps, and placeholders other than the neutral runtime Jujutsu description marker |
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Jujutsu workflow | Uses automatic working-copy snapshots rather than staging; reviews with `jj status` and `jj diff`; finalizes with `jj commit` or an equivalent repository-prescribed Jujutsu flow |
+    | Temporary files | Uses `$(jj workspace root)/.tmp`, with local `.tmp` only outside a Jujutsu workspace; never uses repository-external temporary storage |
+    | Change descriptions | Every composition, edit, validation, or recommendation site includes the exact required sentence below; descriptions explain what changed and why without prescribing a fixed repository-independent format |
+
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+    Repository-local instructions and the message syntax visible in `git log`
+    always win. Otherwise, require compatible Go-style clarity and structure: a
+    concise, clear subject and a wrapped body explaining what changed and why when
+    needed. Accept a neutral runtime description placeholder; reject fixed
+    prefixes, types, scopes, templates, or examples.
 
     ## Calibration
 
