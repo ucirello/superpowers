@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before finalizing or publishing Jujutsu changes or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
 ---
 
 # Verification Before Completion
@@ -44,14 +44,14 @@ Skip any step = lying, not verifying
 | Build succeeds | Build command: exit 0 | Linter passing, logs look good |
 | Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
 | Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
+| Agent completed | `jj diff` shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
+- About to finalize or publish work or create a PR without verification
 - Trusting agent success reports
 - Relying on partial verification
 - Thinking "just this once"
@@ -99,9 +99,15 @@ Skip any step = lying, not verifying
 
 **Agent delegation:**
 ```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
+✅ Agent reports success → Check `jj diff` → Verify changes → Report actual state
 ❌ Trust agent report
 ```
+
+## Jujutsu Change Finalization
+
+Before composing, editing, recommending, or validating any Jujutsu change description, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. If repository-local standards do not decide a point, use compatible Go quality guidance: write a concise, clear subject and explain what changed and why in a wrapped plain-text body when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
+
+Verify the working-copy change with `jj status` and `jj diff`, edit its description with `jj describe`, and inspect the result with `jj log -r @`. Use `jj new` only when the current change is finalized and work should continue in a new change. Publish through an explicit repository-appropriate bookmark with `jj git push --bookmark <bookmark>`; use `gh` for GitHub PR operations when applicable.
 
 ## When To Apply
 
@@ -109,7 +115,7 @@ Skip any step = lying, not verifying
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
-- Committing, PR creation, task completion
+- Finalizing or publishing work, PR creation, task completion
 - Moving to next task
 - Delegating to agents
 
