@@ -92,7 +92,7 @@ is theirs.
 ## Change Descriptions
 
 Repository-local instructions and the message syntax visible in `git log`
-always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when needed. Do not impose a fixed prefix, type, scope, template, or example.
+always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
 
 If the completed feature tip needs a description, apply that guidance with
 `jj describe <feature-tip>` and let the editor collect the description.

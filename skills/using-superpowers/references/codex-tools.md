@@ -25,7 +25,7 @@ jj status
 
 Use `jj describe` to set the current change description, `jj new` to start the next change, and `jj bookmark set <name> -r @` followed by `jj git push --bookmark <name>` when publishing through Git transport. GitHub operations continue to use `gh`.
 
-When composing a change description or commit message, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when needed. Do not impose a fixed prefix, type, scope, template, or example.
+When composing a change description or commit message, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
 
 ## Codex App Finishing
 

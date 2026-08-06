@@ -218,7 +218,7 @@ description: Analyze Excel spreadsheets, create pivot tables, generate charts. U
 description: Draft clear Jujutsu change descriptions from the current diff. Use when asked to write or review a change description.
 ```
 
-Repo-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. When compatible, prefer a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Never impose a fixed prefix, type, scope, example, or template unless the repository requires it.
+Repo-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. When compatible, prefer a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Never impose a fixed message, prefix, type, scope, subject, body, example, or template unless the repository requires it.
 
 Avoid vague descriptions like these:
 
@@ -661,7 +661,7 @@ Read repo-local instructions, inspect the current change with `jj diff`, and ins
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-When compatible with those standards, write a concise, clear subject and add a wrapped plain-text body explaining what changed and why when needed. Do not prescribe a fixed prefix, type, scope, example, or template. Apply the description with `jj describe`.
+When compatible with those standards, write a concise, clear subject and add a wrapped plain-text body explaining what changed and why when needed. Do not prescribe a fixed message, prefix, type, scope, subject, body, example, or template. Apply the description with `jj describe`.
 ````
 
 Examples help agents understand desired output, but commit-message examples can accidentally prescribe repository-incompatible syntax. For Jujutsu descriptions, observed repository standards are safer than a fixed example.

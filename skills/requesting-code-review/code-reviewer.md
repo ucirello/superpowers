@@ -102,7 +102,7 @@ Subagent (general-purpose):
     ### Recommendations
     [Improvements for code quality, architecture, or process]
 
-    For any commit-message composition, edit, validation, or recommendation, repository instructions and the message syntax visible in `git log` always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose fixed messages, prefixes, types, scopes, templates, or examples.
+    For any commit-message composition, edit, validation, or recommendation, repository instructions and the message syntax visible in `git log` always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose fixed messages, prefixes, types, scopes, subjects, bodies, templates, or examples.
 
     ### Assessment
 

@@ -105,7 +105,7 @@ Skip any step = lying, not verifying
 
 ## Jujutsu Change Finalization
 
-Before composing, editing, recommending, or validating any Jujutsu change description, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. If repository-local standards do not decide a point, use compatible Go quality guidance: write a concise, clear subject and explain what changed and why in a wrapped plain-text body when needed. Do not impose a fixed prefix, type, scope, template, or example.
+Before composing, editing, recommending, or validating any Jujutsu change description, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. If repository-local standards do not decide a point, use compatible Go quality guidance: write a concise, clear subject and explain what changed and why in a wrapped plain-text body when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
 
 Verify the working-copy change with `jj status` and `jj diff`, edit its description with `jj describe`, and inspect the result with `jj log -r @`. Use `jj new` only when the current change is finalized and work should continue in a new change. Publish through an explicit repository-appropriate bookmark with `jj git push --bookmark <bookmark>`; use `gh` for GitHub PR operations when applicable.
 

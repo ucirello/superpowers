@@ -665,7 +665,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Read repo-local instructions and inspect existing message syntax with `git log`; both always override general description advice
 - [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 - [ ] When compatible with those higher-priority standards, keep the subject concise and clear and add a wrapped plain-text body that explains what changed and why when needed
-- [ ] Do not impose a fixed prefix, type, scope, or template; use only syntax established by repo-local instructions or `git log`
+- [ ] Do not impose a fixed message, prefix, type, scope, subject, body, template, or example; use only syntax established by repo-local instructions or `git log`
 - [ ] Describe and finish the current Jujutsu change with `jj commit`, then push it through the configured Git transport with `jj git push --remote <fork-remote> --change @-` (if a fork remote is configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 

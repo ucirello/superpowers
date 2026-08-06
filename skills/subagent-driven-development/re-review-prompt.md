@@ -46,7 +46,7 @@ Subagent (general-purpose):
 
     If the fix edited a Jujutsu change description, validate it against
     repository-local instructions and the message syntax visible in `git log`;
-    those sources always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with local standards, expect a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form. Do not require a fixed prefix, tense, punctuation rule, line length, trailer, or example syntax. Report only material violations of the governing local standard.
+    those sources always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with local standards, expect a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form. Do not require a fixed message, prefix, type, scope, subject, body, template, tense, punctuation rule, line length, trailer, or example syntax. Report only material violations of the governing local standard.
 
     ## Scope
 

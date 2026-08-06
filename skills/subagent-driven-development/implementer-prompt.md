@@ -50,7 +50,7 @@ Subagent (general-purpose):
 
     Before composing or editing each Jujutsu change description, follow
     repository-local instructions and the message syntax visible in `git log`;
-    those sources always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with those local standards, keep the subject concise and clear, explain significant motivation and consequences in a wrapped body, and keep issue references in the repository's established form. Do not impose a fixed prefix, tense, punctuation rule, line length, trailer, or example syntax. Use `jj commit` to describe the current working-copy commit and create a new empty change on top. Use `jj describe` only when intentionally editing an existing description; do not rewrite unrelated changes.
+    those sources always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with those local standards, keep the subject concise and clear, explain significant motivation and consequences in a wrapped body, and keep issue references in the repository's established form. Do not impose a fixed message, prefix, type, scope, subject, body, template, tense, punctuation rule, line length, trailer, or example syntax. Use `jj commit` to describe the current working-copy commit and create a new empty change on top. Use `jj describe` only when intentionally editing an existing description; do not rewrite unrelated changes.
 
     ## Code Organization
 

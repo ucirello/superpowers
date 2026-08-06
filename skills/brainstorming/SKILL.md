@@ -109,8 +109,8 @@ digraph brainstorming {
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Inspect repository-local instructions and recent change descriptions with `jj log` before composing the description.
 - Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-- Repository-local instructions and the message syntax visible in `git log` always win. Where compatible, follow Go quality guidance: use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed prefix, type, scope, issue-footer form, template, or example; derive syntax from the repository at runtime.
-- Record only the design document in the current change with `jj commit <spec-path>` and the composed description. Jujutsu tracks working-copy files automatically; there is no staging step.
+- Repository-local instructions and the message syntax visible in `git log` always win. Where compatible, follow Go quality guidance: use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, issue-footer form, template, or example; derive syntax from the repository at runtime.
+- Record only the design document in the current change with `jj commit -m "<description>" <spec-fileset>`. Jujutsu tracks working-copy files automatically; there is no staging step.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:

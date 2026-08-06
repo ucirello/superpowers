@@ -19,7 +19,7 @@ Repository-local instructions and configuration take precedence over the generic
 
 The commands below use current `jj` syntax. If the installed compatible `jj` version, `jj <command> --help`, or repository aliases require equivalent syntax, use that syntax instead of forcing these examples. Do not replace `jj` repository operations with Git commands.
 
-Whenever composing a change or commit message, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed prefix, type, scope, template, or example.
+Whenever composing a change or commit message, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
 
 ## Step 0: Detect Existing Isolation
 
@@ -68,7 +68,7 @@ Use a short, unique `$WORKSPACE_NAME`. Before creation, use `jj workspace list` 
 
 Jujutsu uses `.gitignore`; there is no `.jjignore`. Before creating a project-local workspace, inspect the applicable `.gitignore` files and verify that `.tmp/rocketclaw/` is ignored.
 
-If it is not ignored, add `/.tmp/rocketclaw/` to the repository's `.gitignore`. Record that change using the repository's normal Jujutsu workflow before creating the nested workspace. After confirming the working-copy change contains only the intended ignore update, compose the description with `jj describe` and start a new change with `jj new`. Repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed prefix, type, scope, template, or example.
+If it is not ignored, add `/.tmp/rocketclaw/` to the repository's `.gitignore`. Record that change using the repository's normal Jujutsu workflow before creating the nested workspace. After confirming the working-copy change contains only the intended ignore update, compose the description with `jj describe` and start a new change with `jj new`. Repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
 
 **Why critical:** New files are automatically tracked by Jujutsu unless ignored. Ignoring the workspace parent prevents workspace contents from entering the enclosing working-copy change.
 
@@ -99,7 +99,7 @@ jj status
 
 `-r` selects the parent revision of the new workspace's fresh working-copy commit. It does not create a Git branch. If no base is specified, `jj workspace add` creates the new working-copy commit with the same parent or parents as the current working-copy commit; use that default only when it is intentional.
 
-Do not add a fixed `-m` argument to workspace creation. If a description is useful, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed prefix, type, scope, template, or example.
+Do not add a fixed `-m` argument to workspace creation. If a description is useful, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
 
 **Sandbox fallback:** If workspace creation fails because the sandbox denies the destination, report the denial and work in the current workspace only with user approval. Then run setup and baseline tests in place.
 
@@ -147,7 +147,7 @@ Ready to implement <feature-name>
 
 Use Jujutsu for repository state and Git transport. Create or move the intended bookmark to the revision being published, push it with `jj git push`, then use the provider-appropriate forge tooling or the creation URL emitted by the push. On GitHub, use `gh` for operations such as creating or viewing a pull request. Determine the exact revision, bookmark, remote, and forge workflow from repository-local instructions; do not assume a fixed `@` versus `@-` workflow.
 
-When composing the published change description or commit message, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed prefix, type, scope, template, or example.
+When composing the published change description or commit message, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
 
 Typical commands, adjusted to the repository's workflow, are:
 

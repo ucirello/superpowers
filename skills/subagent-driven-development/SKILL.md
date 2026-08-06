@@ -231,7 +231,7 @@ package and fix-round diffs need the stable completed parent.
   the dispatch prompt. The implementer writes the full report there and
   returns only status, commits, a one-line test summary, and concerns.
 - **Change descriptions:** repository-local instructions and the message syntax
-  visible in `git log` always override generic advice. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Compatible quality guidance is a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form. Do not prescribe a fixed prefix, tense, punctuation rule, line length, trailer, or example syntax. The implementer must finish with `jj commit`, leaving a new empty `@`; the latest completed task commit is then `@-`.
+  visible in `git log` always override generic advice. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Compatible quality guidance is a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form. Do not prescribe a fixed message, prefix, type, scope, subject, body, template, tense, punctuation rule, line length, trailer, or example syntax. The implementer must finish with `jj commit`, leaving a new empty `@`; the latest completed task commit is then `@-`.
 - A dispatch prompt describes one task, not the session's history. Do not
   paste accumulated prior-task summaries ("state after Tasks 1-3") into
   later dispatches — a real session's dispatch hit 42k chars of which 99%
@@ -424,7 +424,7 @@ superpowers:requesting-code-review's
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before integration.
 Tell the final reviewer that repository-local instructions and the message
-syntax visible in `git log` always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with local standards, it may expect a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form, but it must not impose a fixed prefix, tense, punctuation rule, line length, trailer, or example syntax.
+syntax visible in `git log` always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with local standards, it may expect a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form, but it must not impose a fixed message, prefix, type, scope, subject, body, template, tense, punctuation rule, line length, trailer, or example syntax.
 
 If the final whole-stack review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.

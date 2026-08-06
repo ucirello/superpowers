@@ -33,7 +33,7 @@ Subagent (general-purpose):
     always win. Otherwise, require compatible Go-style clarity and structure: a
     concise, clear subject and a wrapped body explaining what changed and why when
     needed. Accept a neutral runtime description placeholder; reject fixed
-    prefixes, types, scopes, templates, or examples.
+    messages, prefixes, types, scopes, subjects, bodies, templates, or examples.
 
     ## Calibration
 

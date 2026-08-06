@@ -183,7 +183,7 @@ You MUST complete each phase before proceeding to the next.
    - No bundled refactoring
    - When composing, editing, validating, or recommending the change description, repository-local instructions and the message syntax visible in `git log` always win
    - Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-   - Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when needed; do not impose a fixed prefix, type, scope, template, or example
+   - Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when needed; do not impose a fixed message, prefix, type, scope, subject, body, template, or example
    - Use `jj describe` to set the current change description and `jj new` to begin the next change
 
 3. **Verify Fix**
