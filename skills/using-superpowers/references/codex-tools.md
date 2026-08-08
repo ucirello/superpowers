@@ -11,29 +11,30 @@ This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dis
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish bookmarks should detect their
+environment with read-only Jujutsu commands before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+ROOT=$(jj root)
+WORKSPACES=$(jj workspace list)
+BOOKMARKS=$(jj bookmark list -r @)
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- Harness-native state identifies a managed workspace → already isolated (skip creation)
+- The primary/default workspace appearing in `WORKSPACES` does not by itself prove isolation
+- `BOOKMARKS` empty → the current change has no bookmark (create one before push/PR)
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
+See `using-jj-workspaces` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
+When the sandbox blocks bookmark/push operations in an externally managed
+workspace, the agent leaves the working-copy change recorded and informs
 the user to use the App's native controls:
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
+- **"Create branch"** — names the App branch, then push/open the PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+The agent can still run tests, inspect `jj diff`, and output suggested bookmark
+names, change descriptions, and PR descriptions. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax established by `git log` always win; apply compatible Go guidance to clarity and structure without imposing fixed prefixes, types, scopes, subjects, bodies, or templates.
