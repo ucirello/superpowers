@@ -99,7 +99,7 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
+const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(workspaceRoot(), '.tmp', 'rocketclaw', 'brainstorm');
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
@@ -193,18 +193,15 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
-function defaultSessionDir() {
-  let root = process.cwd();
+function workspaceRoot() {
   try {
-    root = require('child_process').execFileSync('jj', ['workspace', 'root'], {
-      cwd: root,
+    return require('child_process').execFileSync('jj', ['workspace', 'root'], {
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore']
-    }).trim() || root;
+    }).trim();
   } catch (e) {
-    // Outside a Jujutsu repository, keep scratch data in the local .tmp directory.
+    return process.cwd();
   }
-  return path.join(root, '.tmp', 'rocketclaw', 'brainstorm');
 }
 
 function isFullDocument(html) {

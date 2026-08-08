@@ -37,7 +37,7 @@ digraph when_to_use {
 - 3+ test files failing with different root causes
 - Multiple subsystems broken independently
 - Each problem can be understood without context from others
-- No shared mutable state between investigations
+- No shared state between investigations
 
 **Don't use when:**
 - Failures are related (fix one might fix others)
@@ -76,44 +76,13 @@ Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
 
 Multiple dispatch calls in one response = parallel execution. One per response = sequential.
 
-For read-only investigation, agents can share a working directory. For edits, give each agent a separate Jujutsu workspace so concurrent filesystem writes and working-copy snapshots cannot interfere. Jujutsu workspaces share one repository but have distinct working-copy commits.
-
-Create sibling changes from the current working-copy commit's parents. Keep temporary workspaces under the repository-local temporary namespace; outside a Jujutsu repository, use the current directory's local `.tmp` instead:
-
-```sh
-if root=$(jj workspace root 2>/dev/null); then
-  scratch="$root/.tmp/rocketclaw"
-  invocation="$(date +%s)-$$"
-  mkdir -p "$scratch"
-
-  jj workspace add --name "agent-abort-$invocation" "$scratch/agent-abort-$invocation"
-  jj workspace add --name "agent-batch-$invocation" "$scratch/agent-batch-$invocation"
-  jj workspace add --name "agent-approval-$invocation" "$scratch/agent-approval-$invocation"
-else
-  scratch="$(pwd -P)/.tmp/rocketclaw"
-  mkdir -p "$scratch"
-fi
-```
-
-Before creating these directories in a Jujutsu repository, confirm its `.gitignore` excludes `.tmp/`; Jujutsu uses `.gitignore` and otherwise automatically tracks new files. If Jujutsu is unavailable, use separate directories below the local `.tmp/rocketclaw` only when the project can safely provide independent working copies there.
-
-Give each editing agent its workspace path and require it to:
-- Edit only its assigned scope
-- Inspect its result with `jj diff`
-- Record a clear change description with `jj describe`
-- Return the change ID from `jj log -r @` along with its summary
-
-At the change-description step, tell the agent: Repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when useful. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
-
 ### 4. Review and Integrate
 
 When agents return:
 - Read each summary
-- Inspect each returned change with `jj diff -r <change-id>`
-- Verify changes don't conflict
-- Integrate independent changes by creating a merge change with `jj new <change-id-1> <change-id-2> ...`
-- Resolve any conflicts, then run the full test suite on the merged working copy
-- After integration, run `jj workspace forget <workspace-name> ...`, then delete only the corresponding directories below `.tmp/rocketclaw`
+- Verify fixes don't conflict
+- Run full test suite
+- Integrate all changes
 
 ## Agent Prompt Structure
 

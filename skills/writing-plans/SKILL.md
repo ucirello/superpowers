@@ -7,18 +7,16 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, focused Jujutsu changes.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent focused changes.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated Jujutsu workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** At execution time, use superpowers:using-jj-workspaces to create an isolated JJ workspace or verify the existing one.
 
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
-
-**Temporary files:** Put repository-scoped temporary files under `$(jj workspace root)/.tmp`. If the command is not running in a Jujutsu workspace, use the current directory's `.tmp` instead. Do not use a repository-external temporary location.
 
 ## Scope Check
 
@@ -51,9 +49,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Finalize the Jujutsu change" - step
-
-For every change-finalization step, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
+- "Describe the change" - step
 
 ## Plan Document Header
 
@@ -75,9 +71,7 @@ For every change-finalization step, repository-local instructions and the messag
 [The spec's project-wide requirements — version floors, dependency limits,
 naming and copy rules, platform requirements — one line each, with exact
 values copied verbatim from the spec. Every task's requirements implicitly
-include this section. Include the repository-local temporary-file rule: use
-`$(jj workspace root)/.tmp`, with local `.tmp` only when outside a Jujutsu
-workspace.]
+include this section.]
 
 ---
 ```
@@ -123,24 +117,21 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Finalize the Jujutsu change**
-
-Jujutsu automatically snapshots the working copy; do not stage files. Review the
-complete working-copy change before finalizing it. The description must explain
-what this task changed and why.
+- [ ] **Step 5: Describe the change**
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Repository-local instructions and the message syntax visible in `git log` always
-win. Otherwise, use compatible Go-style clarity and structure: a concise, clear
-subject and a wrapped body explaining what changed and why when needed. Do not
-impose a fixed message, prefix, type, scope, subject, body, template, or example.
+Repository-local instructions and syntax established by `git log` always win. Apply compatible Go guidance to make the message clear, concise, and informative; explain the reason and effects when useful, without imposing fixed prefixes, types, scopes, subjects, bodies, Conventional Commit forms, or templates.
+
+Confirm the current JJ change contains exactly the task's files, then describe it:
 
 ```bash
-jj status
-jj diff
-jj commit -m "<message composed from the standards above>"
+jj diff --summary
+jj describe -m "<message composed from the standards above>"
+jj new
 ```
+
+`jj new` starts a fresh change for the next task, preserving this task as an independent review and integration boundary.
 ````
 
 ## No Placeholders
@@ -153,10 +144,6 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
-The neutral `<message composed from the standards above>` marker in a Jujutsu
-change-finalization command is not plan content; replace it during execution.
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
@@ -167,19 +154,13 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
-**4. Jujutsu workflow and descriptions:** Confirm that every finalization step
-relies on automatic working-copy snapshots, reviews `jj status` and `jj diff`,
-and uses a neutral runtime description rather than staging or a prescribed
-message example. Repository-local instructions and the message syntax visible
-in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Execution Handoff
 
 After saving the plan, offer execution choice:
 
-**"RocketClaw plan complete and saved to `docs/rocketclaw/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/rocketclaw/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 

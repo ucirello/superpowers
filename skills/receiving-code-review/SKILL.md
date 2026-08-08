@@ -107,11 +107,8 @@ FOR multi-item feedback:
      - Simple fixes (typos, imports)
      - Complex fixes (refactoring, logic)
   3. Test each fix individually
-  4. Inspect the working-copy commit with `jj status` and `jj diff`
-  5. Verify no regressions
+  4. Verify no regressions
 ```
-
-Jujutsu snapshots working-copy changes automatically. Do not introduce a staging step between review fixes. Use `jj diff -r @` when explicitly naming the working-copy revision is useful.
 
 ## When To Push Back
 
@@ -145,8 +142,6 @@ When feedback IS correct:
 ❌ "Thanks for [anything]"
 ❌ ANY gratitude expression
 ```
-
-The review reply describes the fix; it does not replace the Jujutsu change description. If the feedback also requires composing, editing, or validating that description, use `jj describe`; repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped body explaining what changed and why when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
 
 **Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
 

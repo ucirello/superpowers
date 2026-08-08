@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before integrating changes into the main bookmark
+- Before integrating into the target revision
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,16 +23,15 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get Jujutsu revision IDs:**
-
-Use the stable base recorded before implementation and resolve the actual
-completed tip after implementation. After `jj commit`, the completed tip is
-normally `@-`; if work remains in the working-copy change, it is `@`. Confirm
-both revisions with `jj log` instead of assuming adjacency.
-
+**1. Get Jujutsu change IDs or revisions:** Before implementation begins in a
+fresh current change, record its parent as the full base change ID. After
+finalizing the implementation with `jj describe` and `jj new`, the completed
+head is `@-`:
 ```bash
-BASE_REV=$(jj log -r '<recorded-base>' --no-graph -T 'commit_id ++ "\n"')
-END_REV=$(jj log -r '<completed-tip>' --no-graph -T 'commit_id ++ "\n"')
+# Run before implementation changes the fresh @.
+FROM_REVISION=$(jj log --no-graph -r '@-' -T 'change_id ++ "\n"')
+# Run after jj describe and jj new.
+TO_REVISION=$(jj log --no-graph -r '@-' -T 'change_id ++ "\n"')
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -42,10 +41,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_REV}` - Starting revision
-- `{END_REV}` - Ending revision
-
-When composing, editing, validating, or recommending commit messages, repository instructions and the message syntax visible in `git log` always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose fixed messages, prefixes, types, scopes, subjects, bodies, templates, or examples.
+- `{FROM_REVISION}` - Starting change ID or revision
+- `{TO_REVISION}` - Ending change ID or revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -60,14 +57,14 @@ When composing, editing, validating, or recommending commit messages, repository
 
 You: Let me request code review before proceeding.
 
-BASE_REV=$(jj log -r @-- --no-graph -T 'commit_id ++ "\n"')
-END_REV=$(jj log -r @- --no-graph -T 'commit_id ++ "\n"')
+FROM_REVISION=<full change ID recorded before Task 2>
+TO_REVISION=$(jj log --no-graph -r '@-' -T 'change_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
   PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  BASE_REV: a7981ec
-  END_REV: 3df7661
+  FROM_REVISION: kkmpptxz
+  TO_REVISION: nkmrtpmo
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

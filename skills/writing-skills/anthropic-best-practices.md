@@ -215,10 +215,10 @@ description: Analyze Excel spreadsheets, create pivot tables, generate charts. U
 **Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Draft clear Jujutsu change descriptions from the current diff. Use when asked to write or review a change description.
+description: Generate descriptive change messages by analyzing jj diffs. Use when the user asks for help writing change messages or reviewing the current change.
 ```
 
-Repo-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. When compatible, prefer a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Never impose a fixed message, prefix, type, scope, subject, body, example, or template unless the repository requires it.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax established by `git log` always win; keep the message clear, concise, and informative without imposing fixed prefixes, types, scopes, subjects, bodies, Conventional Commit forms, or templates. Apply the composed message with `jj describe -m '<message composed from repository conventions>'`.
 
 Avoid vague descriptions like these:
 
@@ -655,16 +655,26 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Jujutsu change description
+## Change description composition
 
-Read repo-local instructions, inspect the current change with `jj diff`, and inspect the repository's existing message syntax with `git log`. Repo-local instructions and `git log` always win.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax established by `git log` always win; keep the message clear, concise, and informative without imposing fixed prefixes, types, scopes, subjects, bodies, Conventional Commit forms, or templates.
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+**Example 1:**
+Input: Added user authentication with JWT tokens
+Describe the authentication behavior, including the login endpoint and token-validation middleware, using the repository's established syntax.
 
-When compatible with those standards, write a concise, clear subject and add a wrapped plain-text body explaining what changed and why when needed. Do not prescribe a fixed message, prefix, type, scope, subject, body, example, or template. Apply the description with `jj describe`.
+**Example 2:**
+Input: Fixed bug where dates displayed incorrectly in reports
+Describe the corrected timezone conversion and consistent UTC timestamp handling using the repository's established syntax.
+
+**Example 3:**
+Input: Updated dependencies and refactored error handling
+Describe both the dependency update and standardized endpoint error responses using the repository's established syntax.
+
+Apply the composed message with `jj describe -m '<message composed from repository conventions>'`.
 ````
 
-Examples help agents understand desired output, but commit-message examples can accidentally prescribe repository-incompatible syntax. For Jujutsu descriptions, observed repository standards are safer than a fixed example.
+Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
 
 ### Conditional workflow pattern
 
@@ -981,7 +991,7 @@ When agents perform complex, open-ended tasks, they can make mistakes. The "plan
 
 Skills run in the code execution environment with platform-specific limitations:
 
-* **claude.ai**: Can install packages from npm and PyPI and pull from GitHub repositories
+* **claude.ai**: Can install packages from npm and PyPI and clone hosted repositories with `jj git clone`
 * **Anthropic API**: Has no network access and no runtime package installation
 
 List required packages in your SKILL.md and verify they're available in the [code execution tool documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool).

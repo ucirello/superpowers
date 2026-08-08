@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before finalizing or publishing Jujutsu changes or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before describing changes or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
 ---
 
 # Verification Before Completion
@@ -51,7 +51,7 @@ Skip any step = lying, not verifying
 
 - Using "should", "probably", "seems to"
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to finalize or publish work or create a PR without verification
+- About to describe/push/open a PR without verification
 - Trusting agent success reports
 - Relying on partial verification
 - Thinking "just this once"
@@ -103,19 +103,13 @@ Skip any step = lying, not verifying
 ❌ Trust agent report
 ```
 
-## Jujutsu Change Finalization
-
-Before composing, editing, recommending, or validating any Jujutsu change description, repository-local instructions and the message syntax visible in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. If repository-local standards do not decide a point, use compatible Go quality guidance: write a concise, clear subject and explain what changed and why in a wrapped plain-text body when needed. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
-
-Verify the working-copy change with `jj status` and `jj diff`, edit its description with `jj describe`, and inspect the result with `jj log -r @`. Use `jj new` only when the current change is finalized and work should continue in a new change. Publish through an explicit repository-appropriate bookmark with `jj git push --bookmark <bookmark>`; use `gh` for GitHub PR operations when applicable.
-
 ## When To Apply
 
 **ALWAYS before:**
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
-- Finalizing or publishing work, PR creation, task completion
+- Describing changes, PR creation, task completion
 - Moving to next task
 - Delegating to agents
 

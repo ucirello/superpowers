@@ -30,23 +30,18 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_ID] (the tip the previous review saw)
-    **Tip:** [TIP_ID]
+    **Fix base:** [FIX_BASE_CHANGE] (the head the previous review saw)
+    **Head:** [HEAD_CHANGE]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. Do not re-run Jujutsu commands
-    unless the diff file is missing; in that case, fetch the diff yourself:
-    `jj --ignore-working-copy diff --from [FIX_BASE_ID] --to [TIP_ID] --stat`
-    and `jj --ignore-working-copy diff --from [FIX_BASE_ID] --to [TIP_ID] --git --context 10`.
+    Read the diff file once — it contains the fix changes, a stat summary,
+    and the fix diff with surrounding context. Do not re-run JJ commands.
+    If the diff file is missing, fetch the diff yourself:
+    `jj diff --from [FIX_BASE_CHANGE] --to [HEAD_CHANGE] --stat` and
+    `jj diff --from [FIX_BASE_CHANGE] --to [HEAD_CHANGE]`.
 
     Your review is read-only in this workspace. Do not mutate the working
-    copy, commit graph, descriptions, bookmarks, or operation state in
-    any way. Use `--ignore-working-copy` for any read-only Jujutsu inspection.
-
-    If the fix edited a Jujutsu change description, validate it against
-    repository-local instructions and the message syntax visible in `git log`;
-    those sources always override generic guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible with local standards, expect a concise, clear subject, a wrapped body when motivation or consequences need explanation, and issue references in the established form. Do not require a fixed message, prefix, type, scope, subject, body, template, tense, punctuation rule, line length, trailer, or example syntax. Report only material violations of the governing local standard.
+    copy, changes, bookmarks, or workspace state in any way.
 
     ## Scope
 
@@ -103,9 +98,10 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_ID]` — full commit ID of the tip the previous review saw
-- `[TIP_ID]` — full commit ID of the latest completed fix commit
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE TIP` printed
+- `[FIX_BASE_CHANGE]` — the head change the previous review saw
+- `[HEAD_CHANGE]` — current head change
+- `[DIFF_FILE]` — the path
+  `scripts/review-package PLAN_FILE FIX_BASE_CHANGE HEAD_CHANGE` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

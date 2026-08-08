@@ -1,8 +1,8 @@
-.worktrees/
-.tmp/
+.workspaces/
 .private-journal/
 .claude/
 .rocketclaw/
+.tmp/
 .DS_Store
 node_modules/
 inspo

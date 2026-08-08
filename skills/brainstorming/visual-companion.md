@@ -55,7 +55,7 @@ without repeating it.
 
 **Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.rocketclaw/brainstorm/` for the session directory.
 
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go under `$(jj workspace root)/.tmp/rocketclaw/`, or local `.tmp/rocketclaw/` when there is no Jujutsu repository, and get cleaned up. Remind the user to add `.rocketclaw/` and `.tmp/rocketclaw/` to `.gitignore` if they are not already there.
+**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go to `$(jj workspace root)/.tmp/rocketclaw/` and get cleaned up; outside a Jujutsu workspace, the local `.tmp/rocketclaw/` directory is used. Remind the user to add `.rocketclaw/` and `.tmp/` to their repository-local ignore rules if needed; do not edit a root ignore file automatically.
 
 **Launching the server by platform:**
 
@@ -290,7 +290,7 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 scripts/stop-server.sh $SESSION_DIR
 ```
 
-If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Sessions under the workspace-local `.tmp/rocketclaw/` storage get deleted on stop.
+If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Workspace-local `.tmp/rocketclaw/` sessions are deleted on stop.
 
 ## Reference
 

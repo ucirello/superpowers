@@ -20,19 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Jujutsu Range to Review
+    ## Jujutsu Revisions to Review
 
-    **Base:** [BASE_REV]
-    **End:** [END_REV]
+    **From:** [FROM_REVISION]
+    **To:** [TO_REVISION]
 
     ```bash
-    jj diff --ignore-working-copy --stat --from [BASE_REV] --to [END_REV]
-    jj diff --ignore-working-copy --from [BASE_REV] --to [END_REV]
+    jj diff --ignore-working-copy --stat --from [FROM_REVISION] --to [TO_REVISION]
+    jj diff --ignore-working-copy --from [FROM_REVISION] --to [TO_REVISION]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate the reviewed working copy, revisions, bookmarks, workspaces, or operation state. Use commands like `jj show --ignore-working-copy`, `jj diff --ignore-working-copy`, `jj file show --ignore-working-copy`, and `jj log --ignore-working-copy` to inspect any revision without creating or editing another working copy.
+    Your review is read-only in this workspace. Do not mutate its working copy, existing revisions, bookmarks, or workspace registrations. Use `jj show --ignore-working-copy`, `jj diff --ignore-working-copy --from/--to`, `jj log --ignore-working-copy`, and `jj file show --ignore-working-copy -r <revision> <path>` to inspect revisions without switching or creating a workspace.
 
     ## What to Check
 
@@ -102,8 +102,6 @@ Subagent (general-purpose):
     ### Recommendations
     [Improvements for code quality, architecture, or process]
 
-    For any commit-message composition, edit, validation, or recommendation, repository instructions and the message syntax visible in `git log` always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use a concise, clear subject and a wrapped plain-text body explaining what changed and why when needed. Do not impose fixed messages, prefixes, types, scopes, subjects, bodies, templates, or examples.
-
     ### Assessment
 
     **Ready to integrate?** [Yes | No | With fixes]
@@ -130,8 +128,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_REV]` — starting revision
-- `[END_REV]` — ending revision
+- `[FROM_REVISION]` — starting change ID or revision
+- `[TO_REVISION]` — ending change ID or revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

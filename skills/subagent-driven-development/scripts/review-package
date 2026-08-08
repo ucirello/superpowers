@@ -1,55 +1,51 @@
 #!/usr/bin/env bash
-# Generate a review package: commit list, stat summary, and the net
+# Generate a review package: change list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not @--) keeps multi-commit
+# call. Using the recorded per-task BASE and HEAD changes keeps multi-change
 # tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE TIP [OUTFILE]
-# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<tip7>.diff
+# Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<head7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE TIP [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE HEAD [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
 base=$2
-tip=$3
+head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-base_id=$(jj --ignore-working-copy log --no-graph -r "exactly($base, 1)" \
-  -T 'commit_id ++ "\n"') || { echo "bad BASE: $base" >&2; exit 2; }
-tip_id=$(jj --ignore-working-copy log --no-graph -r "exactly($tip, 1)" \
-  -T 'commit_id ++ "\n"') || { echo "bad TIP: $tip" >&2; exit 2; }
-jj --ignore-working-copy log --no-graph \
-  -r "exactly($base_id & ::$tip_id, 1)" -T 'commit_id' >/dev/null \
-  || { echo "BASE is not an ancestor of TIP: ${base}..${tip}" >&2; exit 2; }
+jj log -r "$base" --no-graph -T 'change_id ++ "\n"' >/dev/null \
+  || { echo "bad BASE revset: $base" >&2; exit 2; }
+jj log -r "$head" --no-graph -T 'change_id ++ "\n"' >/dev/null \
+  || { echo "bad HEAD revset: $head" >&2; exit 2; }
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  base_short=$(jj --ignore-working-copy log --no-graph -r "$base_id" -T 'commit_id.short(7)')
-  tip_short=$(jj --ignore-working-copy log --no-graph -r "$tip_id" -T 'commit_id.short(7)')
-  out="$dir/review-${base_short}..${tip_short}.diff"
+  base_short=$(jj log -r "$base" --no-graph -T 'change_id.short(7)')
+  head_short=$(jj log -r "$head" --no-graph -T 'change_id.short(7)')
+  out="$dir/review-${base_short}..${head_short}.diff"
 fi
 
 {
-  echo "# Review package: ${base_id}..${tip_id}"
+  echo "# Review package: ${base}..${head}"
   echo
-  echo "## Commits"
-  jj --ignore-working-copy log --no-graph -r "${base_id}..${tip_id}" \
-    -T 'commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
+  echo "## Changes"
+  jj log -r "${base}..${head}" --no-graph \
+    -T 'change_id.short(7) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  jj --ignore-working-copy diff --from "$base_id" --to "$tip_id" --stat
+  jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  jj --ignore-working-copy diff --from "$base_id" --to "$tip_id" --git --context 10
+  jj diff --from "$base" --to "$head" --context 10
 } > "$out"
 
-commits=$(jj --ignore-working-copy log --no-graph -r "${base_id}..${tip_id}" \
-  -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')
-echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+changes=$(jj log -r "${base}..${head}" --no-graph -T 'change_id ++ "\n"' | wc -l | tr -d ' ')
+echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

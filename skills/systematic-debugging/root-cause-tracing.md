@@ -2,7 +2,7 @@
 
 ## Overview
 
-Bugs often manifest deep in the call stack (`jj git init` in the wrong directory, file created in the wrong location, database opened with the wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
+Bugs often manifest deep in the call stack (`jj git init` in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
 
 **Core principle:** Trace backward through the call chain until you find the original trigger, then fix at the source.
 
@@ -59,8 +59,8 @@ WorkspaceManager.createSessionWorkspace(projectDir, sessionId)
 ### 5. Find Original Trigger
 **Where did empty string come from?**
 ```typescript
-const context = setupCoreTest(); // Returns { tempDir: '' }
-Project.create('name', context.tempDir); // Accessed before beforeEach!
+const context = setupCoreTest(); // Returns { workspaceTmpDir: '' }
+Project.create('name', context.workspaceTmpDir); // Accessed before beforeEach!
 ```
 
 ## Adding Stack Traces
@@ -101,30 +101,30 @@ If something appears during tests but you don't know which test:
 Use the bisection script `find-polluter.sh` in this directory:
 
 ```bash
-./find-polluter.sh '.jj' 'src/**/*.test.ts'
+./find-polluter.sh 'packages/core/.jj' 'src/**/*.test.ts'
 ```
 
 Runs tests one-by-one, stops at first polluter. See script for usage.
 
 ## Real Example: Empty projectDir
 
-**Symptom:** `.jj` (and, by default, colocated `.git`) created in `packages/core/` source code
+**Symptom:** `.jj` created in `packages/core/` (source code)
 
 **Trace chain:**
 1. `jj git init` runs in `process.cwd()` ← empty cwd parameter
 2. WorkspaceManager called with empty projectDir
 3. Session.create() passed empty string
-4. Test accessed `context.tempDir` before beforeEach
-5. setupCoreTest() returns `{ tempDir: '' }` initially
+4. Test accessed `context.workspaceTmpDir` before beforeEach
+5. setupCoreTest() returns `{ workspaceTmpDir: '' }` initially
 
 **Root cause:** Top-level variable initialization accessing empty value
 
-**Fix:** Made tempDir a getter that throws if accessed before beforeEach
+**Fix:** Made `workspaceTmpDir` a getter that resolves to `$(jj workspace root)/.tmp`, falls back to local `.tmp`, and throws if accessed before `beforeEach`
 
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp/rocketclaw`, or local `.tmp/rocketclaw` when no Jujutsu workspace exists
+- Layer 3: NODE_ENV guard refuses `jj git init` outside the workspace-local `.tmp`
 - Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle
