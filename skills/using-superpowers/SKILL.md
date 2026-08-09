@@ -25,7 +25,7 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 ## Skill Priority
 
-When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
+When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are RocketClaw's most common process skills, but the rule holds for any of them.
 
 - "Let's build X" → superpowers:brainstorming first, then implementation skills.
 - "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
@@ -39,7 +39,7 @@ These thoughts mean STOP—you're rationalizing:
 | "This is just a simple question" | Questions are tasks. Check for skills. |
 | "I need more context first" | Skill check comes BEFORE clarifying questions. |
 | "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
-| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "I can check JJ/files quickly" | Files lack conversation context. Check for skills. |
 | "Let me gather information first" | Skills tell you HOW to gather information. |
 | "This doesn't need a formal skill" | If a skill exists, use it. |
 | "I remember this skill" | Skills evolve. Read current version. |
@@ -55,7 +55,12 @@ If your harness appears here, read its reference file for special instructions:
 
 - Codex: `references/codex-tools.md`
 - Pi: `references/pi-tools.md`
+- Gemini CLI: `references/gemini-tools.md`
 - Antigravity: `references/antigravity-tools.md`
+
+## Temporary Storage
+
+Store temporary files under `$(jj workspace root)/.tmp`. If the current directory is not in a JJ workspace, fall back to the local `./.tmp` directory; never use global temporary storage.
 
 ## User Instructions
 
