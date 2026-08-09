@@ -11,10 +11,9 @@ digraph STYLE_GUIDE {
         // Actions are boxes (default)
         "Take an action" [shape=box];
 
-        // Commands are plaintext
-        "jj describe -m '<message composed from repository conventions>'" [shape=plaintext];
-        "Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards." [shape=box];
-        "Repository-local instructions and syntax established by git log always win; keep the message clear, concise, and informative without imposing fixed prefixes, types, scopes, subjects, bodies, Conventional Commit forms, or templates." [shape=box];
+        // Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+        // Repository-local syntax wins; this placeholder deliberately imposes no fixed format.
+        "jj commit -m '<message composed from the standards above>'" [shape=plaintext];
 
         // States are ellipses
         "Current state" [shape=ellipse];
@@ -31,7 +30,7 @@ digraph STYLE_GUIDE {
         "Write test first" [shape=box];
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
-        "NEVER use jj file track . indiscriminately" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "NEVER expect a staging area" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions
@@ -73,7 +72,7 @@ digraph STYLE_GUIDE {
         // Actions start with verb
         "Write the test";
         "Search for patterns";
-        "Describe changes";
+        "Finish the change";
         "Ask for help";
 
         // Commands are literal
@@ -154,12 +153,12 @@ digraph STYLE_GUIDE {
         "Test failed" [shape=ellipse];
         "Read error message" [shape=box];
         "Can reproduce?" [shape=diamond];
-        "jj diff --from @-" [shape=plaintext];
+        "jj diff -r @-" [shape=plaintext];
         "NEVER ignore errors" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
 
         "Test failed" -> "Read error message";
         "Read error message" -> "Can reproduce?";
-        "Can reproduce?" -> "jj diff --from @-" [label="yes"];
+        "Can reproduce?" -> "jj diff -r @-" [label="yes"];
 
         // Bad: vague and wrong shapes
         bad_1 [label="Something wrong", shape=box];  // Should be ellipse (state)

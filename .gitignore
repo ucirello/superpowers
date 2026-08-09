@@ -1,7 +1,7 @@
-.workspaces/
+.worktrees/
 .private-journal/
 .claude/
-.rocketclaw/
+.superpowers/
 .tmp/
 .DS_Store
 node_modules/

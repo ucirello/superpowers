@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before describing changes or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before describing changes, pushing, or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 ---
 
 # Verification Before Completion
@@ -51,7 +51,7 @@ Skip any step = lying, not verifying
 
 - Using "should", "probably", "seems to"
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to describe/push/open a PR without verification
+- About to describe a change with `jj describe`, push with `jj git push`, or create a PR without verification. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 - Trusting agent success reports
 - Relying on partial verification
 - Thinking "just this once"
@@ -109,7 +109,7 @@ Skip any step = lying, not verifying
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
-- Describing changes, PR creation, task completion
+- Describing a change with `jj describe`, pushing with `jj git push`, PR creation, task completion. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 - Moving to next task
 - Delegating to agents
 

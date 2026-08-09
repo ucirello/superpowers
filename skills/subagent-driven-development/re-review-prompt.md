@@ -30,18 +30,18 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_CHANGE] (the head the previous review saw)
-    **Head:** [HEAD_CHANGE]
+    **Fix base:** [FIX_BASE_COMMIT_ID] (the exact revision the previous review saw)
+    **Tip:** [TIP_COMMIT_ID]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the fix changes, a stat summary,
-    and the fix diff with surrounding context. Do not re-run JJ commands.
+    and the fix diff with surrounding context. Do not re-run Jujutsu commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj diff --from [FIX_BASE_CHANGE] --to [HEAD_CHANGE] --stat` and
-    `jj diff --from [FIX_BASE_CHANGE] --to [HEAD_CHANGE]`.
+    `jj diff --stat --from [FIX_BASE_COMMIT_ID] --to [TIP_COMMIT_ID]` and
+    `jj diff --from [FIX_BASE_COMMIT_ID] --to [TIP_COMMIT_ID]`.
 
-    Your review is read-only in this workspace. Do not mutate the working
-    copy, changes, bookmarks, or workspace state in any way.
+    Your review is read-only in this workspace. Do not mutate the working-copy
+    commit, revision graph, bookmarks, or operation log in any way.
 
     ## Scope
 
@@ -98,10 +98,9 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_CHANGE]` — the head change the previous review saw
-- `[HEAD_CHANGE]` — current head change
-- `[DIFF_FILE]` — the path
-  `scripts/review-package PLAN_FILE FIX_BASE_CHANGE HEAD_CHANGE` printed
+- `[FIX_BASE_COMMIT_ID]` — exact full commit ID the previous review saw
+- `[TIP_COMMIT_ID]` — exact full commit ID for the revision under review
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE TIP` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

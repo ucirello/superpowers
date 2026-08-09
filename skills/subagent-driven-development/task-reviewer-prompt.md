@@ -31,18 +31,18 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base:** [BASE_CHANGE]
-    **Head:** [HEAD_CHANGE]
+    **Base:** [BASE_COMMIT_ID]
+    **Tip:** [TIP_COMMIT_ID]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the change list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not re-run JJ commands.
+    mid-function — and say so in your report. Do not re-run Jujutsu commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj diff --from [BASE_CHANGE] --to [HEAD_CHANGE] --stat` and
-    `jj diff --from [BASE_CHANGE] --to [HEAD_CHANGE]`.
+    `jj diff --stat --from [BASE_COMMIT_ID] --to [TIP_COMMIT_ID]` and
+    `jj diff --from [BASE_COMMIT_ID] --to [TIP_COMMIT_ID]`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -50,8 +50,8 @@ Subagent (general-purpose):
     lock ordering, a function or API contract, or shared mutable state,
     checking the call sites is the right method.
 
-    Your review is read-only in this workspace. Do not mutate the working
-    copy, changes, bookmarks, or workspace state in any way.
+    Your review is read-only in this workspace. Do not mutate the working-copy
+    commit, revision graph, bookmarks, or operation log in any way.
 
     ## Do Not Trust the Report
 
@@ -176,10 +176,10 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_CHANGE]` — change ID immediately before this task
-- `[HEAD_CHANGE]` — change ID at the end of this task
+- `[BASE_COMMIT_ID]` — exact full commit ID recorded before this task
+- `[TIP_COMMIT_ID]` — exact full commit ID for the revision under review
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE_CHANGE HEAD_CHANGE` prints the unique
+  package to (`scripts/review-package PLAN_FILE BASE TIP` prints the unique
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

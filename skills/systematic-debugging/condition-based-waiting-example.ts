@@ -1,5 +1,6 @@
 // Complete implementation of condition-based waiting utilities
-// Fixed 15 flaky tests by replacing arbitrary timeouts (2025-10-03)
+// From: Lace test infrastructure improvements (2025-10-03)
+// Context: Fixed 15 flaky tests by replacing arbitrary timeouts
 
 import type { ThreadManager } from '~/threads/thread-manager';
 import type { LaceEvent, LaceEventType } from '~/threads/types';

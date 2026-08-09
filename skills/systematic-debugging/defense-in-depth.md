@@ -53,22 +53,15 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function jjGitInit(directory: string) {
-  // In tests, refuse jj git init outside the workspace-local .tmp directory.
+async function jjInit(directory: string, workspaceRoot: string) {
+  // In tests, refuse jj git init outside workspace-local temporary storage
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    let workspaceRoot = process.cwd();
-    try {
-      const { stdout } = await execFileAsync('jj', ['workspace', 'root']);
-      workspaceRoot = stdout.trim() || workspaceRoot;
-    } catch {
-      // Outside a Jujutsu workspace, use the current directory's local .tmp.
-    }
-    const scratchDir = normalize(resolve(workspaceRoot, '.tmp'));
+    const tempRoot = normalize(resolve(workspaceRoot, '.tmp'));
 
-    if (normalized !== scratchDir && !normalized.startsWith(`${scratchDir}${sep}`)) {
+    if (!normalized.startsWith(tempRoot)) {
       throw new Error(
-        `Refusing jj git init outside ${scratchDir} during tests: ${directory}`
+        `Refusing jj git init outside workspace-local .tmp during tests: ${directory}`
       );
     }
   }
@@ -80,9 +73,9 @@ async function jjGitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to run jj git init', {
+  logger.debug('About to jj git init', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -113,7 +106,7 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` as the fallback
+- Layer 3: `WorktreeManager` refuses `jj git init` outside `$(jj workspace root)/.tmp` in tests
 - Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce

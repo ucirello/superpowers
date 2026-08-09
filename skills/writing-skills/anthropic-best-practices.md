@@ -212,13 +212,13 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Jujutsu Change Description Helper skill:**
+**Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change messages by analyzing jj diffs. Use when the user asks for help writing change messages or reviewing the current change.
+description: Generate clear change descriptions by analyzing Jujutsu diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax established by `git log` always win; keep the message clear, concise, and informative without imposing fixed prefixes, types, scopes, subjects, bodies, Conventional Commit forms, or templates. Apply the composed message with `jj describe -m '<message composed from repository conventions>'`.
+Follow repository instructions first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Use compatible Go quality, clarity, and structure, while letting repository instructions and existing history determine the wording.
 
 Avoid vague descriptions like these:
 
@@ -655,26 +655,12 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Change description composition
+## Change description quality
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax established by `git log` always win; keep the message clear, concise, and informative without imposing fixed prefixes, types, scopes, subjects, bodies, Conventional Commit forms, or templates.
-
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Describe the authentication behavior, including the login endpoint and token-validation middleware, using the repository's established syntax.
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Describe the corrected timezone conversion and consistent UTC timestamp handling using the repository's established syntax.
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Describe both the dependency update and standardized endpoint error responses using the repository's established syntax.
-
-Apply the composed message with `jj describe -m '<message composed from repository conventions>'`.
+Follow repository instructions first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply compatible Go guidance to quality, clarity, and structure without imposing a subject form, punctuation rule, prefix, scope, or template; repository instructions and existing history determine the present form.
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Concrete repository history helps agents understand the desired style and level of detail more clearly than invented examples.
 
 ### Conditional workflow pattern
 
@@ -991,7 +977,7 @@ When agents perform complex, open-ended tasks, they can make mistakes. The "plan
 
 Skills run in the code execution environment with platform-specific limitations:
 
-* **claude.ai**: Can install packages from npm and PyPI and clone hosted repositories with `jj git clone`
+* **claude.ai**: Can install packages from npm and PyPI and pull from GitHub repositories
 * **Anthropic API**: Has no network access and no runtime package installation
 
 List required packages in your SKILL.md and verify they're available in the [code execution tool documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool).

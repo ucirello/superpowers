@@ -13,10 +13,12 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** At execution time, use superpowers:using-jj-workspaces to create an isolated JJ workspace or verify the existing one.
+**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time. That skill uses `jj workspace add` as its manual fallback; the workspace has its own working-copy commit while sharing repository history and operation history.
 
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+
+**Temporary files:** Use `$(jj workspace root)/.tmp`. If `jj workspace root` is unavailable, use the repository-local fallback `./.tmp`.
 
 ## Scope Check
 
@@ -49,7 +51,11 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe the change" - step
+- "Describe the current change and start the next change" - step
+
+Every change-description step must include this instruction exactly:
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
 ## Plan Document Header
 
@@ -117,21 +123,20 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Describe the change**
+- [ ] **Step 5: Describe the completed change and start the next change**
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Repository-local instructions and syntax established by `git log` always win. Apply compatible Go guidance to make the message clear, concise, and informative; explain the reason and effects when useful, without imposing fixed prefixes, types, scopes, subjects, bodies, Conventional Commit forms, or templates.
+Inspect `git log` and follow the repository's local message syntax; it takes precedence. Apply compatible Go guidance to message quality, clarity, and structure without imposing a type, scope, prefix, subject form, punctuation rule, or template.
 
-Confirm the current JJ change contains exactly the task's files, then describe it:
+Jujutsu snapshots the working copy into the current change automatically, so there is no staging step. Review `jj status` and `jj diff`, then describe the current change in an editor and start a new working-copy change:
 
 ```bash
-jj diff --summary
-jj describe -m "<message composed from the standards above>"
+jj status
+jj diff
+jj describe
 jj new
 ```
-
-`jj new` starts a fresh change for the next task, preserving this task as an independent review and integration boundary.
 ````
 
 ## No Placeholders

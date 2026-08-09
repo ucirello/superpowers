@@ -22,17 +22,17 @@ Subagent (general-purpose):
 
     ## Jujutsu Revisions to Review
 
-    **From:** [FROM_REVISION]
-    **To:** [TO_REVISION]
+    **Base:** [BASE_COMMIT_ID]
+    **Tip:** [TIP_COMMIT_ID]
 
     ```bash
-    jj diff --ignore-working-copy --stat --from [FROM_REVISION] --to [TO_REVISION]
-    jj diff --ignore-working-copy --from [FROM_REVISION] --to [TO_REVISION]
+    jj diff --ignore-working-copy --stat --from [BASE_COMMIT_ID] --to [TIP_COMMIT_ID]
+    jj diff --ignore-working-copy --from [BASE_COMMIT_ID] --to [TIP_COMMIT_ID]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate its working copy, existing revisions, bookmarks, or workspace registrations. Use `jj show --ignore-working-copy`, `jj diff --ignore-working-copy --from/--to`, `jj log --ignore-working-copy`, and `jj file show --ignore-working-copy -r <revision> <path>` to inspect revisions without switching or creating a workspace.
+    Your review is read-only in this workspace. Do not mutate its working copy, revisions, bookmarks, or workspace registrations. Use `jj show --ignore-working-copy`, `jj diff --ignore-working-copy --from/--to`, `jj log --ignore-working-copy`, and `jj file show --ignore-working-copy -r <revision> <path>` to inspect revisions without switching or creating a workspace.
 
     ## What to Check
 
@@ -128,8 +128,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[FROM_REVISION]` — starting change ID or revision
-- `[TO_REVISION]` — ending change ID or revision
+- `[BASE_COMMIT_ID]` — exact starting revision
+- `[TIP_COMMIT_ID]` — exact completed revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

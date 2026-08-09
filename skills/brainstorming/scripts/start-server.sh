@@ -120,8 +120,11 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
-  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/rocketclaw/brainstorm-${SESSION_ID}"
+  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || true)"
+  if [[ -z "$WORKSPACE_ROOT" ]]; then
+    WORKSPACE_ROOT="$PWD"
+  fi
+  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/rocketclaw/brainstorm/${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
@@ -151,8 +154,9 @@ fi
 
 cd "$SCRIPT_DIR" || exit 1
 
-# Resolve the invoking process PID (grandparent of this script).
-# $PPID is the ephemeral shell that ran this script; its parent owns the session.
+# Resolve the harness PID (grandparent of this script).
+# $PPID is the ephemeral shell the harness spawned to run us — it dies
+# when this script exits. The harness itself is $PPID's parent.
 OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
 if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
   OWNER_PID="$PPID"
