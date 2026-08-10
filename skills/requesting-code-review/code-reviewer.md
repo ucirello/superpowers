@@ -20,19 +20,22 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## JJ Range to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_REVISION]
+    **Head:** [HEAD_REVISION]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --ignore-working-copy diff --stat --from '[BASE_REVISION]' --to '[HEAD_REVISION]'
+    jj --ignore-working-copy diff --git --context 10 --from '[BASE_REVISION]' --to '[HEAD_REVISION]'
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only. Inspect revisions with `jj --ignore-working-copy
+    file show -r`, `jj --ignore-working-copy diff`, and `jj
+    --ignore-working-copy log`. Do not mutate project files, revisions,
+    bookmarks, or workspace state. Do not create, forget, or change workspaces.
 
     ## What to Check
 
@@ -128,8 +131,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REVISION]` — starting revision
+- `[HEAD_REVISION]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

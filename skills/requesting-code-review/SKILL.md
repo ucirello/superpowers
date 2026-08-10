@@ -23,11 +23,17 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Get JJ revisions:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REVISION=$(jj log --no-graph -r '@--' -T 'commit_id ++ "\n"')
+HEAD_REVISION=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')
+jj log -n 20
 ```
+
+This form applies after `jj commit`, when `@` is the new empty working-copy
+change and the completed change is `@-`. If the completed work is still in `@`,
+use its parent and `@`. Resolve both boundaries to stable commit IDs before
+dispatching the reviewer.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -36,8 +42,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{BASE_REVISION}` - Starting revision
+- `{HEAD_REVISION}` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +58,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REVISION=$(jj log --no-graph -r '<revision for Task 1>' -T 'commit_id ++ "\n"')
+HEAD_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  BASE_REVISION: a7981ec
+  HEAD_REVISION: 3df7661
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

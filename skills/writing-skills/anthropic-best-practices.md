@@ -212,11 +212,15 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**JJ change description helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive change messages by analyzing JJ diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and history take precedence, and their syntax wins. Incorporate compatible Go guidance by clearly stating what the change does, favoring complete sentences, structuring details for readability, and explaining why when useful. Review `jj diff`, then apply the result with `jj describe -m "<message composed from the applicable standards>"`.
 
 Avoid vague descriptions like these:
 
@@ -653,39 +657,17 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Change message composition
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
+Repository-local instructions and history take precedence, and their syntax wins. Incorporate compatible Go guidance by clearly stating what the change does, favoring complete sentences, structuring details for readability, and explaining why when useful. Let the change determine the message's structure and level of detail rather than imposing a fixed prefix, type, scope, subject, or body.
+
+Review the current change with `jj diff`, compose its message from those standards, and apply it with:
+
+```bash
+jj describe -m "<message composed from the applicable standards>"
 ```
-feat(auth): implement JWT-based authentication
-
-Add login endpoint and token validation middleware
-```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
