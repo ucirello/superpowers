@@ -2,9 +2,8 @@
 # Stop the brainstorm server and clean up
 # Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Only deletes session directories under
-# .tmp/rocketclaw/brainstorm/. Persistent directories under .rocketclaw/ are
-# kept so mockups can be reviewed later.
+# Kills the server process. Only deletes workspace-local ephemeral sessions.
+# Persistent directories (.rocketclaw/) are kept so mockups can be reviewed later.
 
 SESSION_DIR="$1"
 
@@ -16,11 +15,26 @@ fi
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
+EPHEMERAL_MARKER="${STATE_DIR}/ephemeral-session"
 
 mark_stopped() {
   local reason="$1"
   rm -f "${STATE_DIR}/server-info"
   printf '{"reason":"%s","timestamp":%s}\n' "$reason" "$(date +%s)" > "${STATE_DIR}/server-stopped"
+}
+
+cleanup_ephemeral_session() {
+  [[ -f "$EPHEMERAL_MARKER" ]] || return 0
+
+  local workspace_root allowed_root canonical_allowed canonical_session
+  workspace_root="$(jj workspace root 2>/dev/null || pwd)"
+  allowed_root="${workspace_root}/.tmp/brainstorm"
+  canonical_allowed="$(cd "$allowed_root" 2>/dev/null && pwd -P)" || return 0
+  canonical_session="$(cd "$SESSION_DIR" 2>/dev/null && pwd -P)" || return 0
+
+  # Startup creates each ephemeral session as one direct child of this root.
+  [[ "$(dirname "$canonical_session")" == "$canonical_allowed" ]] || return 0
+  rm -rf -- "$canonical_session"
 }
 
 read_expected_server_id() {
@@ -78,6 +92,7 @@ if [[ -f "$PID_FILE" ]]; then
   if ! is_brainstorm_server "$pid"; then
     rm -f "$PID_FILE" "$SERVER_ID_FILE"
     mark_stopped "stale_pid"
+    cleanup_ephemeral_session
     echo '{"status": "stale_pid"}'
     exit 0
   fi
@@ -109,12 +124,10 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Only delete ephemeral workspace-local directories.
-  case "$SESSION_DIR" in
-    */.tmp/rocketclaw/brainstorm/*) rm -rf "$SESSION_DIR" ;;
-  esac
+  cleanup_ephemeral_session
 
   echo '{"status": "stopped"}'
 else
+  cleanup_ephemeral_session
   echo '{"status": "not_running"}'
 fi

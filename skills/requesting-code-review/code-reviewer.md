@@ -20,19 +20,22 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Jujutsu Revisions to Review
+    ## JJ Range to Review
 
-    **Base:** [BASE_COMMIT_ID]
-    **Tip:** [TIP_COMMIT_ID]
+    **Base:** [BASE_REVISION]
+    **Head:** [HEAD_REVISION]
 
     ```bash
-    jj diff --ignore-working-copy --stat --from [BASE_COMMIT_ID] --to [TIP_COMMIT_ID]
-    jj diff --ignore-working-copy --from [BASE_COMMIT_ID] --to [TIP_COMMIT_ID]
+    jj --ignore-working-copy diff --stat --from '[BASE_REVISION]' --to '[HEAD_REVISION]'
+    jj --ignore-working-copy diff --git --context 10 --from '[BASE_REVISION]' --to '[HEAD_REVISION]'
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate its working copy, revisions, bookmarks, or workspace registrations. Use `jj show --ignore-working-copy`, `jj diff --ignore-working-copy --from/--to`, `jj log --ignore-working-copy`, and `jj file show --ignore-working-copy -r <revision> <path>` to inspect revisions without switching or creating a workspace.
+    Your review is read-only. Inspect revisions with `jj --ignore-working-copy
+    file show -r`, `jj --ignore-working-copy diff`, and `jj
+    --ignore-working-copy log`. Do not mutate project files, revisions,
+    bookmarks, or workspace state. Do not create, forget, or change workspaces.
 
     ## What to Check
 
@@ -104,7 +107,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to integrate?** [Yes | No | With fixes]
+    **Ready to merge?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -128,8 +131,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_COMMIT_ID]` — exact starting revision
-- `[TIP_COMMIT_ID]` — exact completed revision
+- `[BASE_REVISION]` — starting revision
+- `[HEAD_REVISION]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -166,7 +169,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to integrate: With fixes**
+**Ready to merge: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

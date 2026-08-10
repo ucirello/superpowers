@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Describe the current change and run `jj commit` to start the next change
+    4. Describe and commit your work with Jujutsu. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and history take precedence; otherwise use a clear summary line and add a concise explanatory body only when it improves understanding. Use the neutral `jj commit -m "<description>"` form to describe the current change and create a new empty working-copy change on top.
     5. Self-review (see below)
     6. Report back
 
@@ -45,14 +45,7 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before finishing the change, not after every edit.
-
-    Before using `jj describe` or `jj commit`, inspect the repository's local
-    conventions. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Repository-local syntax and existing messages take precedence. Apply
-    compatible Go guidance to clarity and structure without imposing a subject
-    form, capitalization, punctuation, length, prefix, canned subject, or
-    template. Derive the description from the actual task and diff.
+    full suite once before `jj commit`, not after every edit.
 
     ## Code Organization
 
@@ -110,19 +103,14 @@ Subagent (general-purpose):
     - Is the test output pristine (no stray warnings or noise)?
 
     If you find issues during self-review, fix them now before reporting.
-    Describe and complete the resulting fix change before replying. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     ## After Review Findings
 
     If the task review finds issues, you will be resumed with the findings.
-    Fix them, re-run the tests that cover the amended code, and append a fix
-    report to your report file: what you changed, the covering tests you
+    Fix them and re-run the tests that cover the amended code. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and history take precedence; otherwise use a clear summary line and add a concise explanatory body only when it improves understanding. Describe the review fixes with the neutral `jj commit -m "<description>"` form; this creates a new empty working-copy change on top. Then append a fix report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Describe and complete the fix
-    change before replying. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Apply the repository-local and compatible Go guidance above, deriving the
-    description from the actual fix. Then reply with the same short status
-    contract as your first report.
+    you — your report is the test evidence. Then reply with the same short
+    status contract as your first report.
 
     ## Report Format
 
@@ -139,7 +127,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Changes completed (short change ID + description subject)
+    - Revisions created (short commit ID + description first line)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

@@ -15,6 +15,8 @@ Subagent (general-purpose):
     **Plan to review:** [PLAN_FILE_PATH]
     **Spec for reference:** [SPEC_FILE_PATH]
 
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax observed at runtime always win. When validating or recommending JJ descriptions, apply only compatible Go guidance: require a clear, concise subject and an explanatory body when it improves understanding, without imposing any fixed prefix, capitalization, tense, Conventional Commit form, subject/body/trailer syntax, message, or example.
+
     ## What to Check
 
     | Category | What to Look For |
@@ -23,6 +25,7 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | JJ Descriptions | Description steps follow local instructions and history without imposing a fixed syntax |
 
     ## Calibration
 

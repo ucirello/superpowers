@@ -3,18 +3,16 @@
 # short-lived artifacts: task briefs, implementer reports, review packages,
 # and the progress ledger. Print the plan directory's absolute path.
 #
-# One directory per plan (.tmp/rocketclaw/sdd/<plan-basename>/) so a follow-up
+# One directory per plan (.rocketclaw/sdd/<plan-basename>/) so a follow-up
 # plan in the same workspace can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The artifacts live in the working tree (not under .jj/) because Claude Code
-# treats .jj/ as a protected path and denies agent writes there — which blocks
-# an implementer subagent from writing its report file. In a Jujutsu repository,
-# they live under $(jj workspace root)/.tmp; outside one, they fall back to
-# ./.tmp. A self-ignoring .gitignore in the scratch directory keeps artifacts
-# out of snapshots without changing a tracked ignore file; Jujutsu uses
-# .gitignore files for ignore rules.
+# The artifact workspace lives in the working copy (not under .git/) because
+# Claude Code treats .git/ as a protected path and denies agent writes there —
+# which blocks an implementer subagent from writing its report file. A
+# self-ignoring .gitignore at .rocketclaw/sdd/ keeps every plan's workspace out of
+# `jj status` and out of accidental revisions without modifying any tracked file.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -34,12 +32,8 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
-if root=$(jj workspace root 2>/dev/null); then
-  :
-else
-  root=$PWD
-fi
-base="$root/.tmp/rocketclaw/sdd"
+root=$(jj --ignore-working-copy workspace root)
+base="$root/.rocketclaw/sdd"
 dir="$base/$slug"
 mkdir -p "$dir"
 printf '*\n' > "$base/.gitignore"

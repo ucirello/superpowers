@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before integration to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before integrating into the trunk bookmark
+- Before merge to main
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,17 +23,17 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get exact Jujutsu commit IDs:** Before implementation begins in a fresh
-current change, record its parent. After completing the implementation with
-`jj commit`, the completed change is `@-`:
+**1. Get JJ revisions:**
 ```bash
-# Run before implementation changes the fresh @.
-BASE_COMMIT_ID=$(jj log --ignore-working-copy -r '@-' --no-graph -T 'commit_id ++ "\n"')
-# Run after jj commit.
-TIP_COMMIT_ID=$(jj log --ignore-working-copy -r '@-' --no-graph -T 'commit_id ++ "\n"')
+BASE_REVISION=$(jj log --no-graph -r '@--' -T 'commit_id ++ "\n"')
+HEAD_REVISION=$(jj log --no-graph -r '@-' -T 'commit_id ++ "\n"')
+jj log -n 20
 ```
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax wins; use compatible Go guidance for clarity and structure without imposing a fixed format.
+This form applies after `jj commit`, when `@` is the new empty working-copy
+change and the completed change is `@-`. If the completed work is still in `@`,
+use its parent and `@`. Resolve both boundaries to stable commit IDs before
+dispatching the reviewer.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -42,8 +42,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_COMMIT_ID}` - Exact starting revision
-- `{TIP_COMMIT_ID}` - Exact completed revision
+- `{BASE_REVISION}` - Starting revision
+- `{HEAD_REVISION}` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -58,14 +58,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_COMMIT_ID=<full commit ID recorded before Task 2>
-TIP_COMMIT_ID=$(jj log --ignore-working-copy -r '@-' --no-graph -T 'commit_id ++ "\n"')
+BASE_REVISION=$(jj log --no-graph -r '<revision for Task 1>' -T 'commit_id ++ "\n"')
+HEAD_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
   PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  BASE_COMMIT_ID: <full commit ID recorded before Task 2>
-  TIP_COMMIT_ID: <full commit ID for the completed Task 2 change>
+  BASE_REVISION: a7981ec
+  HEAD_REVISION: 3df7661
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

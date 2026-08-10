@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Generate a review package: change list, stat summary, and the net
+# Generate a review package: revision list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Full commit IDs preserve the exact endpoint even when Jujutsu rewrites
-# a change. Using the recorded per-task BASE keeps multi-change tasks intact.
+# call. Using the recorded per-task BASE (not TIP-) keeps multi-revision
+# tasks intact.
 #
 # Usage: review-package PLAN_FILE BASE TIP [OUTFILE]
-# Default OUTFILE: <workspace-root>/.tmp/rocketclaw/sdd/<plan-basename>/review-<base12>..<tip12>.diff
+# Default OUTFILE: <repo-root>/.rocketclaw/sdd/<plan-basename>/review-<base-id>..<tip-id>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
@@ -19,36 +19,35 @@ base=$2
 tip=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-base_id=$(jj --ignore-working-copy log --no-graph -r "exactly($base, 1)" -T 'commit_id ++ "\n"' 2>/dev/null) \
-  || { echo "BASE must resolve to one Jujutsu revision: $base" >&2; exit 2; }
-tip_id=$(jj --ignore-working-copy log --no-graph -r "exactly($tip, 1)" -T 'commit_id ++ "\n"' 2>/dev/null) \
-  || { echo "TIP must resolve to one Jujutsu revision: $tip" >&2; exit 2; }
-[ -n "$base_id" ] || { echo "BASE resolved to no commit: $base" >&2; exit 2; }
-[ -n "$tip_id" ] || { echo "TIP resolved to no commit: $tip" >&2; exit 2; }
-range="commit_id($base_id)..commit_id($tip_id)"
+jj --ignore-working-copy log -r "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+jj --ignore-working-copy log -r "$tip" >/dev/null || { echo "bad TIP: $tip" >&2; exit 2; }
+
+base_id=$(jj --ignore-working-copy log --no-graph -r "$base" -T 'commit_id ++ "\n"')
+tip_id=$(jj --ignore-working-copy log --no-graph -r "$tip" -T 'commit_id ++ "\n"')
+range="${base_id}..${tip_id}"
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-${base_id:0:12}..${tip_id:0:12}.diff"
+  base_short=$(jj --ignore-working-copy log --no-graph -r "$base_id" -T 'commit_id.shortest(8)')
+  tip_short=$(jj --ignore-working-copy log --no-graph -r "$tip_id" -T 'commit_id.shortest(8)')
+  out="$dir/review-${base_short}..${tip_short}.diff"
 fi
 
 {
   echo "# Review package: ${base_id}..${tip_id}"
   echo
-  echo "## Changes"
+  echo "## Revisions"
   jj --ignore-working-copy log --no-graph -r "$range" \
-    -T 'change_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
+    -T 'commit_id.shortest(8) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  jj --ignore-working-copy diff --stat \
-    --from "commit_id($base_id)" --to "commit_id($tip_id)"
+  jj --ignore-working-copy diff --from "$base_id" --to "$tip_id" --stat
   echo
   echo "## Diff"
-  jj --ignore-working-copy --color=never diff --context 10 \
-    --from "commit_id($base_id)" --to "commit_id($tip_id)"
+  jj --ignore-working-copy diff --from "$base_id" --to "$tip_id" --git --context 10
 } > "$out"
 
-changes=$(jj --ignore-working-copy log --no-graph -r "$range" -T '"x\n"' | wc -l | tr -d ' ')
-echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"
+revisions=$(jj --ignore-working-copy log -r "$range" --count)
+echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"

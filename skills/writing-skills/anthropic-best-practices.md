@@ -212,13 +212,15 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Change Description Helper skill:**
+**JJ change description helper skill:**
 
 ```yaml  theme={null}
-description: Generate clear change descriptions by analyzing Jujutsu diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
+description: Generate descriptive change messages by analyzing JJ diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
 
-Follow repository instructions first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Use compatible Go quality, clarity, and structure, while letting repository instructions and existing history determine the wording.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and history take precedence, and their syntax wins. Incorporate compatible Go guidance by clearly stating what the change does, favoring complete sentences, structuring details for readability, and explaining why when useful. Review `jj diff`, then apply the result with `jj describe -m "<message composed from the applicable standards>"`.
 
 Avoid vague descriptions like these:
 
@@ -655,12 +657,20 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Change description quality
+## Change message composition
 
-Follow repository instructions first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply compatible Go guidance to quality, clarity, and structure without imposing a subject form, punctuation rule, prefix, scope, or template; repository instructions and existing history determine the present form.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and history take precedence, and their syntax wins. Incorporate compatible Go guidance by clearly stating what the change does, favoring complete sentences, structuring details for readability, and explaining why when useful. Let the change determine the message's structure and level of detail rather than imposing a fixed prefix, type, scope, subject, or body.
+
+Review the current change with `jj diff`, compose its message from those standards, and apply it with:
+
+```bash
+jj describe -m "<message composed from the applicable standards>"
+```
 ````
 
-Concrete repository history helps agents understand the desired style and level of detail more clearly than invented examples.
+Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
 
 ### Conditional workflow pattern
 

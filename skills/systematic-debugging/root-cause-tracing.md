@@ -39,12 +39,12 @@ Error: jj git init failed in ~/project/packages/core
 ### 2. Find Immediate Cause
 **What code directly causes this?**
 ```typescript
-await execFileAsync('jj', ['git', 'init', '--no-colocate'], { cwd: projectDir });
+await execFileAsync('jj', ['git', 'init'], { cwd: projectDir });
 ```
 
 ### 3. Ask: What Called This?
 ```typescript
-WorktreeManager.createSessionWorktree(projectDir, sessionId)
+WorkspaceManager.createSessionWorkspace(projectDir, sessionId)
   → called by Session.initializeWorkspace()
   → called by Session.create()
   → called by test at Project.create()
@@ -59,8 +59,8 @@ WorktreeManager.createSessionWorktree(projectDir, sessionId)
 ### 5. Find Original Trigger
 **Where did empty string come from?**
 ```typescript
-const context = setupCoreTest(); // Returns { tempDir: '' }
-Project.create('name', context.tempDir); // Accessed before beforeEach!
+const context = setupCoreTest(); // Returns { workspaceTempDir: '' }
+Project.create('name', context.workspaceTempDir); // Accessed before beforeEach!
 ```
 
 ## Adding Stack Traces
@@ -71,14 +71,14 @@ When you can't trace manually, add instrumentation:
 // Before the problematic operation
 async function jjInit(directory: string) {
   const stack = new Error().stack;
-  console.error('DEBUG jj git init:', {
+  console.error('debug jj git init:', {
     directory,
     cwd: process.cwd(),
     nodeEnv: process.env.NODE_ENV,
     stack,
   });
 
-  await execFileAsync('jj', ['git', 'init', '--no-colocate'], { cwd: directory });
+  await execFileAsync('jj', ['git', 'init'], { cwd: directory });
 }
 ```
 
@@ -86,7 +86,7 @@ async function jjInit(directory: string) {
 
 **Run and capture:**
 ```bash
-npm test 2>&1 | grep 'DEBUG jj git init'
+npm test 2>&1 | grep 'debug jj git init'
 ```
 
 **Analyze stack traces:**
@@ -112,19 +112,19 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 
 **Trace chain:**
 1. `jj git init` runs in `process.cwd()` ← empty cwd parameter
-2. WorktreeManager called with empty projectDir
+2. WorkspaceManager called with empty projectDir
 3. Session.create() passed empty string
-4. Test accessed `context.tempDir` before beforeEach
-5. setupCoreTest() returns `{ tempDir: '' }` initially
+4. Test accessed `context.workspaceTempDir` before beforeEach
+5. setupCoreTest() returns `{ workspaceTempDir: '' }` initially instead of `$(jj workspace root)/.tmp` (or local `.tmp` when JJ is unavailable)
 
 **Root cause:** Top-level variable initialization accessing empty value
 
-**Fix:** Made tempDir a getter that throws if accessed before beforeEach
+**Fix:** Made workspaceTempDir a getter that throws if accessed before beforeEach
 
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`
+- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, falling back to local `.tmp` when JJ is unavailable
 - Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle

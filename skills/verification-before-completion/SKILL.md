@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before describing changes, pushing, or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+description: Use when about to claim work is complete, fixed, or passing, before describing changes with `jj describe` or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
 ---
 
 # Verification Before Completion
@@ -51,7 +51,7 @@ Skip any step = lying, not verifying
 
 - Using "should", "probably", "seems to"
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to describe a change with `jj describe`, push with `jj git push`, or create a PR without verification. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+- About to run `jj describe`, `jj git push`, or create a PR without verification
 - Trusting agent success reports
 - Relying on partial verification
 - Thinking "just this once"
@@ -105,11 +105,21 @@ Skip any step = lying, not verifying
 
 ## When To Apply
 
+**Before composing any commit message or change description:**
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and syntax observed at runtime always win. Apply
+only compatible Go guidance: write a clear, concise subject and add an
+explanatory body when it improves understanding. Do not impose a fixed prefix,
+capitalization, tense, Conventional Commit form, subject/body/trailer syntax,
+message, or example.
+
 **ALWAYS before:**
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
-- Describing a change with `jj describe`, pushing with `jj git push`, PR creation, task completion. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+- Running `jj describe`, `jj git push`, PR creation, task completion
 - Moving to next task
 - Delegating to agents
 

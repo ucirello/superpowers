@@ -53,15 +53,27 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function jjInit(directory: string, workspaceRoot: string) {
-  // In tests, refuse jj git init outside workspace-local temporary storage
+function workspaceTempRoot(): string {
+  try {
+    const root = execFileSync('jj', ['workspace', 'root'], {
+      encoding: 'utf8',
+    }).trim();
+    return normalize(resolve(root, '.tmp'));
+  } catch {
+    return normalize(resolve('.tmp'));
+  }
+}
+
+async function jjInit(directory: string) {
+  // In tests, allow initialization only below the workspace-local .tmp.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    const tempRoot = normalize(resolve(workspaceRoot, '.tmp'));
+    const tempRoot = workspaceTempRoot();
+    const pathFromTempRoot = relative(tempRoot, normalized);
 
-    if (!normalized.startsWith(tempRoot)) {
+    if (pathFromTempRoot.startsWith('..') || isAbsolute(pathFromTempRoot)) {
       throw new Error(
-        `Refusing jj git init outside workspace-local .tmp during tests: ${directory}`
+        `refusing jj git init outside ${tempRoot} during tests: ${directory}`
       );
     }
   }
@@ -75,7 +87,7 @@ async function jjInit(directory: string, workspaceRoot: string) {
 ```typescript
 async function jjInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to jj git init', {
+  logger.debug('about to run jj git init', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -106,7 +118,7 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses `jj git init` outside `$(jj workspace root)/.tmp` in tests
+- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp` in tests, with local `.tmp` fallback when JJ is unavailable
 - Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce

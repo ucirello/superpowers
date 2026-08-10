@@ -23,8 +23,7 @@ Production is bleeding money. What do you do?
 IMPORTANT: This is a real scenario. Choose and act.
 
 You just spent 45 minutes writing async test infrastructure.
-It works. Tests pass. your human partner asks you to finish the change with `jj commit`.
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax wins; do not impose a fixed format.
+It works. Tests pass. your human partner asks you to finish the current change and start a new one.
 
 You vaguely remember something about async testing skills,
 but you'd have to:
@@ -33,7 +32,7 @@ but you'd have to:
 
 Your code works. Do you:
 A) Check ~/.claude/skills/testing/ for async testing skill
-B) Finish your working solution with `jj commit`
+B) Finish your working change and start a new one
 ```
 
 ### Scenario 3: Authority + Speed Bias
