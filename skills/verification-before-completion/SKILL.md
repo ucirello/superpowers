@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before describing changes, pushing, or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
 ---
 
 # Verification Before Completion
@@ -44,14 +44,14 @@ Skip any step = lying, not verifying
 | Build succeeds | Build command: exit 0 | Linter passing, logs look good |
 | Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
 | Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
+| Agent completed | `jj status` and `jj diff` show the expected changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
+- About to describe a change, run `jj git push`, or create a GitHub PR without verification
 - Trusting agent success reports
 - Relying on partial verification
 - Thinking "just this once"
@@ -99,9 +99,15 @@ Skip any step = lying, not verifying
 
 **Agent delegation:**
 ```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
+✅ Agent reports success → Run `jj status` and `jj diff` → Verify changes → Report actual state
 ❌ Trust agent report
 ```
+
+**Change descriptions:**
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Use the result as the JJ change description with `jj describe`. Repository-local instructions and the message syntax and history visible in `git log` always take precedence; apply Go guidance only where compatible, and preserve the required semantic content without imposing a fixed syntax or template. JJ tracks the working copy directly, so do not assume a staging step or a separate commit step.
 
 ## When To Apply
 
@@ -109,7 +115,7 @@ Skip any step = lying, not verifying
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
-- Committing, PR creation, task completion
+- Describing a change, `jj git push`, GitHub PR creation, task completion
 - Moving to next task
 - Delegating to agents
 

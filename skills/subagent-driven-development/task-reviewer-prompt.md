@@ -15,7 +15,7 @@ Subagent (general-purpose):
   prompt: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
-    not a merge review — a broad whole-branch review happens separately after
+    not an integration review — a broad whole-change review happens separately after
     all tasks are complete.
 
     ## What Was Requested
@@ -31,17 +31,18 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base commit ID:** [BASE_COMMIT_ID]
+    **Head commit ID:** [HEAD_COMMIT_ID]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the commit list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not re-run git commands.
+    mid-function — and say so in your report. Do not re-run JJ commands.
     If the diff file is missing, fetch the diff yourself:
-    `git diff --stat [BASE_SHA]..[HEAD_SHA]` and `git diff [BASE_SHA]..[HEAD_SHA]`.
+    `jj diff --from [BASE_COMMIT_ID] --to [HEAD_COMMIT_ID] --stat` and
+    `jj diff --from [BASE_COMMIT_ID] --to [HEAD_COMMIT_ID] --git --context 10`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -50,7 +51,7 @@ Subagent (general-purpose):
     checking the call sites is the right method.
 
     Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    copy, current change, bookmarks, or workspace state in any way.
 
     ## Do Not Trust the Report
 
@@ -125,7 +126,7 @@ Subagent (general-purpose):
     Categorize issues by actual severity. Not everything is Critical.
     Important means this task cannot be trusted until it is fixed: incorrect
     or fragile behavior, a missed requirement, or maintainability damage you
-    would block a merge over — verbatim duplication of a logic block,
+    would block integration over — verbatim duplication of a logic block,
     swallowed errors, tests that assert nothing. "Coverage could be broader"
     and polish suggestions are Minor.
     If the plan or brief explicitly mandates something this rubric calls a
@@ -175,10 +176,10 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_SHA]` — commit before this task
-- `[HEAD_SHA]` — current commit
+- `[BASE_COMMIT_ID]` — full commit ID recorded before this task
+- `[HEAD_COMMIT_ID]` — full commit ID of the task's completed endpoint
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE HEAD` prints the unique
+  package to (`scripts/review-package PLAN_FILE BASE_COMMIT_ID HEAD_COMMIT_ID` prints the unique
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

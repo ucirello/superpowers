@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Generate a review package: commit list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
-# tasks intact.
+# call. Full commit IDs keep review endpoints stable even when JJ change IDs
+# or bookmarks move.
 #
-# Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
-# Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/review-<base7>..<head7>.diff
+# Usage: review-package PLAN_FILE BASE_COMMIT_ID HEAD_COMMIT_ID [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base12>..<head12>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE HEAD [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE_COMMIT_ID HEAD_COMMIT_ID [OUTFILE]" >&2
   exit 2
 fi
 
@@ -19,28 +19,45 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+resolve_full_commit_id() {
+  local endpoint=$1
+  local label=$2
+  local resolved
+
+  case "$endpoint" in
+    *[!0-9a-fA-F]*|'') echo "$label must be a full JJ commit ID: $endpoint" >&2; exit 2 ;;
+  esac
+  resolved=$(jj log --no-graph -r "$endpoint" -T 'commit_id ++ "\n"' 2>/dev/null) \
+    || { echo "bad $label commit ID: $endpoint" >&2; exit 2; }
+  [ "$endpoint" = "$resolved" ] \
+    || { echo "$label must be the full immutable commit ID (resolved to $resolved): $endpoint" >&2; exit 2; }
+}
+
+resolve_full_commit_id "$base" BASE
+resolve_full_commit_id "$head" HEAD
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+  out="$dir/review-${base:0:12}..${head:0:12}.diff"
 fi
+
+revisions="::$head ~ ::$base"
 
 {
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Commits"
-  git log --oneline "${base}..${head}"
+  jj log --no-graph -r "$revisions" \
+    -T 'commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  git diff --stat "${base}..${head}"
+  jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  git diff -U10 "${base}..${head}"
+  jj diff --from "$base" --to "$head" --git --context 10
 } > "$out"
 
-commits=$(git rev-list --count "${base}..${head}")
+commits=$(jj log --no-graph -r "$revisions" --count)
 echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"

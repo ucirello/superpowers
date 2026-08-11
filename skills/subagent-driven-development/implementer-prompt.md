@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Describe your completed JJ change and create a fresh working-copy change
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,16 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before finalizing the change, not after every edit. JJ
+    snapshots the working copy directly; do not stage files or assume an index.
+
+    Before setting or editing the change description: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Repository-local instructions, syntax, and history win. Use the Go guidance
+    only for compatible message quality; it does not impose a fixed syntax.
+    Dynamically compose a neutral `MESSAGE` that preserves the semantic reason
+    for this change, then run `jj commit -m "$MESSAGE"` without path arguments
+    so recording is noninteractive, all task changes remain together, and JJ
+    creates a fresh working-copy change.
 
     ## Code Organization
 
@@ -110,8 +119,13 @@ Subagent (general-purpose):
     Fix them, re-run the tests that cover the amended code, and append a fix
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Then reply with the same short
-    status contract as your first report.
+    you — your report is the test evidence. Before setting or editing the change description: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Repository-local instructions, syntax, and history win. Use the Go guidance
+    only for compatible message quality; it does not impose a fixed syntax.
+    Dynamically compose a neutral `MESSAGE` that preserves the semantic reason
+    for the fix, then run `jj commit -m "$MESSAGE"` without path arguments so
+    recording is noninteractive, and reply with the same short status contract
+    as your first report.
 
     ## Report Format
 
@@ -128,7 +142,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Commits created (short commit ID + description first line)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
