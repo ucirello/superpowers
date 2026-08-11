@@ -7,7 +7,7 @@
 #
 # Options:
 #   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         Files persist after server stops.
+#                         instead of the workspace-local .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -16,8 +16,6 @@
 #                         after the user approves the visual companion).
 #   --foreground          Run server in the current terminal (no backgrounding).
 #   --background          Force background mode (overrides Codex auto-foreground).
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Parse arguments
 PROJECT_DIR=""
@@ -62,6 +60,20 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+canonical_dir() {
+  (cd -- "$1" 2>/dev/null && pwd -P)
+}
+
+if [[ -n "$PROJECT_DIR" ]]; then
+  if ! PROJECT_DIR="$(canonical_dir "$PROJECT_DIR")" || [[ -z "$PROJECT_DIR" ]]; then
+    echo '{"error": "--project-dir must name an existing directory"}'
+    exit 1
+  fi
+fi
+
+SCRIPT_DIR="$(canonical_dir "$(dirname "$0")")" || exit 1
+START_DIR="$(pwd -P)"
 
 if [[ -z "$URL_HOST" ]]; then
   if [[ "$BIND_HOST" == "127.0.0.1" || "$BIND_HOST" == "localhost" ]]; then
@@ -110,22 +122,57 @@ fi
 # keep everything this script and the server create owner-only.
 umask 077
 
-# Generate unique session directory
-SESSION_ID="$$-$(date +%s)"
-
 if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
-  # Persist the bound port and key per project so a restart reuses them and an
-  # already-open browser tab reconnects to the same URL with a valid cookie.
-  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
-  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
+  SESSION_BASE="${PROJECT_DIR}/.rocketclaw/brainstorm"
+  EPHEMERAL="false"
 else
-  if WORKSPACE_ROOT="$(jj workspace root 2>/dev/null)"; then
-    :
+  JJ_MARKER_DIR="$START_DIR"
+  while [[ "$JJ_MARKER_DIR" != "/" && ! -e "${JJ_MARKER_DIR}/.jj" ]]; do
+    JJ_MARKER_DIR="$(dirname "$JJ_MARKER_DIR")"
+  done
+  if command -v jj >/dev/null 2>&1 && [[ -e "${JJ_MARKER_DIR}/.jj" ]]; then
+    if ! JJ_ROOT="$(jj workspace root)" || [[ -z "$JJ_ROOT" ]]; then
+      echo '{"error": "Jujutsu returned an empty or invalid workspace root"}'
+      exit 1
+    fi
+    if ! JJ_ROOT="$(canonical_dir "$JJ_ROOT")" || [[ -z "$JJ_ROOT" ]]; then
+      echo '{"error": "Unable to resolve the Jujutsu workspace root"}'
+      exit 1
+    fi
+    SESSION_BASE="${JJ_ROOT}/.tmp/rocketclaw/brainstorm"
   else
-    WORKSPACE_ROOT="$PWD"
+    SESSION_BASE="${START_DIR}/.tmp/rocketclaw/brainstorm"
   fi
-  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm/${SESSION_ID}"
+  EPHEMERAL="true"
+fi
+
+# Atomically reserve a unique local session directory.
+mkdir -p "$SESSION_BASE"
+SESSION_BASE="$(canonical_dir "$SESSION_BASE")" || exit 1
+if [[ "$EPHEMERAL" == "true" ]]; then
+  if [[ "$(basename "$SESSION_BASE")" != "brainstorm" || "$(basename "$(dirname "$SESSION_BASE")")" != "rocketclaw" || "$(basename "$(dirname "$(dirname "$SESSION_BASE")")")" != ".tmp" ]]; then
+    echo '{"error": "Resolved temporary session root escaped .tmp/rocketclaw/brainstorm"}'
+    exit 1
+  fi
+  EPHEMERAL_ROOT="$SESSION_BASE"
+else
+  EPHEMERAL_ROOT=""
+  # Persist the bound port and key per project so a restart reuses them and an
+  # already-open browser tab reconnects to the same canonical paths.
+  export BRAINSTORM_PORT_FILE="${SESSION_BASE}/.last-port"
+  export BRAINSTORM_TOKEN_FILE="${SESSION_BASE}/.last-token"
+fi
+SESSION_DIR=""
+for attempt in {1..100}; do
+  candidate="${SESSION_BASE}/$$-$(date +%s)-${RANDOM:-0}-${attempt}"
+  if mkdir "$candidate" 2>/dev/null; then
+    SESSION_DIR="$candidate"
+    break
+  fi
+done
+if [[ -z "$SESSION_DIR" ]]; then
+  echo '{"error": "Unable to create a unique session directory"}'
+  exit 1
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
@@ -133,10 +180,11 @@ PID_FILE="${STATE_DIR}/server.pid"
 LOG_FILE="${STATE_DIR}/server.log"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
 
-# Create fresh session directory with content and state peers
+# Create content and state peers. The marker authorizes guarded cleanup on stop.
 mkdir -p "${SESSION_DIR}/content" "$STATE_DIR"
-if [[ -z "$PROJECT_DIR" ]]; then
-  : > "${STATE_DIR}/ephemeral-session"
+if [[ "$EPHEMERAL" == "true" ]]; then
+  : > "${SESSION_DIR}/.ephemeral"
+  printf '%s\n' "$EPHEMERAL_ROOT" > "${STATE_DIR}/cleanup-root"
 fi
 
 SERVER_ID=""
@@ -176,7 +224,7 @@ fi
 
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
-  env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" &
+  env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_EPHEMERAL_ROOT="$EPHEMERAL_ROOT" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" &
   SERVER_PID=$!
   echo "$SERVER_PID" > "$PID_FILE"
   wait "$SERVER_PID"
@@ -185,7 +233,7 @@ fi
 
 # Start server, capturing output to log file
 # Use nohup to survive shell exit; disown to remove from job table
-nohup env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" > "$LOG_FILE" 2>&1 &
+nohup env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_EPHEMERAL_ROOT="$EPHEMERAL_ROOT" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null
 echo "$SERVER_PID" > "$PID_FILE"

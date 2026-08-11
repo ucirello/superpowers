@@ -1,53 +1,63 @@
 #!/usr/bin/env bash
-# Generate a review package: revision list, stat summary, and the net
+# Generate a review package: commit list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not TIP-) keeps multi-revision
-# tasks intact.
+# call. Full commit IDs keep review endpoints stable even when JJ change IDs
+# or bookmarks move.
 #
-# Usage: review-package PLAN_FILE BASE TIP [OUTFILE]
-# Default OUTFILE: <repo-root>/.rocketclaw/sdd/<plan-basename>/review-<base-id>..<tip-id>.diff
+# Usage: review-package PLAN_FILE BASE_COMMIT_ID HEAD_COMMIT_ID [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base12>..<head12>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE TIP [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE_COMMIT_ID HEAD_COMMIT_ID [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
 base=$2
-tip=$3
+head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-jj --ignore-working-copy log -r "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-jj --ignore-working-copy log -r "$tip" >/dev/null || { echo "bad TIP: $tip" >&2; exit 2; }
+resolve_full_commit_id() {
+  local endpoint=$1
+  local label=$2
+  local resolved
 
-base_id=$(jj --ignore-working-copy log --no-graph -r "$base" -T 'commit_id ++ "\n"')
-tip_id=$(jj --ignore-working-copy log --no-graph -r "$tip" -T 'commit_id ++ "\n"')
-range="${base_id}..${tip_id}"
+  case "$endpoint" in
+    *[!0-9a-fA-F]*|'') echo "$label must be a full JJ commit ID: $endpoint" >&2; exit 2 ;;
+  esac
+  resolved=$(jj log --no-graph -r "$endpoint" -T 'commit_id ++ "\n"' 2>/dev/null) \
+    || { echo "bad $label commit ID: $endpoint" >&2; exit 2; }
+  [ "$endpoint" = "$resolved" ] \
+    || { echo "$label must be the full immutable commit ID (resolved to $resolved): $endpoint" >&2; exit 2; }
+}
+
+resolve_full_commit_id "$base" BASE
+resolve_full_commit_id "$head" HEAD
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  base_short=$(jj --ignore-working-copy log --no-graph -r "$base_id" -T 'commit_id.shortest(8)')
-  tip_short=$(jj --ignore-working-copy log --no-graph -r "$tip_id" -T 'commit_id.shortest(8)')
-  out="$dir/review-${base_short}..${tip_short}.diff"
+  out="$dir/review-${base:0:12}..${head:0:12}.diff"
 fi
 
+revisions="::$head ~ ::$base"
+
 {
-  echo "# Review package: ${base_id}..${tip_id}"
+  echo "# Review package: ${base}..${head}"
   echo
-  echo "## Revisions"
-  jj --ignore-working-copy log --no-graph -r "$range" \
-    -T 'commit_id.shortest(8) ++ " " ++ description.first_line() ++ "\n"'
+  echo "## Commits"
+  jj log --no-graph -r "$revisions" \
+    -T 'commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  jj --ignore-working-copy diff --from "$base_id" --to "$tip_id" --stat
+  jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  jj --ignore-working-copy diff --from "$base_id" --to "$tip_id" --git --context 10
+  jj diff --from "$base" --to "$head" --git --context 10
 } > "$out"
 
-revisions=$(jj --ignore-working-copy log -r "$range" --count)
-echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"
+commits=$(jj log --no-graph -r "$revisions" --count)
+echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"

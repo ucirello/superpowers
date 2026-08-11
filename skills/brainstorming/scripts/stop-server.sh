@@ -2,39 +2,69 @@
 # Stop the brainstorm server and clean up
 # Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Only deletes workspace-local ephemeral sessions.
+# Kills the server process. Only deletes marked workspace-local .tmp sessions.
 # Persistent directories (.rocketclaw/) are kept so mockups can be reviewed later.
 
-SESSION_DIR="$1"
+SESSION_DIR="${1:-}"
 
 if [[ -z "$SESSION_DIR" ]]; then
   echo '{"error": "Usage: stop-server.sh <session_dir>"}'
   exit 1
 fi
 
+canonical_dir() {
+  (cd -- "$1" 2>/dev/null && pwd -P)
+}
+
+if [[ -L "$SESSION_DIR" ]] || ! SESSION_DIR="$(canonical_dir "$SESSION_DIR")" || [[ -z "$SESSION_DIR" ]]; then
+  echo '{"error": "Session directory must be an existing, non-symlink directory"}'
+  exit 1
+fi
+
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
-EPHEMERAL_MARKER="${STATE_DIR}/ephemeral-session"
+CLEANUP_ROOT_FILE="${STATE_DIR}/cleanup-root"
+
+if [[ -L "$STATE_DIR" || ! -d "$STATE_DIR" ]] || [[ "$(canonical_dir "$STATE_DIR")" != "${SESSION_DIR}/state" ]]; then
+  echo '{"error": "Session state directory is missing or escaped the session"}'
+  exit 1
+fi
+
+cleanup_ephemeral_session() {
+  [[ -e "${SESSION_DIR}/.ephemeral" || -L "${SESSION_DIR}/.ephemeral" ]] || return 0
+  if [[ -L "${SESSION_DIR}/.ephemeral" || ! -f "${SESSION_DIR}/.ephemeral" || -L "$CLEANUP_ROOT_FILE" || ! -f "$CLEANUP_ROOT_FILE" ]]; then
+    echo '{"error": "Refusing cleanup: invalid ephemeral session metadata"}'
+    return 1
+  fi
+
+  local recorded_root resolved_root parent
+  recorded_root="$(tr -d '\r\n' < "$CLEANUP_ROOT_FILE")"
+  [[ -n "$recorded_root" && ! -L "$recorded_root" ]] || {
+    echo '{"error": "Refusing cleanup: invalid temporary root"}'
+    return 1
+  }
+  resolved_root="$(canonical_dir "$recorded_root")" || {
+    echo '{"error": "Refusing cleanup: temporary root is missing"}'
+    return 1
+  }
+  if [[ "$recorded_root" != "$resolved_root" || "$(basename "$resolved_root")" != "brainstorm" || "$(basename "$(dirname "$resolved_root")")" != "rocketclaw" || "$(basename "$(dirname "$(dirname "$resolved_root")")")" != ".tmp" ]]; then
+    echo '{"error": "Refusing cleanup: temporary root is not canonical"}'
+    return 1
+  fi
+  parent="$(dirname "$SESSION_DIR")"
+  if [[ "$parent" != "$resolved_root" || "$SESSION_DIR" == "$resolved_root" ]]; then
+    echo '{"error": "Refusing cleanup: session is outside its temporary root"}'
+    return 1
+  fi
+
+  rm -rf -- "$SESSION_DIR"
+}
 
 mark_stopped() {
   local reason="$1"
   rm -f "${STATE_DIR}/server-info"
   printf '{"reason":"%s","timestamp":%s}\n' "$reason" "$(date +%s)" > "${STATE_DIR}/server-stopped"
-}
-
-cleanup_ephemeral_session() {
-  [[ -f "$EPHEMERAL_MARKER" ]] || return 0
-
-  local workspace_root allowed_root canonical_allowed canonical_session
-  workspace_root="$(jj workspace root 2>/dev/null || pwd)"
-  allowed_root="${workspace_root}/.tmp/brainstorm"
-  canonical_allowed="$(cd "$allowed_root" 2>/dev/null && pwd -P)" || return 0
-  canonical_session="$(cd "$SESSION_DIR" 2>/dev/null && pwd -P)" || return 0
-
-  # Startup creates each ephemeral session as one direct child of this root.
-  [[ "$(dirname "$canonical_session")" == "$canonical_allowed" ]] || return 0
-  rm -rf -- "$canonical_session"
 }
 
 read_expected_server_id() {
@@ -90,9 +120,13 @@ if [[ -f "$PID_FILE" ]]; then
   # Refuse to signal a PID we can't prove is our server. A stale pid file may
   # point at an unrelated process after a reboot/PID wraparound.
   if ! is_brainstorm_server "$pid"; then
+    if kill -0 "$pid" 2>/dev/null; then
+      echo '{"status": "failed", "error": "PID is live but server identity could not be verified"}'
+      exit 1
+    fi
     rm -f "$PID_FILE" "$SERVER_ID_FILE"
     mark_stopped "stale_pid"
-    cleanup_ephemeral_session
+    cleanup_ephemeral_session || exit 1
     echo '{"status": "stale_pid"}'
     exit 0
   fi
@@ -124,10 +158,11 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  cleanup_ephemeral_session
+  cleanup_ephemeral_session || exit 1
 
   echo '{"status": "stopped"}'
 else
-  cleanup_ephemeral_session
+  mark_stopped "not_running"
+  cleanup_ephemeral_session || exit 1
   echo '{"status": "not_running"}'
 fi

@@ -39,7 +39,7 @@ These thoughts mean STOP—you're rationalizing:
 | "This is just a simple question" | Questions are tasks. Check for skills. |
 | "I need more context first" | Skill check comes BEFORE clarifying questions. |
 | "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
-| "I can check JJ/files quickly" | Files lack conversation context. Check for skills. |
+| "I can check the workspace/files quickly" | Files lack conversation context. Check for skills. |
 | "Let me gather information first" | Skills tell you HOW to gather information. |
 | "This doesn't need a formal skill" | If a skill exists, use it. |
 | "I remember this skill" | Skills evolve. Read current version. |
@@ -55,12 +55,7 @@ If your harness appears here, read its reference file for special instructions:
 
 - Codex: `references/codex-tools.md`
 - Pi: `references/pi-tools.md`
-- Gemini CLI: `references/gemini-tools.md`
 - Antigravity: `references/antigravity-tools.md`
-
-## Temporary Storage
-
-Store temporary files under `$(jj workspace root)/.tmp`. If the current directory is not in a JJ workspace, fall back to the local `./.tmp` directory; never use global temporary storage.
 
 ## User Instructions
 

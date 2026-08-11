@@ -30,18 +30,18 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_REVISION] (the tip the previous review saw)
-    **Tip:** [TIP_REVISION]
+    **Fix base commit ID:** [FIX_BASE_COMMIT_ID] (the endpoint the previous review saw)
+    **Head commit ID:** [HEAD_COMMIT_ID]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix revisions, a stat summary,
-    and the fix diff with surrounding context. Do not re-run `jj` commands.
+    Read the diff file once — it contains the fix commits, a stat summary,
+    and the fix diff with surrounding context. Do not re-run JJ commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj --ignore-working-copy diff --from '[FIX_BASE_REVISION]' --to '[TIP_REVISION]' --stat` and
-    `jj --ignore-working-copy diff --from '[FIX_BASE_REVISION]' --to '[TIP_REVISION]' --git --context 10`.
+    `jj diff --from [FIX_BASE_COMMIT_ID] --to [HEAD_COMMIT_ID] --stat` and
+    `jj diff --from [FIX_BASE_COMMIT_ID] --to [HEAD_COMMIT_ID] --git --context 10`.
 
-    Your review is read-only in this workspace. Do not mutate the working
-    copy, revisions, bookmarks, or operation state in any way.
+    Your review is read-only on this checkout. Do not mutate the working
+    copy, current change, bookmarks, or workspace state in any way.
 
     ## Scope
 
@@ -50,7 +50,7 @@ Subagent (general-purpose):
     re-review code the fix did not touch: if you notice an issue entirely
     outside the fix diff, report it under Out-of-Scope Observations — it
     does not block this task and does not extend the loop. A broad
-    whole-stack review happens after all tasks are complete.
+    whole-change review happens after all tasks are complete.
 
     ## Tests
 
@@ -98,9 +98,9 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_REVISION]` — the tip the previous review saw
-- `[TIP_REVISION]` — current task-tip revision
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE TIP` printed
+- `[FIX_BASE_COMMIT_ID]` — full commit ID of the endpoint the previous review saw
+- `[HEAD_COMMIT_ID]` — full commit ID of the fix endpoint
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE_COMMIT_ID HEAD_COMMIT_ID` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

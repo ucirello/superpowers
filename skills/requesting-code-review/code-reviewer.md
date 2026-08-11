@@ -20,22 +20,25 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## JJ Range to Review
+    ## JJ Commits to Review
 
-    **Base:** [BASE_REVISION]
-    **Head:** [HEAD_REVISION]
+    **Base:** [BASE_COMMIT]
+    **End:** [END_COMMIT]
 
     ```bash
-    jj --ignore-working-copy diff --stat --from '[BASE_REVISION]' --to '[HEAD_REVISION]'
-    jj --ignore-working-copy diff --git --context 10 --from '[BASE_REVISION]' --to '[HEAD_REVISION]'
+    jj diff --ignore-working-copy --stat --from [BASE_COMMIT] --to [END_COMMIT]
+    jj diff --ignore-working-copy --from [BASE_COMMIT] --to [END_COMMIT]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only. Inspect revisions with `jj --ignore-working-copy
-    file show -r`, `jj --ignore-working-copy diff`, and `jj
-    --ignore-working-copy log`. Do not mutate project files, revisions,
-    bookmarks, or workspace state. Do not create, forget, or change workspaces.
+    Your review is read-only in the current JJ workspace. Do not mutate its working-copy commit, changes, bookmarks, or workspace state. Do not create directories, files, temporary output, or alternate workspaces, and do not use `jj workspace add`. Never materialize revisions in an OS temporary directory or any other location. Inspect alternate revisions only through command output, using `jj show`, `jj diff`, `jj file show`, and `jj log` with `--ignore-working-copy`. For example:
+
+    ```bash
+    jj show --ignore-working-copy [END_COMMIT]
+    jj log --ignore-working-copy -r '[BASE_COMMIT]::[END_COMMIT]'
+    jj file show --ignore-working-copy -r [END_COMMIT] path/to/file
+    ```
 
     ## What to Check
 
@@ -107,7 +110,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready to advance the target bookmark?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -131,8 +134,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_REVISION]` — starting revision
-- `[HEAD_REVISION]` — ending revision
+- `[BASE_COMMIT]` — full starting commit ID
+- `[END_COMMIT]` — full ending commit ID
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -169,7 +172,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready to advance the target bookmark: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

@@ -14,9 +14,21 @@ fi
 POLLUTION_CHECK="$1"
 TEST_PATTERN="$2"
 
+pollution_paths() {
+  if [[ "$POLLUTION_CHECK" == */* ]]; then
+    [ ! -e "$POLLUTION_CHECK" ] || printf '%s\n' "$POLLUTION_CHECK"
+  else
+    find . -name "$POLLUTION_CHECK" -print | sort
+  fi
+}
+
 echo "🔍 Searching for test that creates: $POLLUTION_CHECK"
 echo "Test pattern: $TEST_PATTERN"
 echo ""
+
+# Preserve metadata that belongs to the existing workspace, such as its root
+# .jj directory. Only paths created while a test runs are pollution.
+EXISTING_POLLUTION=$(pollution_paths)
 
 # Get list of test files (find . emits ./-prefixed paths, so accept the
 # pattern written with or without a leading ./)
@@ -38,27 +50,29 @@ COUNT=0
 for TEST_FILE in $TEST_FILES; do
   COUNT=$((COUNT + 1))
 
-  # Skip if pollution already exists
-  if [ -e "$POLLUTION_CHECK" ]; then
-    echo "⚠️  Pollution already exists before test $COUNT/$TOTAL"
-    echo "   Skipping: $TEST_FILE"
-    continue
-  fi
-
   echo "[$COUNT/$TOTAL] Testing: $TEST_FILE"
 
   # Run the test
   npm test "$TEST_FILE" > /dev/null 2>&1 || true
 
-  # Check if pollution appeared
-  if [ -e "$POLLUTION_CHECK" ]; then
+  # Check for paths that were not present before the search began.
+  CURRENT_POLLUTION=$(pollution_paths)
+  NEW_POLLUTION=$(comm -13 \
+    <(printf '%s\n' "$EXISTING_POLLUTION" | sed '/^$/d') \
+    <(printf '%s\n' "$CURRENT_POLLUTION" | sed '/^$/d'))
+  if [ -n "$NEW_POLLUTION" ]; then
     echo ""
     echo "🎯 FOUND POLLUTER!"
     echo "   Test: $TEST_FILE"
-    echo "   Created: $POLLUTION_CHECK"
+    echo "   Created:"
+    while IFS= read -r POLLUTION_PATH; do
+      printf '   %s\n' "$POLLUTION_PATH"
+    done <<< "$NEW_POLLUTION"
     echo ""
     echo "Pollution details:"
-    ls -la "$POLLUTION_CHECK"
+    while IFS= read -r POLLUTION_PATH; do
+      ls -la "$POLLUTION_PATH"
+    done <<< "$NEW_POLLUTION"
     echo ""
     echo "To investigate:"
     echo "  npm test $TEST_FILE    # Run just this test"

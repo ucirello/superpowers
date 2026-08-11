@@ -2,14 +2,14 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>RocketClaw Brainstorming</title>
+  <title>Brainstorm Companion</title>
   <style>
     /*
      * BRAINSTORM COMPANION FRAME TEMPLATE
      *
      * This template provides a consistent frame with:
      * - OS-aware light/dark theming
-     * - Connection status header
+     * - Header connection status
      * - Scrollable main content area
      * - CSS helpers for common UI patterns
      *
@@ -63,6 +63,7 @@
     }
 
     /* ===== FRAME STRUCTURE ===== */
+    .companion-meta { color: var(--text-secondary); font-size: 0.75rem; line-height: 1; }
     .status { font-size: 0.7rem; color: var(--status-color, var(--success)); display: flex; align-items: center; gap: 0.4rem; justify-self: end; white-space: nowrap; line-height: 1; }
     .status::before { content: ''; width: 6px; height: 6px; background: var(--status-color, var(--success)); border-radius: 50%; }
 
@@ -74,9 +75,10 @@
       border-bottom: 1px solid var(--border);
       padding: 0.5rem 1.5rem;
       flex-shrink: 0;
-      display: flex;
-      justify-content: flex-end;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
+      gap: 1rem;
       min-height: 42px;
     }
     .header .status { line-height: 1; }
@@ -190,6 +192,7 @@
 </head>
 <body>
   <div class="header">
+    <!-- COMPANION_METADATA -->
     <div class="status">Connecting…</div>
   </div>
 

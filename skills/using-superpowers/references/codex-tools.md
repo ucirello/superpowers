@@ -11,43 +11,31 @@ This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dis
 
 ## Environment Detection
 
-Skills that create workspaces or finish changes should inspect their JJ
-environment with read-only commands before proceeding:
+Skills that create workspaces or finish bookmarks should detect their
+environment with read-only `jj` commands before proceeding:
 
 ```bash
-jj workspace root
-jj workspace list
-jj log --no-graph -r @
+WORKSPACE_ROOT=$(jj workspace root 2>/dev/null)
+WORKSPACES=$(jj workspace list)
+CURRENT_CHANGE=$(jj log -r @ --no-graph -T 'change_id.short()')
+BOOKMARKS=$(jj bookmark list -r @)
 ```
 
-- If the current workspace is already assigned to this task, do not create a
-  redundant workspace. Use session context and the current workspace entry from
-  `jj workspace list`; the number of attached workspaces is not an isolation
-  signal.
-- A current change without a suitable bookmark needs a bookmark before
-  `jj git push` or opening a PR.
+- `WORKSPACE_ROOT` set → inside a Jujutsu repository; compare `WORKSPACES`, the current root, and the task's intended isolation before deciding whether workspace creation can be skipped
+- `BOOKMARKS` empty → no bookmark points to the current change; create one before `jj git push` and `gh pr create`
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark creation or `jj git push` in an externally
-managed workspace, the agent finishes the JJ change and informs
+When the sandbox blocks bookmark movement or `jj git push` in an
+externally managed workspace, the agent describes the current change and informs
 the user to use the App's native controls:
 
-- **"Create branch"** — names the branch, then exports, pushes, and opens the PR
-  via the App UI
 - **"Hand off to local"** — transfers the change to the user's local workspace
 
-The agent can still run tests, describe the JJ change with `jj describe`, and
-suggest bookmark names and PR descriptions. For every JJ change description,
-apply this instruction:
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
-Repository-local instructions and syntax observed at runtime always win. Apply
-only compatible Go guidance: use a clear, concise subject and an explanatory
-body when it improves understanding. Do not impose a fixed prefix,
-capitalization, tense, Conventional Commit form, subject/body/trailer syntax,
-message, or example.
+The agent can still run tests, inspect the current change, and suggest bookmark
+names and GitHub PR descriptions. For change descriptions, repository-local
+instructions and the message syntax and history visible in `git log` always win;
+apply only compatible Go quality guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.

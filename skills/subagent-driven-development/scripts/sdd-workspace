@@ -1,18 +1,16 @@
 #!/usr/bin/env bash
-# Resolve and ensure the workspace directory SDD uses for one plan's
+# Resolve and ensure the JJ workspace directory SDD uses for one plan's
 # short-lived artifacts: task briefs, implementer reports, review packages,
 # and the progress ledger. Print the plan directory's absolute path.
 #
 # One directory per plan (.rocketclaw/sdd/<plan-basename>/) so a follow-up
-# plan in the same workspace can never read or overwrite another plan's
+# plan in the same JJ workspace can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The artifact workspace lives in the working copy (not under .git/) because
-# Claude Code treats .git/ as a protected path and denies agent writes there —
-# which blocks an implementer subagent from writing its report file. A
-# self-ignoring .gitignore at .rocketclaw/sdd/ keeps every plan's workspace out of
-# `jj status` and out of accidental revisions without modifying any tracked file.
+# The artifact directory lives under the JJ workspace root so subagents can
+# write reports there. A self-ignoring .gitignore at .rocketclaw/sdd/ keeps
+# these short-lived files out of snapshots without modifying tracked files.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -31,10 +29,13 @@ plan=$1
 slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
+case "$slug" in
+  *[!A-Za-z0-9._-]*) echo "plan basename is not a valid workspace/bookmark name: $slug" >&2; exit 2 ;;
+esac
 
-root=$(jj --ignore-working-copy workspace root)
+root=$(jj workspace root)
 base="$root/.rocketclaw/sdd"
 dir="$base/$slug"
 mkdir -p "$dir"
-printf '*\n' > "$base/.gitignore"
+[ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
 cd "$dir" && pwd
