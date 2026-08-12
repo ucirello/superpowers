@@ -212,13 +212,14 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**JJ Description Helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-Repository-local instructions and the message syntax and history visible in `git log` always win; apply only compatible Go quality guidance.
+
+Repository-local instructions and the syntax and style visible in history take precedence. Apply only compatible Go quality guidance, such as keeping the first line concise and using the body to explain what changed and why; do not impose a fixed type, scope, subject, or body template.
 
 ```yaml  theme={null}
-description: Generate descriptive JJ change descriptions by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing current changes.
+description: Generate repository-conventional change descriptions by analyzing `jj diff`. Use when the user asks for help writing change descriptions or reviewing the current working-copy change.
 ```
 
 Avoid vague descriptions like these:
@@ -656,35 +657,21 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## JJ description examples
+## Change description guidance
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-Repository-local instructions and the message syntax and history visible in `git log` always win; apply only compatible Go quality guidance.
 
-Generate JJ change descriptions that communicate the change and its rationale:
+Repository-local instructions and the syntax and style visible in history take precedence. Apply only compatible Go quality guidance: keep the first line concise, make it complete the repository's expected description of what the change does, omit a trailing period when that matches local style, and use a wrapped body to explain what changed and why when useful. Do not impose a fixed type, scope, subject, body, or template.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-<message composed from the standards above>
-```
+Inspect the current change with `jj diff` and its description with `jj log -r @`. Use neutral placeholders when demonstrating structure:
 
-**Example 2:**
-Input: Fixed a bug where dates displayed incorrectly in reports
-Output:
 ```
-<message composed from the standards above>
+<repository-conventional first line>
+
+<optional explanation of what changed and why>
 ```
 
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-<message composed from the standards above>
-```
-
-Each message must identify the change and include its rationale when that context is necessary, without prescribing a fixed summary, body, or subject style.
+Update the working-copy change description with `jj describe`; use `jj new` only when a new child change should be created afterward.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

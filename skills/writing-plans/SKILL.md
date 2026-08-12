@@ -7,18 +7,16 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, well-described changes.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated JJ workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
-
-**Temporary files:** Resolve the repository-local root with `jj workspace root` and use its `.tmp/rocketclaw/` directory. If the root cannot be resolved, use `.tmp/rocketclaw/` relative to the current directory. Never use an OS temporary directory.
 
 ## Scope Check
 
@@ -51,7 +49,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe the completed change and start the next change" - step
+- "Describe the change and start the next change" - step
 
 ## Plan Document Header
 
@@ -68,6 +66,9 @@ independently testable deliverable.
 
 **Tech Stack:** [Key technologies/libraries]
 
+**Spec:** [path to the spec/design doc this plan implements — the plan
+argues from the spec, so the spec travels with it; executors read both]
+
 ## Global Constraints
 
 [The spec's project-wide requirements — version floors, dependency limits,
@@ -78,20 +79,20 @@ include this section.]
 ---
 ```
 
+## Commit Messages
+
+Repository-local instructions and the commit-message syntax used by the
+repository always take precedence over general guidance.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Apply compatible Go guidance to message quality, clarity, and structure without
+choosing syntax during planning. Prefer a concise summary and add a body when it
+helps explain what changed and why.
+
+Jujutsu automatically snapshots the working copy, so do not add or stage files.
+At each task boundary, inspect `jj status` and `jj diff`, describe the current
+change using the standards above, then use `jj new` to begin the next change.
+
 ## Task Structure
-
-Jujutsu snapshots the working copy automatically, so plans must not include a staging step. Each task should occupy one change. At the task boundary, describe the completed change with `jj describe`, then create the next empty change with `jj new`. Use `jj commit` only when its combined `jj describe` plus `jj new` semantics fit the task exactly.
-
-### Message Composition
-
-Repository-local instructions and the message syntax and history visible in `git log` always win. Apply only compatible quality guidance from the Go commit-message guidance to make each message clear and useful, including the reason for the change when it adds necessary context, without imposing a fixed format, subject, type, scope, or body.
-
-For every task message:
-
-1. Identify the tested behavior or deliverable completed by the task.
-2. Read the applicable repository-local instructions and inspect the message syntax and history with `git log`.
-3. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-4. Use the resulting message as the task's `jj describe` value.
 
 ````markdown
 ### Task N: [Component Name]
@@ -132,9 +133,11 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Describe the completed change and start the next change**
+- [ ] **Step 5: Describe the change and start the next change**
 
 ```bash
+jj status
+jj diff
 jj describe -m "<message composed from the standards above>"
 jj new
 ```

@@ -53,34 +53,29 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-function getWorkspaceTmpDir(): string {
-  const result = spawnSync('jj', ['workspace', 'root'], { encoding: 'utf8' });
-
-  if (result.error) {
-    if ((result.error as NodeJS.ErrnoException).code !== 'ENOENT') throw result.error;
-    return resolve('.tmp');
-  }
-
-  if (result.status !== 0) {
-    if (/\bno\b.*\b(?:repository|repo)\b/i.test(result.stderr)) return resolve('.tmp');
-    throw new Error(`jj workspace root failed: ${result.stderr.trim()}`);
-  }
-
-  const root = result.stdout.trim();
-  if (!root) throw new Error('jj workspace root returned an empty path');
-  return resolve(root, '.tmp');
-}
-
-async function jjInit(directory: string) {
-  // In tests, refuse repository initialization outside the workspace's .tmp.
+async function jjGitInit(directory: string) {
+  // In tests, keep temporary repositories under the workspace-local .tmp.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    const workspaceTmpDir = normalize(getWorkspaceTmpDir());
-    const relativePath = relative(workspaceTmpDir, normalized);
+    let workspaceRoot = process.cwd();
 
-    if (relativePath === '..' || relativePath.startsWith(`..${sep}`) || isAbsolute(relativePath)) {
+    try {
+      const { stdout } = await execFileAsync('jj', ['root'], { cwd: directory });
+      workspaceRoot = stdout.trim();
+    } catch {
+      // Outside a jj workspace, treat the current directory as the workspace.
+    }
+
+    const workspaceTmp = normalize(resolve(workspaceRoot, '.tmp'));
+    const relativeDirectory = relative(workspaceTmp, normalized);
+
+    if (
+      relativeDirectory === '..' ||
+      relativeDirectory.startsWith(`..${sep}`) ||
+      isAbsolute(relativeDirectory)
+    ) {
       throw new Error(
-        `Refusing jj git init outside ${workspaceTmpDir} during tests: ${directory}`
+        `Refusing jj git init outside workspace .tmp during tests: ${directory}`
       );
     }
   }
@@ -92,7 +87,7 @@ async function jjInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjInit(directory: string) {
+async function jjGitInit(directory: string) {
   const stack = new Error().stack;
   logger.debug('About to run jj git init', {
     directory,
@@ -125,7 +120,7 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp` in tests, with local `.tmp` fallback only when no JJ repository exists or JJ is unavailable
+- Layer 3: `WorktreeManager` refuses `jj git init` outside the workspace's `.tmp/` in tests
 - Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce

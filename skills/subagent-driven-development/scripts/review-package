@@ -1,63 +1,50 @@
 #!/usr/bin/env bash
-# Generate a review package: commit list, stat summary, and the net
+# Generate a review package: revision list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Full commit IDs keep review endpoints stable even when JJ change IDs
-# or bookmarks move.
+# call. Using the recorded per-task BASE snapshot keeps multi-revision
+# tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE_COMMIT_ID HEAD_COMMIT_ID [OUTFILE]
-# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base12>..<head12>.diff
+# Usage: review-package PLAN_FILE BASE TIP [OUTFILE]
+# Default OUTFILE: <workspace-root>/.tmp/rocketclaw/sdd/<plan-basename>/review-<base7>..<tip7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE_COMMIT_ID HEAD_COMMIT_ID [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE TIP [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
 base=$2
-head=$3
+tip=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-resolve_full_commit_id() {
-  local endpoint=$1
-  local label=$2
-  local resolved
-
-  case "$endpoint" in
-    *[!0-9a-fA-F]*|'') echo "$label must be a full JJ commit ID: $endpoint" >&2; exit 2 ;;
-  esac
-  resolved=$(jj log --no-graph -r "$endpoint" -T 'commit_id ++ "\n"' 2>/dev/null) \
-    || { echo "bad $label commit ID: $endpoint" >&2; exit 2; }
-  [ "$endpoint" = "$resolved" ] \
-    || { echo "$label must be the full immutable commit ID (resolved to $resolved): $endpoint" >&2; exit 2; }
-}
-
-resolve_full_commit_id "$base" BASE
-resolve_full_commit_id "$head" HEAD
+base=$(jj log --no-graph -r "exactly(commit_id($base), 1)" -T 'commit_id ++ "\n"' 2>/dev/null) \
+  || { echo "bad BASE commit ID: $base" >&2; exit 2; }
+tip=$(jj log --no-graph -r "exactly(commit_id($tip), 1)" -T 'commit_id ++ "\n"' 2>/dev/null) \
+  || { echo "bad TIP commit ID: $tip" >&2; exit 2; }
+revset="commit_id($base)..commit_id($tip)"
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-${base:0:12}..${head:0:12}.diff"
+  out="$dir/review-${base:0:7}..${tip:0:7}.diff"
 fi
 
-revisions="::$head ~ ::$base"
-
 {
-  echo "# Review package: ${base}..${head}"
+  echo "# Review package: ${base}..${tip}"
   echo
-  echo "## Commits"
-  jj log --no-graph -r "$revisions" \
-    -T 'commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
+  echo "## Revisions"
+  jj log --no-graph -r "$revset" \
+    -T 'commit_id.short(12) ++ " " ++ change_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  jj diff --from "$base" --to "$head" --stat
+  jj diff --stat --from "commit_id($base)" --to "commit_id($tip)"
   echo
   echo "## Diff"
-  jj diff --from "$base" --to "$head" --git --context 10
+  jj diff --git --context 10 --from "commit_id($base)" --to "commit_id($tip)"
 } > "$out"
 
-commits=$(jj log --no-graph -r "$revisions" --count)
-echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+revisions=$(jj log --count -r "$revset")
+echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"

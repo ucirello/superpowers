@@ -30,18 +30,27 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base commit ID:** [FIX_BASE_COMMIT_ID] (the endpoint the previous review saw)
-    **Head commit ID:** [HEAD_COMMIT_ID]
+    **Fix base:** [FIX_BASE_ID] (the exact snapshot the previous review saw)
+    **Tip:** [TIP_ID]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. Do not re-run JJ commands.
+    Read the diff file once — it contains the fix revisions, a stat summary,
+    and the fix diff with surrounding context. Do not re-run Jujutsu commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj diff --from [FIX_BASE_COMMIT_ID] --to [HEAD_COMMIT_ID] --stat` and
-    `jj diff --from [FIX_BASE_COMMIT_ID] --to [HEAD_COMMIT_ID] --git --context 10`.
+    `jj --ignore-working-copy diff --stat --from [FIX_BASE_ID] --to [TIP_ID]` and
+    `jj --ignore-working-copy diff --git --context 10 --from [FIX_BASE_ID] --to [TIP_ID]`.
 
     Your review is read-only on this checkout. Do not mutate the working
-    copy, current change, bookmarks, or workspace state in any way.
+    files, working-copy revision, bookmarks, or operation state in any way.
+
+    ## You Do Not Dispatch Subagents
+
+    Do all of this review yourself. Never spawn a subagent to review part
+    of the diff, and never spawn another reviewer for a second opinion.
+    This process already provides every review seat the work gets; a
+    reviewer you spawn duplicates one of them at full cost, and its
+    verdict counts for nothing. If the diff feels too large for one
+    pass, review it in passes yourself and say so in your report.
 
     ## Scope
 
@@ -50,7 +59,7 @@ Subagent (general-purpose):
     re-review code the fix did not touch: if you notice an issue entirely
     outside the fix diff, report it under Out-of-Scope Observations — it
     does not block this task and does not extend the loop. A broad
-    whole-change review happens after all tasks are complete.
+    whole-stack review happens after all tasks are complete.
 
     ## Tests
 
@@ -98,9 +107,9 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_COMMIT_ID]` — full commit ID of the endpoint the previous review saw
-- `[HEAD_COMMIT_ID]` — full commit ID of the fix endpoint
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE_COMMIT_ID HEAD_COMMIT_ID` printed
+- `[FIX_BASE_ID]` — exact commit ID snapshot the previous review saw
+- `[TIP_ID]` — exact current commit ID snapshot
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE TIP` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

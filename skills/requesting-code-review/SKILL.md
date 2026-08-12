@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before advancing a target bookmark to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before landing changes to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -12,9 +12,9 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 ## When to Request Review
 
 **Mandatory:**
-- After each task in `superpowers:subagent-driven-development`
+- After each task in subagent-driven development
 - After completing major feature
-- Before moving or pushing the target bookmark
+- Before landing changes on the trunk bookmark
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,16 +23,14 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Snapshot the working copy and capture immutable commit IDs:**
+**1. Select Jujutsu revisions:**
 ```bash
-jj status
-BASE_REV=${FEATURE_BASE_COMMIT:?"Set FEATURE_BASE_COMMIT to the recorded full feature-base commit ID"}
-# If the feature intentionally started from upstream main, use instead: BASE_REV=main@origin
-BASE_COMMIT=$(jj log --ignore-working-copy -r "$BASE_REV" --no-graph -T 'commit_id ++ "\n"')
-END_COMMIT=$(jj log --ignore-working-copy -r '@' --no-graph -T 'commit_id ++ "\n"')
+jj status  # snapshot the current working copy before reviewers use --ignore-working-copy
+FROM_REVISION='first_parent(@)'  # or trunk(), a bookmark, a change ID, or a commit ID
+TO_REVISION='@'
 ```
 
-Use the feature base recorded before implementation began. If no feature base was recorded, explicitly use `main@origin` only when it is the actual feature base; do not default to `@-`, which truncates multi-change features. Resolve each endpoint to exactly one full commit ID before dispatch so later change, bookmark, or working-copy movement cannot alter the review range.
+Each value must be a revset that resolves to one revision. `@` is the current workspace's working-copy commit, `first_parent(@)` selects one parent even when `@` is a merge commit, and `<bookmark>@<remote>` selects a remote bookmark when that is the repository's review base. In a single-parent workflow, `@-` is equivalent shorthand for the parent.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -41,8 +39,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_COMMIT}` - Starting commit ID
-- `{END_COMMIT}` - Ending commit ID
+- `{FROM_REVISION}` - Earlier snapshot's revision
+- `{TO_REVISION}` - Later snapshot's revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -57,16 +55,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-jj status
-BASE_REV=${FEATURE_BASE_COMMIT:?"Set FEATURE_BASE_COMMIT to the recorded full feature-base commit ID"}
-BASE_COMMIT=$(jj log --ignore-working-copy -r "$BASE_REV" --no-graph -T 'commit_id ++ "\n"')
-END_COMMIT=$(jj log --ignore-working-copy -r '@' --no-graph -T 'commit_id ++ "\n"')
+FROM_REVISION='first_parent(@)'
+TO_REVISION='@'
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
-  BASE_COMMIT: a7981ec0d7c80fcb3f03d8a11a4938297e99a225
-  END_COMMIT: 3df766133a1ab7c981b35642e37fc0d9a2bbd09a
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  FROM_REVISION: first_parent(@)
+  TO_REVISION: @
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

@@ -20,25 +20,28 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## JJ Commits to Review
+    ## Jujutsu Snapshots to Compare
 
-    **Base:** [BASE_COMMIT]
-    **End:** [END_COMMIT]
+    **From revision:** [FROM_REVISION]
+    **To revision:** [TO_REVISION]
 
     ```bash
-    jj diff --ignore-working-copy --stat --from [BASE_COMMIT] --to [END_COMMIT]
-    jj diff --ignore-working-copy --from [BASE_COMMIT] --to [END_COMMIT]
+    jj --ignore-working-copy diff --stat --from '[FROM_REVISION]' --to '[TO_REVISION]'
+    jj --ignore-working-copy diff --from '[FROM_REVISION]' --to '[TO_REVISION]'
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in the current JJ workspace. Do not mutate its working-copy commit, changes, bookmarks, or workspace state. Do not create directories, files, temporary output, or alternate workspaces, and do not use `jj workspace add`. Never materialize revisions in an OS temporary directory or any other location. Inspect alternate revisions only through command output, using `jj show`, `jj diff`, `jj file show`, and `jj log` with `--ignore-working-copy`. For example:
+    Your review is read-only in this workspace. Do not mutate workspace files, the working-copy commit (`@`), bookmarks, or repository operation state. Use read-only commands such as `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` to inspect revisions without snapshotting the working copy. Prefer `jj --ignore-working-copy file show -r '[REVISION]' [FILESET]` when you need file contents from another revision. If materializing another revision is unavoidable, ask the coordinator to create a separate workspace rather than changing this one. Its path must be under the repository-local temporary directory: `REPO_ROOT=$(jj workspace root 2>/dev/null || pwd); REVIEW_PATH="$REPO_ROOT/.tmp/[WORKSPACE_NAME]"; mkdir -p "$REPO_ROOT/.tmp"; jj workspace add --name '[WORKSPACE_NAME]' -r '[REVISION]' "$REVIEW_PATH"`. The `pwd` fallback keeps the temporary directory local when the command is prepared outside a Jujutsu repository. Creating and later forgetting that workspace are coordinator-owned mutations, not review steps.
 
-    ```bash
-    jj show --ignore-working-copy [END_COMMIT]
-    jj log --ignore-working-copy -r '[BASE_COMMIT]::[END_COMMIT]'
-    jj file show --ignore-working-copy -r [END_COMMIT] path/to/file
-    ```
+    ## You Do Not Dispatch Subagents
+
+    Do all of this review yourself. Never spawn a subagent to review part
+    of the diff, and never spawn another reviewer for a second opinion.
+    This process already provides every review seat the work gets; a
+    reviewer you spawn duplicates one of them at full cost, and its
+    verdict counts for nothing. If the diff feels too large for one
+    pass, review it in passes yourself and say so in your report.
 
     ## What to Check
 
@@ -110,7 +113,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to advance the target bookmark?** [Yes | No | With fixes]
+    **Ready to land?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -134,8 +137,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_COMMIT]` — full starting commit ID
-- `[END_COMMIT]` — full ending commit ID
+- `[FROM_REVISION]` - earlier snapshot's revision; use a revset resolving to one revision
+- `[TO_REVISION]` - later snapshot's revision; use a revset resolving to one revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -172,7 +175,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to advance the target bookmark: With fixes**
+**Ready to land: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

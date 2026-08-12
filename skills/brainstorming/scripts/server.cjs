@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const childProcess = require('child_process');
 
 // ========== WebSocket Protocol (RFC 6455) ==========
 
@@ -100,47 +99,10 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-function findJujutsuMarker(start) {
-  let current = fs.realpathSync(start);
-  while (true) {
-    if (fs.existsSync(path.join(current, '.jj'))) return current;
-    const parent = path.dirname(current);
-    if (parent === current) return null;
-    current = parent;
-  }
-}
-function defaultSession() {
-  const cwd = fs.realpathSync(process.cwd());
-  const marker = findJujutsuMarker(cwd);
-  let root = cwd;
-  if (marker) {
-    try {
-      const output = childProcess.execFileSync('jj', ['workspace', 'root'], {
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'inherit']
-      }).trim();
-      if (!output) throw new Error('Jujutsu returned an empty workspace root');
-      root = fs.realpathSync(output);
-    } catch (e) {
-      if (e.code !== 'ENOENT') throw e;
-    }
-  }
-  const ephemeralRoot = path.join(root, '.tmp', 'rocketclaw', 'brainstorm');
-  const id = [process.pid, Date.now(), crypto.randomBytes(6).toString('hex')].join('-');
-  return { sessionDir: path.join(ephemeralRoot, id), ephemeralRoot };
-}
-const defaultSessionInfo = process.env.BRAINSTORM_DIR ? null : defaultSession();
-const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionInfo.sessionDir;
-const EPHEMERAL_ROOT = process.env.BRAINSTORM_EPHEMERAL_ROOT || (defaultSessionInfo && defaultSessionInfo.ephemeralRoot);
+const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 const ROCKETCLAW_VERSION = readRocketClawVersion();
-const TELEMETRY_DISABLE_ENV_VARS = [
-  'ROCKETCLAW_DISABLE_TELEMETRY',
-  'DISABLE_TELEMETRY',
-  'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'
-];
-const ROCKETCLAW_TELEMETRY_DISABLED = TELEMETRY_DISABLE_ENV_VARS.some(name => isTruthyEnv(process.env[name]));
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 // Per-session secret key. The companion is reachable by any local browser tab
@@ -190,17 +152,17 @@ const MIME_TYPES = {
 // ========== Templates and Constants ==========
 
 function waitingPage() {
-  return renderCompanionMetadata(`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Brainstorm Companion</title>
 <style>
 body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
 h1 { color: #333; } p { color: #666; }
-.companion-meta { color: #666; font-size: 0.8rem; margin-bottom: 1.5rem; }
+.version { font-size: 0.9rem; }
 </style>
 </head>
-<body><!-- COMPANION_METADATA --><h1>Brainstorm Companion</h1>
-<p>Waiting for the agent to push a screen...</p></body></html>`);
+<body><p class="version">RocketClaw v${escapeHtmlText(ROCKETCLAW_VERSION)}</p><h1>Brainstorm Companion</h1>
+<p>Waiting for the agent to push a screen...</p></body></html>`;
 }
 
 const FORBIDDEN_PAGE = `<!DOCTYPE html>
@@ -245,18 +207,11 @@ function readRocketClawVersion() {
       const data = JSON.parse(fs.readFileSync(manifest, 'utf-8'));
       if (data.version) return String(data.version);
     } catch (e) {
-      // Packaged plugins may omit one manifest; try the next one.
+      // Packaged Codex plugins omit package.json; try the next manifest.
     }
   }
 
   return 'unknown';
-}
-
-function isTruthyEnv(value) {
-  if (!value) return false;
-  const normalized = String(value).trim().toLowerCase();
-  if (!normalized) return false;
-  return !['0', 'false', 'no', 'off'].includes(normalized);
 }
 
 function escapeHtmlText(value) {
@@ -267,12 +222,16 @@ function escapeHtmlText(value) {
     .replace(/"/g, '&quot;');
 }
 
-function companionMetadata() {
-  return '<div class="companion-meta">Brainstorm Companion v' + escapeHtmlText(ROCKETCLAW_VERSION) + '</div>';
-}
-
-function renderCompanionMetadata(html) {
-  return html.split('<!-- COMPANION_METADATA -->').join(companionMetadata());
+function defaultSessionDir() {
+  let workspaceRoot = process.cwd();
+  try {
+    workspaceRoot = require('child_process')
+      .execFileSync('jj', ['workspace', 'root'], { encoding: 'utf-8' })
+      .trim();
+  } catch (e) {
+    // Support direct invocation without Jujutsu by using a local .tmp directory.
+  }
+  return path.join(workspaceRoot, '.tmp', 'brainstorm');
 }
 
 function isFullDocument(html) {
@@ -281,30 +240,9 @@ function isFullDocument(html) {
 }
 
 function wrapInFrame(content) {
-  return renderCompanionMetadata(frameTemplate).replace('<!-- CONTENT -->', content);
-}
-
-function cleanupEphemeralSession() {
-  if (!EPHEMERAL_ROOT) return;
-  const marker = path.join(SESSION_DIR, '.ephemeral');
-  const cleanupRootFile = path.join(STATE_DIR, 'cleanup-root');
-  const markerStat = fs.lstatSync(marker);
-  const rootFileStat = fs.lstatSync(cleanupRootFile);
-  if (!markerStat.isFile() || markerStat.isSymbolicLink() || !rootFileStat.isFile() || rootFileStat.isSymbolicLink()) {
-    throw new Error('invalid ephemeral session metadata');
-  }
-  const recordedRoot = fs.readFileSync(cleanupRootFile, 'utf-8').trim();
-  const realRoot = fs.realpathSync(EPHEMERAL_ROOT);
-  const realSession = fs.realpathSync(SESSION_DIR);
-  const realState = fs.realpathSync(STATE_DIR);
-  if (recordedRoot !== realRoot || path.resolve(EPHEMERAL_ROOT) !== realRoot ||
-      path.resolve(SESSION_DIR) !== realSession || path.dirname(realSession) !== realRoot ||
-      path.resolve(STATE_DIR) !== realState || realState !== path.join(realSession, 'state') ||
-      path.basename(realRoot) !== 'brainstorm' || path.basename(path.dirname(realRoot)) !== 'rocketclaw' ||
-      path.basename(path.dirname(path.dirname(realRoot))) !== '.tmp') {
-    throw new Error('ephemeral session escaped its resolved temporary root');
-  }
-  fs.rmSync(realSession, { recursive: true });
+  return frameTemplate
+    .replace('<!-- VERSION -->', 'RocketClaw v' + escapeHtmlText(ROCKETCLAW_VERSION))
+    .replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {
@@ -577,16 +515,17 @@ function maybeOpenBrowser() {
   if (HOST !== '127.0.0.1' && HOST !== 'localhost') return;
   if (clients.size > 0) return; // the user already opened it
   const url = companionUrl(); // must carry the key or the gate 403s it
+  const cp = require('child_process');
   // Operator-provided launcher: run as given (this env var is trusted operator input).
   if (process.env.BRAINSTORM_OPEN_CMD) {
-    try { childProcess.exec(process.env.BRAINSTORM_OPEN_CMD + ' ' + JSON.stringify(url), () => {}); } catch (e) { /* best effort */ }
+    try { cp.exec(process.env.BRAINSTORM_OPEN_CMD + ' ' + JSON.stringify(url), () => {}); } catch (e) { /* best effort */ }
     return;
   }
   // Platform launchers: pass the URL as an argv element via execFile (no shell),
   // so a url-host containing shell metacharacters can't inject a command.
   const launcher = browserLauncherForPlatform(url);
   if (!launcher) return; // headless: nothing to open
-  try { childProcess.execFile(launcher.bin, launcher.args, () => {}); } catch (e) { /* best effort */ }
+  try { cp.execFile(launcher.bin, launcher.args, () => {}); } catch (e) { /* best effort */ }
 }
 
 // ========== Activity Tracking ==========
@@ -618,20 +557,6 @@ const debounceTimers = new Map();
 function startServer() {
   if (!fs.existsSync(CONTENT_DIR)) fs.mkdirSync(CONTENT_DIR, { recursive: true });
   if (!fs.existsSync(STATE_DIR)) fs.mkdirSync(STATE_DIR, { recursive: true });
-  if (EPHEMERAL_ROOT) {
-    const realRoot = fs.realpathSync(EPHEMERAL_ROOT);
-    const realSession = fs.realpathSync(SESSION_DIR);
-    if (path.resolve(EPHEMERAL_ROOT) !== realRoot || path.resolve(SESSION_DIR) !== realSession ||
-        path.dirname(realSession) !== realRoot || path.basename(realRoot) !== 'brainstorm' ||
-        path.basename(path.dirname(realRoot)) !== 'rocketclaw' ||
-        path.basename(path.dirname(path.dirname(realRoot))) !== '.tmp') {
-      throw new Error('ephemeral session escaped its resolved temporary root');
-    }
-    const marker = path.join(SESSION_DIR, '.ephemeral');
-    const cleanupRootFile = path.join(STATE_DIR, 'cleanup-root');
-    if (!fs.existsSync(marker)) fs.writeFileSync(marker, '');
-    if (!fs.existsSync(cleanupRootFile)) fs.writeFileSync(cleanupRootFile, realRoot + '\n');
-  }
 
   // Track known files to distinguish new screens from updates.
   // macOS fs.watch reports 'rename' for both new files and overwrites,
@@ -671,26 +596,12 @@ function startServer() {
 
   function shutdown(reason) {
     console.log(JSON.stringify({ type: 'server-stopped', reason }));
-    let stateIsSafe = true;
-    if (EPHEMERAL_ROOT) {
-      try {
-        const realSession = fs.realpathSync(SESSION_DIR);
-        const realState = fs.realpathSync(STATE_DIR);
-        stateIsSafe = path.resolve(STATE_DIR) === realState && realState === path.join(realSession, 'state');
-      } catch (e) {
-        stateIsSafe = false;
-      }
-    }
-    if (stateIsSafe) {
-      const infoFile = path.join(STATE_DIR, 'server-info');
-      if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
-      fs.writeFileSync(
-        path.join(STATE_DIR, 'server-stopped'),
-        JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
-      );
-    } else {
-      console.error('Refusing to write shutdown state outside the session directory');
-    }
+    const infoFile = path.join(STATE_DIR, 'server-info');
+    if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
+    fs.writeFileSync(
+      path.join(STATE_DIR, 'server-stopped'),
+      JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
+    );
     watcher.close();
     clearInterval(lifecycleCheck);
     // Close any upgraded WebSocket sockets so server.close() can complete and
@@ -698,11 +609,7 @@ function startServer() {
     for (const socket of clients) {
       try { socket.destroy(); } catch (e) { /* already gone */ }
     }
-    server.close(() => {
-      try { cleanupEphemeralSession(); }
-      catch (e) { console.error('Ephemeral session cleanup failed:', e.message); }
-      process.exit(0);
-    });
+    server.close(() => process.exit(0));
   }
 
   function ownerAlive() {
@@ -755,8 +662,7 @@ function startServer() {
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
       url_host: URL_HOST, url: companionUrl(),
-      screen_dir: CONTENT_DIR, state_dir: STATE_DIR, idle_timeout_ms: IDLE_TIMEOUT_MS,
-      rocketclaw_version: ROCKETCLAW_VERSION, telemetry_disabled: ROCKETCLAW_TELEMETRY_DISABLED
+      screen_dir: CONTENT_DIR, state_dir: STATE_DIR, idle_timeout_ms: IDLE_TIMEOUT_MS
     });
     console.log(info);
     // server-info embeds the key — keep it owner-only.

@@ -11,12 +11,16 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that this workflow works much better with access to subagents (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note:** Tell your human partner that this workflow works much better with
+access to subagents (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini
+CLI all qualify; see the per-platform tool refs in
+`../using-superpowers/references/`). If subagents are available, use
+superpowers:subagent-driven-development instead of this skill.
 
 ## The Process
 
 ### Step 1: Load and Review Plan
-1. Ensure an isolated JJ workspace: use superpowers:using-git-worktrees to create one with `jj workspace add <destination>` or verify the existing one with `jj workspace list` and `jj workspace root`
+1. Ensure an isolated Jujutsu workspace: use superpowers:using-git-worktrees to create one or verify the existing one
 2. Read plan file
 3. Review critically - identify any questions or concerns about the plan
 4. If concerns: Raise them with your human partner before starting
@@ -50,7 +54,7 @@ After all tasks complete and verified:
 ## When to Revisit Earlier Steps
 
 **Return to Review (Step 1) when:**
-- Partner updates the plan based on your feedback
+- User updates the plan based on your feedback
 - Fundamental approach needs rethinking
 
 **Don't force through blockers** - stop and ask.
@@ -61,4 +65,4 @@ After all tasks complete and verified:
 - Don't skip verifications
 - Reference skills when plan says to
 - Stop when blocked, don't guess
-- Never start implementation by editing the revision targeted by the trunk bookmark without explicit user consent; use `jj new <trunk-bookmark>` to create a separate working-copy change, and do not assume the bookmark will advance with new changes
+- Never start implementation by editing the revision targeted by the mainline bookmark without explicit user consent; create a new working-copy commit in an isolated workspace
