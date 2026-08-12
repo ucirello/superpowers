@@ -212,10 +212,14 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Jujutsu Change Description Helper skill:**
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and the syntax and style visible in history take precedence. Apply only compatible Go quality guidance, such as keeping the first line concise and using the body to explain what changed and why; do not impose a fixed type, scope, subject, or body template.
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate repository-conventional change descriptions by analyzing `jj diff`. Use when the user asks for help writing change descriptions or reviewing the current working-copy change.
 ```
 
 Avoid vague descriptions like these:
@@ -653,39 +657,21 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Change description guidance
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
+Repository-local instructions and the syntax and style visible in history take precedence. Apply only compatible Go quality guidance: keep the first line concise, make it complete the repository's expected description of what the change does, omit a trailing period when that matches local style, and use a wrapped body to explain what changed and why when useful. Do not impose a fixed type, scope, subject, body, or template.
+
+Inspect the current change with `jj diff` and its description with `jj log -r @`. Use neutral placeholders when demonstrating structure:
+
 ```
-feat(auth): implement JWT-based authentication
+<repository-conventional first line>
 
-Add login endpoint and token validation middleware
-```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
+<optional explanation of what changed and why>
 ```
 
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Update the working-copy change description with `jj describe`; use `jj new` only when a new child change should be created afterward.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

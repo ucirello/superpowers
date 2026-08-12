@@ -99,17 +99,10 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
+const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
-const SUPERPOWERS_VERSION = readSuperpowersVersion();
-const SUPERPOWERS_BRAND_IMAGE_URL = 'https://primeradiant.com/brand/superpowers-visual-brainstorming-logo.png';
-const TELEMETRY_DISABLE_ENV_VARS = [
-  'SUPERPOWERS_DISABLE_TELEMETRY',
-  'DISABLE_TELEMETRY',
-  'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'
-];
-const SUPERPOWERS_TELEMETRY_DISABLED = TELEMETRY_DISABLE_ENV_VARS.some(name => isTruthyEnv(process.env[name]));
+const ROCKETCLAW_VERSION = readRocketClawVersion();
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 // Per-session secret key. The companion is reachable by any local browser tab
@@ -159,20 +152,17 @@ const MIME_TYPES = {
 // ========== Templates and Constants ==========
 
 function waitingPage() {
-  return renderBranding(`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Brainstorm Companion</title>
 <style>
 body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
 h1 { color: #333; } p { color: #666; }
-.brand { display: flex; align-items: center; min-width: 0; overflow: hidden; margin-bottom: 1.5rem; color: #666; font-size: 0.9rem; line-height: 1; }
-.brand a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; min-width: 0; max-width: 100%; line-height: 1; }
-.brand-copy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; transform: translateY(-1px); }
-.brand-logo { display: block; height: 1em; width: auto; max-width: 180px; filter: invert(1); }
+.version { font-size: 0.9rem; }
 </style>
 </head>
-<body><!-- BRANDING --><h1>Brainstorm Companion</h1>
-<p>Waiting for the agent to push a screen...</p></body></html>`);
+<body><p class="version">RocketClaw v${escapeHtmlText(ROCKETCLAW_VERSION)}</p><h1>Brainstorm Companion</h1>
+<p>Waiting for the agent to push a screen...</p></body></html>`;
 }
 
 const FORBIDDEN_PAGE = `<!DOCTYPE html>
@@ -205,7 +195,7 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
-function readSuperpowersVersion() {
+function readRocketClawVersion() {
   const root = path.join(__dirname, '../../..');
   const manifests = [
     path.join(root, 'package.json'),
@@ -224,13 +214,6 @@ function readSuperpowersVersion() {
   return 'unknown';
 }
 
-function isTruthyEnv(value) {
-  if (!value) return false;
-  const normalized = String(value).trim().toLowerCase();
-  if (!normalized) return false;
-  return !['0', 'false', 'no', 'off'].includes(normalized);
-}
-
 function escapeHtmlText(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -239,20 +222,16 @@ function escapeHtmlText(value) {
     .replace(/"/g, '&quot;');
 }
 
-function brandMarkup() {
-  const version = escapeHtmlText(SUPERPOWERS_VERSION);
-  const text = SUPERPOWERS_TELEMETRY_DISABLED
-    ? 'Prime Radiant Superpowers v' + version
-    : 'Superpowers v' + version;
-  const logo = SUPERPOWERS_TELEMETRY_DISABLED
-    ? ''
-    : '<img class="brand-logo" src="' + SUPERPOWERS_BRAND_IMAGE_URL + '?v=' + encodeURIComponent(SUPERPOWERS_VERSION) + '" alt="Prime Radiant" referrerpolicy="no-referrer" decoding="async">';
-
-  return '<div class="brand"><a href="https://github.com/obra/superpowers">' + logo + '<span class="brand-copy">' + text + '</span></a></div>';
-}
-
-function renderBranding(html) {
-  return html.split('<!-- BRANDING -->').join(brandMarkup());
+function defaultSessionDir() {
+  let workspaceRoot = process.cwd();
+  try {
+    workspaceRoot = require('child_process')
+      .execFileSync('jj', ['workspace', 'root'], { encoding: 'utf-8' })
+      .trim();
+  } catch (e) {
+    // Support direct invocation without Jujutsu by using a local .tmp directory.
+  }
+  return path.join(workspaceRoot, '.tmp', 'brainstorm');
 }
 
 function isFullDocument(html) {
@@ -261,7 +240,9 @@ function isFullDocument(html) {
 }
 
 function wrapInFrame(content) {
-  return renderBranding(frameTemplate).replace('<!-- CONTENT -->', content);
+  return frameTemplate
+    .replace('<!-- VERSION -->', 'RocketClaw v' + escapeHtmlText(ROCKETCLAW_VERSION))
+    .replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {
