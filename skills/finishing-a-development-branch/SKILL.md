@@ -45,15 +45,17 @@ WORKSPACE_OWNER_ROOT=$(jj workspace list -T 'root ++ "\n"' |
 
 Identify `FEATURE_BOOKMARK`, the local bookmark naming this work, from the
 plan, conversation, and `jj bookmark list`. Leave it empty if the work has no
-local bookmark. Capture these values now, before cleanup changes directory.
+local bookmark. Independently identify `FEATURE_HEAD`, the exact revision
+containing the completed work. Capture these values now, before cleanup changes
+directory.
 
 This determines which menu to show and how cleanup works:
 
 | State | Menu | Cleanup |
 |-------|------|---------|
-| `WORKSPACE_COUNT == 1` (only workspace), feature bookmark present | Standard 3 options | No workspace to clean up |
-| Additional workspace, feature bookmark present | Standard 3 options | Provenance-based (see Step 6) |
-| No feature bookmark | Reduced 2 options (no merge) | Externally managed — leave in place |
+| `WORKSPACE_COUNT == 1` (only workspace) | Standard 3 options | No workspace to clean up |
+| `WORKSPACE_OWNER_ROOT` is non-empty | Standard 3 options | Provenance-based (see Step 6) |
+| Any other workspace | Standard 3 options | Host-managed — leave in place |
 
 ## Step 3: Determine Base Bookmark
 
@@ -64,25 +66,14 @@ Confirm before merging: merging into the wrong base is expensive to undo.
 
 ## Step 4: Present Options
 
-**Only workspace and named-bookmark workspace — present exactly these 3 options:**
+**Present exactly these 3 options:**
 
 ```
 Implementation complete. What would you like to do?
 
 1. Merge back to <base-bookmark> locally
 2. Push and create a Pull Request
-3. Keep the bookmark as-is (I'll handle it later)
-
-Which option?
-```
-
-**No feature bookmark — present exactly these 2 options:**
-
-```
-Implementation complete. This change has no feature bookmark (externally managed workspace).
-
-1. Push as a new bookmark and create a Pull Request
-2. Keep as-is (I'll handle it later)
+3. Keep the work as-is (I'll handle it later)
 
 Which option?
 ```
@@ -103,7 +94,6 @@ integrating:
 ```bash
 jj git fetch --remote <remote>
 REMOTE_BASE='<base-bookmark>@<remote>'
-FEATURE_HEAD='<feature-head>'
 jj log --no-graph -r "$REMOTE_BASE & ::$FEATURE_HEAD"
 ```
 
@@ -131,27 +121,29 @@ Verify the selected result before moving the base bookmark:
 jj bookmark set <base-bookmark> -r <verified-feature-or-integration-change>
 ```
 
-If tests fail on the merged result: stop, leave the workspace and bookmarks in
-place, and investigate — nothing has been pushed, so the merge change is local
-and recoverable.
+If tests fail on the merged result: stop, leave the workspace and bookmarks
+in place, and investigate — nothing has been pushed, so the merge change
+is local and recoverable.
 
-Once the merged result is green, forget the local feature bookmark without
+Once the merged result is green, forget any local feature bookmark without
 propagating a deletion to any remote bookmark, then clean up the workspace
 (Step 6):
 
 ```bash
-jj bookmark forget <feature-bookmark>
+if [ -n "$FEATURE_BOOKMARK" ]; then
+  jj bookmark forget "$FEATURE_BOOKMARK"
+fi
 ```
 
 ### Option 2: Push and Create PR
 
 ```bash
 # With an existing feature bookmark:
-jj bookmark set <feature-bookmark> -r <feature-head>
+jj bookmark set <feature-bookmark> -r "$FEATURE_HEAD"
 jj git push --bookmark <feature-bookmark> --remote <remote>
 
 # With no feature bookmark, create and push one:
-jj git push --named <new-bookmark>=<feature-head> --remote <remote>
+jj git push --named <new-bookmark>="$FEATURE_HEAD" --remote <remote>
 ```
 
 Then create the pull/merge request against <base-bookmark> with the forge's
@@ -163,7 +155,9 @@ Keep the workspace — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
 
-Report: "Keeping bookmark <name>. Workspace preserved at <path>."
+With a feature bookmark, report: "Keeping bookmark <name>. Workspace preserved at <path>."
+
+Without one, report: "Keeping work as-is. Workspace preserved at <path>."
 
 ### If your human partner asks to discard the work
 
@@ -245,7 +239,7 @@ registration from outside its directory and remove the directory:
 
 ```bash
 cd "$(dirname "$WORKSPACE_ROOT")"
-jj -R "$WORKSPACE_ROOT" workspace forget "$WORKSPACE_NAME"
+jj -R "$WORKSPACE_OWNER_ROOT" workspace forget "$WORKSPACE_NAME"
 rm -rf "$WORKSPACE_ROOT"
 ```
 

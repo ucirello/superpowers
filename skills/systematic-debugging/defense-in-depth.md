@@ -75,7 +75,7 @@ async function jjGitInit(directory: string) {
       isAbsolute(relativeDirectory)
     ) {
       throw new Error(
-        `Refusing jj git init outside workspace .tmp during tests: ${directory}`
+        `Refusing jj git init --no-colocate outside workspace .tmp during tests: ${directory}`
       );
     }
   }
@@ -89,7 +89,7 @@ async function jjGitInit(directory: string) {
 ```typescript
 async function jjGitInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to run jj git init', {
+  logger.debug('About to run jj git init --no-colocate', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -109,19 +109,19 @@ When you find a bug:
 
 ## Example from Session
 
-Bug: Empty `projectDir` caused `jj git init` in source code
+Bug: Empty `projectDir` caused `jj git init --no-colocate` in source code
 
 **Data flow:**
 1. Test setup → empty string
 2. `Project.create(name, '')`
 3. `WorkspaceManager.createWorkspace('')`
-4. `jj git init` runs in `process.cwd()`
+4. `jj git init --no-colocate` runs in `process.cwd()`
 
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses `jj git init` outside the workspace's `.tmp/` in tests
-- Layer 4: Stack trace logging before `jj git init`
+- Layer 3: `WorktreeManager` refuses `jj git init --no-colocate` outside the workspace's `.tmp/` in tests
+- Layer 4: Stack trace logging before `jj git init --no-colocate`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
 

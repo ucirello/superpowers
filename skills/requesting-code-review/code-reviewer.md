@@ -26,13 +26,13 @@ Subagent (general-purpose):
     **To revision:** [TO_REVISION]
 
     ```bash
-    jj --ignore-working-copy diff --stat --from '[FROM_REVISION]' --to '[TO_REVISION]'
-    jj --ignore-working-copy diff --from '[FROM_REVISION]' --to '[TO_REVISION]'
+    jj --at-operation=@ diff --stat --from '[FROM_REVISION]' --to '[TO_REVISION]'
+    jj --at-operation=@ diff --git --from '[FROM_REVISION]' --to '[TO_REVISION]'
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate workspace files, the working-copy commit (`@`), bookmarks, or repository operation state. Use read-only commands such as `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` to inspect revisions without snapshotting the working copy. Prefer `jj --ignore-working-copy file show -r '[REVISION]' [FILESET]` when you need file contents from another revision. If materializing another revision is unavoidable, ask the coordinator to create a separate workspace rather than changing this one. Its path must be under the repository-local temporary directory: `REPO_ROOT=$(jj workspace root 2>/dev/null || pwd); REVIEW_PATH="$REPO_ROOT/.tmp/[WORKSPACE_NAME]"; mkdir -p "$REPO_ROOT/.tmp"; jj workspace add --name '[WORKSPACE_NAME]' -r '[REVISION]' "$REVIEW_PATH"`. The `pwd` fallback keeps the temporary directory local when the command is prepared outside a Jujutsu repository. Creating and later forgetting that workspace are coordinator-owned mutations, not review steps.
+    Your review is read-only in this workspace. Do not mutate workspace files, the working-copy commit (`@`), bookmarks, or repository operation state. Pin every read-only Jujutsu command to the operation that was current when your command started: use `jj --at-operation=@ show`, `jj --at-operation=@ diff`, and `jj --at-operation=@ log`. Loading with `--at-operation=@` cannot integrate divergent operation heads and implies ignoring the working copy. Prefer `jj --at-operation=@ file show -r '[REVISION]' [FILESET]` when you need file contents from another revision. If materializing another revision is unavoidable, ask the coordinator to create a separate workspace rather than changing this one. Its path must be under the repository-local temporary directory: `REPO_ROOT=$(jj workspace root 2>/dev/null || pwd); if command -v cygpath >/dev/null 2>&1; then REPO_ROOT=$(cygpath -u "$REPO_ROOT"); fi; REVIEW_PATH="$REPO_ROOT/.tmp/[WORKSPACE_NAME]"; mkdir -p "$REPO_ROOT/.tmp"; jj workspace add --name '[WORKSPACE_NAME]' -r '[REVISION]' "$REVIEW_PATH"`. The `pwd` fallback keeps the temporary directory local when the command is prepared outside a Jujutsu repository. Creating and later forgetting that workspace are coordinator-owned mutations, not review steps.
 
     ## You Do Not Dispatch Subagents
 
@@ -137,8 +137,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[FROM_REVISION]` - earlier snapshot's revision; use a revset resolving to one revision
-- `[TO_REVISION]` - later snapshot's revision; use a revset resolving to one revision
+- `[FROM_REVISION]` - earlier snapshot's exact commit ID, resolved by the coordinator before dispatch
+- `[TO_REVISION]` - later snapshot's exact commit ID, resolved by the coordinator before dispatch
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

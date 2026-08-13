@@ -121,6 +121,9 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
   WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
+  if command -v cygpath >/dev/null 2>&1; then
+    WORKSPACE_ROOT="$(cygpath -u "$WORKSPACE_ROOT")"
+  fi
   SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm/${SESSION_ID}"
   EPHEMERAL_SESSION="true"
 fi

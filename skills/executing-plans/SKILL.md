@@ -54,7 +54,7 @@ After all tasks complete and verified:
 ## When to Revisit Earlier Steps
 
 **Return to Review (Step 1) when:**
-- User updates the plan based on your feedback
+- Your human partner updates the plan based on your feedback
 - Fundamental approach needs rethinking
 
 **Don't force through blockers** - stop and ask.

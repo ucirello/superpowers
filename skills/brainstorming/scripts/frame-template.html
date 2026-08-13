@@ -9,7 +9,7 @@
      *
      * This template provides a consistent frame with:
      * - OS-aware light/dark theming
-     * - Header and connection status
+     * - Connection status header
      * - Scrollable main content area
      * - CSS helpers for common UI patterns
      *
@@ -63,7 +63,6 @@
     }
 
     /* ===== FRAME STRUCTURE ===== */
-    .version { color: var(--text-secondary); font-size: 0.75rem; line-height: 1; }
     .status { font-size: 0.7rem; color: var(--status-color, var(--success)); display: flex; align-items: center; gap: 0.4rem; justify-self: end; white-space: nowrap; line-height: 1; }
     .status::before { content: ''; width: 6px; height: 6px; background: var(--status-color, var(--success)); border-radius: 50%; }
 
@@ -76,13 +75,12 @@
       padding: 0.5rem 1.5rem;
       flex-shrink: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: 1fr;
       align-items: center;
       gap: 1rem;
       min-height: 42px;
     }
-    .header .version { justify-self: start; }
-    .header .status { grid-column: 2; line-height: 1; }
+    .header .status { justify-self: end; line-height: 1; }
     .header span {
       font-size: 0.75rem;
       color: var(--text-secondary);
@@ -193,7 +191,6 @@
 </head>
 <body>
   <div class="header">
-    <div class="version"><!-- VERSION --></div>
     <div class="status">Connecting…</div>
   </div>
 

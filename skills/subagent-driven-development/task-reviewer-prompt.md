@@ -41,8 +41,8 @@ Subagent (general-purpose):
     changed file separately unless a hunk you must judge is cut off
     mid-function — and say so in your report. Do not re-run Jujutsu commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj --ignore-working-copy diff --stat --from [BASE_ID] --to [TIP_ID]` and
-    `jj --ignore-working-copy diff --git --context 10 --from [BASE_ID] --to [TIP_ID]`.
+    `jj --at-operation=@ diff --stat --from [BASE_ID] --to [TIP_ID]` and
+    `jj --at-operation=@ diff --git --context 10 --from [BASE_ID] --to [TIP_ID]`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -52,6 +52,9 @@ Subagent (general-purpose):
 
     Your review is read-only on this checkout. Do not mutate the working
     files, working-copy revision, bookmarks, or operation state in any way.
+    Pin every read-only Jujutsu command to `--at-operation=@`; this prevents
+    loading from integrating divergent operation heads and implies ignoring
+    the working copy.
 
     ## You Do Not Dispatch Subagents
 
@@ -198,8 +201,10 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_ID]` — exact commit ID snapshot from before this task
-- `[TIP_ID]` — exact current commit ID snapshot
+- `[BASE_ID]` — exact commit ID snapshot from before this task, resolved by
+  the coordinator before dispatch
+- `[TIP_ID]` — exact current commit ID snapshot, resolved by the coordinator
+  before dispatch
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`scripts/review-package PLAN_FILE BASE TIP` prints the unique
   path it wrote; the package never enters the controller's context)

@@ -39,7 +39,7 @@ Error: jj git init failed in ~/project/packages/core
 ### 2. Find Immediate Cause
 **What code directly causes this?**
 ```typescript
-await execFileAsync('jj', ['git', 'init'], { cwd: projectDir });
+await execFileAsync('jj', ['git', 'init', '--no-colocate'], { cwd: projectDir });
 ```
 
 ### 3. Ask: What Called This?
@@ -78,7 +78,7 @@ async function jjGitInit(directory: string) {
     stack,
   });
 
-  await execFileAsync('jj', ['git', 'init'], { cwd: directory });
+  await execFileAsync('jj', ['git', 'init', '--no-colocate'], { cwd: directory });
 }
 ```
 
@@ -111,7 +111,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Symptom:** `.jj` created in `packages/core/` (source code)
 
 **Trace chain:**
-1. `jj git init` runs in `process.cwd()` ← empty cwd parameter
+1. `jj git init --no-colocate` runs in `process.cwd()` ← empty cwd parameter
 2. WorktreeManager called with empty projectDir
 3. Session.create() passed empty string
 4. Test accessed `context.tempDir` before beforeEach
@@ -124,8 +124,8 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside the workspace's `.tmp/`
-- Layer 4: Stack trace logging before `jj git init`
+- Layer 3: NODE_ENV guard refuses `jj git init --no-colocate` outside the workspace's `.tmp/`
+- Layer 4: Stack trace logging before `jj git init --no-colocate`
 
 ## Key Principle
 

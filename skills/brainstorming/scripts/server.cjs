@@ -102,7 +102,6 @@ const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'loc
 const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
-const ROCKETCLAW_VERSION = readRocketClawVersion();
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 // Per-session secret key. The companion is reachable by any local browser tab
@@ -158,10 +157,9 @@ function waitingPage() {
 <style>
 body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
 h1 { color: #333; } p { color: #666; }
-.version { font-size: 0.9rem; }
 </style>
 </head>
-<body><p class="version">RocketClaw v${escapeHtmlText(ROCKETCLAW_VERSION)}</p><h1>Brainstorm Companion</h1>
+<body><h1>Brainstorm Companion</h1>
 <p>Waiting for the agent to push a screen...</p></body></html>`;
 }
 
@@ -195,33 +193,6 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
-function readRocketClawVersion() {
-  const root = path.join(__dirname, '../../..');
-  const manifests = [
-    path.join(root, 'package.json'),
-    path.join(root, '.codex-plugin/plugin.json')
-  ];
-
-  for (const manifest of manifests) {
-    try {
-      const data = JSON.parse(fs.readFileSync(manifest, 'utf-8'));
-      if (data.version) return String(data.version);
-    } catch (e) {
-      // Packaged Codex plugins omit package.json; try the next manifest.
-    }
-  }
-
-  return 'unknown';
-}
-
-function escapeHtmlText(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 function defaultSessionDir() {
   let workspaceRoot = process.cwd();
   try {
@@ -240,9 +211,7 @@ function isFullDocument(html) {
 }
 
 function wrapInFrame(content) {
-  return frameTemplate
-    .replace('<!-- VERSION -->', 'RocketClaw v' + escapeHtmlText(ROCKETCLAW_VERSION))
-    .replace('<!-- CONTENT -->', content);
+  return frameTemplate.replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {

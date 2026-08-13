@@ -126,9 +126,9 @@ digraph process {
 Ensure the work happens in an isolated Jujutsu workspace. Preserve the
 superpowers:using-git-worktrees routing verbatim where the harness requires
 that functional route, but use `jj workspace list` to verify an existing
-workspace or `jj workspace add <destination>` to create one. Never start
-implementation by editing `trunk()` or another immutable revision; create a
-new mutable working-copy revision with `jj new <base>`.
+workspace or `jj workspace add -r @ <destination>` to create one. The new
+workspace gets a mutable working-copy revision on top of the current revision;
+never start implementation by editing `trunk()` or another immutable revision.
 
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
@@ -332,9 +332,11 @@ needed.
 
 - Hand the reviewer its diff as a file: run this skill's
   `scripts/review-package PLAN_FILE BASE TIP` and pass the reviewer the file path
-  it prints (or, without the script: `jj log --no-graph -r 'BASE..TIP'`,
-  `jj diff --stat --from BASE --to TIP`, and
-  `jj diff --git --context 10 --from BASE --to TIP`, redirected to one uniquely named
+  it prints (or, without the script:
+  `jj log --no-graph -r 'commit_id(BASE)..commit_id(TIP)'`,
+  `jj diff --stat --from 'commit_id(BASE)' --to 'commit_id(TIP)'`, and
+  `jj diff --git --context 10 --from 'commit_id(BASE)' --to 'commit_id(TIP)'`,
+  redirected to one uniquely named
   file). The output never enters your own context, and the reviewer sees
   the revision list, stat summary, and full diff with context in one Read
   call. Use the BASE you recorded before dispatching the implementer —
@@ -540,7 +542,7 @@ Task 1: Hook installation script
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
-You: "User level (~/.config/hooks/)"
+You: "User level (~/.config/rocketclaw/hooks/)"
 
 Implementer: [Later]
   - Implemented install-hook command

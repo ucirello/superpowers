@@ -25,12 +25,12 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 **1. Select Jujutsu revisions:**
 ```bash
-jj status  # snapshot the current working copy before reviewers use --ignore-working-copy
-FROM_REVISION='first_parent(@)'  # or trunk(), a bookmark, a change ID, or a commit ID
-TO_REVISION='@'
+jj status  # snapshot the current working copy before resolving review boundaries
+FROM_REVISION=$(jj log --no-graph -r 'first_parent(@)' -T 'commit_id ++ "\n"')
+TO_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 ```
 
-Each value must be a revset that resolves to one revision. `@` is the current workspace's working-copy commit, `first_parent(@)` selects one parent even when `@` is a merge commit, and `<bookmark>@<remote>` selects a remote bookmark when that is the repository's review base. In a single-parent workflow, `@-` is equivalent shorthand for the parent.
+Choose the base revset appropriate to the review: `first_parent(@)` selects one parent even when `@` is a merge commit, `trunk()` selects the trunk revision, and `<bookmark>@<remote>` selects a remote bookmark. Resolve both boundary revsets to their exact commit IDs before dispatch. Never pass workspace-relative revsets such as `@`, `@-`, or `first_parent(@)` as reviewer snapshots; they can resolve differently in another workspace or operation.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -39,8 +39,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{FROM_REVISION}` - Earlier snapshot's revision
-- `{TO_REVISION}` - Later snapshot's revision
+- `{FROM_REVISION}` - Earlier snapshot's exact commit ID
+- `{TO_REVISION}` - Later snapshot's exact commit ID
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -55,14 +55,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-FROM_REVISION='first_parent(@)'
-TO_REVISION='@'
+FROM_REVISION=$(jj log --no-graph -r 'first_parent(@)' -T 'commit_id ++ "\n"')
+TO_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
   PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  FROM_REVISION: first_parent(@)
-  TO_REVISION: @
+  FROM_REVISION: [exact commit ID printed above]
+  TO_REVISION: [exact commit ID printed above]
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests
