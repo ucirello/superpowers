@@ -25,7 +25,7 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 ## Skill Priority
 
-When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
+When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are common process skills, but the rule holds for any of them.
 
 - "Let's build X" → superpowers:brainstorming first, then implementation skills.
 - "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
@@ -39,7 +39,7 @@ These thoughts mean STOP—you're rationalizing:
 | "This is just a simple question" | Questions are tasks. Check for skills. |
 | "I need more context first" | Skill check comes BEFORE clarifying questions. |
 | "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
-| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "I can check version-control/files quickly" | Files lack conversation context. Check for skills. |
 | "Let me gather information first" | Skills tell you HOW to gather information. |
 | "This doesn't need a formal skill" | If a skill exists, use it. |
 | "I remember this skill" | Skills evolve. Read current version. |

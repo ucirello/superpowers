@@ -20,19 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Jujutsu Snapshots to Compare
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **From revision:** [FROM_REVISION]
+    **To revision:** [TO_REVISION]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --at-operation=@ diff --stat --from '[FROM_REVISION]' --to '[TO_REVISION]'
+    jj --at-operation=@ diff --git --from '[FROM_REVISION]' --to '[TO_REVISION]'
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in this workspace. Do not mutate workspace files, the working-copy commit (`@`), bookmarks, or repository operation state. Pin every read-only Jujutsu command to the operation that was current when your command started: use `jj --at-operation=@ show`, `jj --at-operation=@ diff`, and `jj --at-operation=@ log`. Loading with `--at-operation=@` cannot integrate divergent operation heads and implies ignoring the working copy. Prefer `jj --at-operation=@ file show -r '[REVISION]' [FILESET]` when you need file contents from another revision. If materializing another revision is unavoidable, ask the coordinator to create a separate workspace rather than changing this one. Its path must be under the repository-local temporary directory: `REPO_ROOT=$(jj workspace root 2>/dev/null || pwd); if command -v cygpath >/dev/null 2>&1; then REPO_ROOT=$(cygpath -u "$REPO_ROOT"); fi; REVIEW_PATH="$REPO_ROOT/.tmp/[WORKSPACE_NAME]"; mkdir -p "$REPO_ROOT/.tmp"; jj workspace add --name '[WORKSPACE_NAME]' -r '[REVISION]' "$REVIEW_PATH"`. The `pwd` fallback keeps the temporary directory local when the command is prepared outside a Jujutsu repository. Creating and later forgetting that workspace are coordinator-owned mutations, not review steps.
 
     ## You Do Not Dispatch Subagents
 
@@ -113,7 +113,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready to land?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -137,8 +137,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[FROM_REVISION]` - earlier snapshot's exact commit ID, resolved by the coordinator before dispatch
+- `[TO_REVISION]` - later snapshot's exact commit ID, resolved by the coordinator before dispatch
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -175,7 +175,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready to land: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

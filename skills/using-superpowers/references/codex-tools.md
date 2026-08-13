@@ -80,29 +80,40 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish changes should inspect Jujutsu
+before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+JJ_ROOT=$(jj root)
+jj status
+jj workspace list
+jj bookmark list
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+`jj root` identifies the current workspace root, `jj status` reports the
+working-copy change, and the list commands show existing workspaces and
+bookmarks. Follow repository-local instructions and naming conventions.
+Do not infer branch or detached-HEAD state; Jujutsu workspaces have a
+working-copy change and bookmarks are explicit references.
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+Keep temporary files under `$JJ_ROOT/.tmp/`. If `jj` is unavailable or the
+directory is not a Jujutsu workspace, use the current workspace's local
+`.tmp/` directory and do not fall back to global temporary storage.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
-the user to use the App's native controls:
+Describe the working-copy change before publishing it. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Pass the resulting repository-appropriate text to `jj describe`; repository-local instructions and conventions always win, so do not impose a fixed template.
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
-- **"Hand off to local"** — transfers work to the user's local checkout
+To publish a change, create or move the intended bookmark according to the
+repository's conventions, then push that bookmark explicitly:
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+```bash
+jj bookmark create <bookmark> -r @
+jj git push --bookmark <bookmark> --remote <remote>
+```
+
+If the bookmark already exists, use `jj bookmark move <bookmark> --to @`
+instead of creating it. Use `gh` for pull-request operations when available.
+If the sandbox blocks bookmark creation or pushing, leave the working-copy
+change described and report the exact blocked operation; do not substitute
+branch or staging commands.

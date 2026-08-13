@@ -53,15 +53,29 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function gitInit(directory: string) {
-  // In tests, refuse git init outside temp directories
+async function jjGitInit(directory: string) {
+  // In tests, keep temporary repositories under the workspace-local .tmp.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    const tmpDir = normalize(resolve(tmpdir()));
+    let workspaceRoot = process.cwd();
 
-    if (!normalized.startsWith(tmpDir)) {
+    try {
+      const { stdout } = await execFileAsync('jj', ['root'], { cwd: directory });
+      workspaceRoot = stdout.trim();
+    } catch {
+      // Outside a jj workspace, treat the current directory as the workspace.
+    }
+
+    const workspaceTmp = normalize(resolve(workspaceRoot, '.tmp'));
+    const relativeDirectory = relative(workspaceTmp, normalized);
+
+    if (
+      relativeDirectory === '..' ||
+      relativeDirectory.startsWith(`..${sep}`) ||
+      isAbsolute(relativeDirectory)
+    ) {
       throw new Error(
-        `Refusing git init outside temp dir during tests: ${directory}`
+        `Refusing jj git init --no-colocate outside workspace .tmp during tests: ${directory}`
       );
     }
   }
@@ -73,9 +87,9 @@ async function gitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function gitInit(directory: string) {
+async function jjGitInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to git init', {
+  logger.debug('About to run jj git init --no-colocate', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -95,19 +109,19 @@ When you find a bug:
 
 ## Example from Session
 
-Bug: Empty `projectDir` caused `git init` in source code
+Bug: Empty `projectDir` caused `jj git init --no-colocate` in source code
 
 **Data flow:**
 1. Test setup → empty string
 2. `Project.create(name, '')`
 3. `WorkspaceManager.createWorkspace('')`
-4. `git init` runs in `process.cwd()`
+4. `jj git init --no-colocate` runs in `process.cwd()`
 
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses git init outside tmpdir in tests
-- Layer 4: Stack trace logging before git init
+- Layer 3: `WorktreeManager` refuses `jj git init --no-colocate` outside the workspace's `.tmp/` in tests
+- Layer 4: Stack trace logging before `jj git init --no-colocate`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
 
