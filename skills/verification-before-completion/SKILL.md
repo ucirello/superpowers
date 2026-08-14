@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before running `jj commit` or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before describing changes or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
 ---
 
 # Verification Before Completion
@@ -51,7 +51,7 @@ Skip any step = lying, not verifying
 
 - Using "should", "probably", "seems to"
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to run `jj describe`, `jj new`, `jj commit`, move a bookmark, push with `jj git push`, or create a PR without verification
+- About to describe a change, run `jj git push`, or create a PR without verification
 - Trusting agent success reports
 - Relying on partial verification
 - Thinking "just this once"
@@ -99,7 +99,7 @@ Skip any step = lying, not verifying
 
 **Agent delegation:**
 ```
-✅ Agent reports success → Check `jj diff` → Verify changes → Report actual state
+✅ Agent reports success → Run `jj diff` → Verify changes → Report actual state
 ❌ Trust agent report
 ```
 
@@ -109,7 +109,7 @@ Skip any step = lying, not verifying
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
-- Running `jj describe`, `jj new`, or `jj commit`; moving a bookmark; pushing with `jj git push`; PR creation; task completion
+- Describing changes, running `jj git push`, PR creation, task completion
 - Moving to next task
 - Delegating to agents
 

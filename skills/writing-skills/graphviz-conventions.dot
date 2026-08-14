@@ -12,7 +12,9 @@ digraph STYLE_GUIDE {
         "Take an action" [shape=box];
 
         // Commands are plaintext
-        "jj describe -m '<change description>'" [shape=plaintext];
+        // Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+        // Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Otherwise use compatible Go guidance: a clear imperative summary, a concise first line, and an explanatory body when useful. The placeholder imposes no fixed prefix, type, scope, subject, or body.
+        "jj describe -m '<message>'" [shape=plaintext];
 
         // States are ellipses
         "Current state" [shape=ellipse];
@@ -29,7 +31,7 @@ digraph STYLE_GUIDE {
         "Write test first" [shape=box];
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
-        "NEVER expect a staging area; use jj split or jj squash -i" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "NEVER abandon changes without confirming intent" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions
@@ -71,7 +73,7 @@ digraph STYLE_GUIDE {
         // Actions start with verb
         "Write the test";
         "Search for patterns";
-        "Finalize the current change";
+        "Describe changes";
         "Ask for help";
 
         // Commands are literal
@@ -152,12 +154,12 @@ digraph STYLE_GUIDE {
         "Test failed" [shape=ellipse];
         "Read error message" [shape=box];
         "Can reproduce?" [shape=diamond];
-        "jj diff -r @" [shape=plaintext];
+        "jj diff --from @-" [shape=plaintext];
         "NEVER ignore errors" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
 
         "Test failed" -> "Read error message";
         "Read error message" -> "Can reproduce?";
-        "Can reproduce?" -> "jj diff -r @" [label="yes"];
+        "Can reproduce?" -> "jj diff --from @-" [label="yes"];
 
         // Bad: vague and wrong shapes
         bad_1 [label="Something wrong", shape=box];  // Should be ellipse (state)

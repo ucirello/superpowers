@@ -1,50 +1,60 @@
 #!/usr/bin/env bash
-# Generate a review package: revision list, stat summary, and the net
+# Generate a review package: change list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE snapshot keeps multi-revision
-# tasks intact.
+# call. Using the recorded per-task BASE (not @-) keeps multi-change tasks
+# intact.
 #
-# Usage: review-package PLAN_FILE BASE TIP [OUTFILE]
-# Default OUTFILE: <workspace-root>/.tmp/rocketclaw/sdd/<plan-basename>/review-<base7>..<tip7>.diff
+# Usage: review-package PLAN_FILE BASE END [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<end7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE TIP [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE END [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
 base=$2
-tip=$3
+end=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-base=$(jj log --no-graph -r "exactly(commit_id($base), 1)" -T 'commit_id ++ "\n"' 2>/dev/null) \
-  || { echo "bad BASE commit ID: $base" >&2; exit 2; }
-tip=$(jj log --no-graph -r "exactly(commit_id($tip), 1)" -T 'commit_id ++ "\n"' 2>/dev/null) \
-  || { echo "bad TIP commit ID: $tip" >&2; exit 2; }
-revset="commit_id($base)..commit_id($tip)"
+resolve_commit() {
+  local label=$1 value=$2 resolved
+  [[ "$value" =~ ^[0-9a-f]{40,64}$ ]] \
+    || { echo "$label must be a full immutable commit ID: $value" >&2; exit 2; }
+  resolved=$(jj log --no-graph -r "exactly(commit_id(\"$value\"), 1)" -T 'commit_id ++ "\n"' 2>/dev/null) \
+    || { echo "bad $label: $value" >&2; exit 2; }
+  [ "$(printf '%s\n' "$resolved" | wc -l | tr -d ' ')" -eq 1 ] \
+    || { echo "$label does not identify exactly one commit: $value" >&2; exit 2; }
+  printf '%s\n' "$resolved"
+}
+
+base=$(resolve_commit BASE "$base")
+end=$(resolve_commit END "$end")
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-${base:0:7}..${tip:0:7}.diff"
+  base_short=$(jj log --no-graph -r "commit_id(\"$base\")" -T 'commit_id.short(7)')
+  end_short=$(jj log --no-graph -r "commit_id(\"$end\")" -T 'commit_id.short(7)')
+  out="$dir/review-${base_short}..${end_short}.diff"
 fi
 
 {
-  echo "# Review package: ${base}..${tip}"
+  echo "# Review package: ${base}..${end}"
   echo
-  echo "## Revisions"
-  jj log --no-graph -r "$revset" \
-    -T 'commit_id.short(12) ++ " " ++ change_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
+  echo "## Changes"
+  jj log --no-graph -r "commit_id(\"$base\")..commit_id(\"$end\")" \
+    -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  jj diff --stat --from "commit_id($base)" --to "commit_id($tip)"
+  jj diff --from "commit_id(\"$base\")" --to "commit_id(\"$end\")" --stat
   echo
   echo "## Diff"
-  jj diff --git --context 10 --from "commit_id($base)" --to "commit_id($tip)"
+  jj diff --from "commit_id(\"$base\")" --to "commit_id(\"$end\")" --context 10
 } > "$out"
 
-revisions=$(jj log --count -r "$revset")
-echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"
+changes=$(jj log --no-graph -r "commit_id(\"$base\")..commit_id(\"$end\")" -T '"change\n"' | wc -l | tr -d ' ')
+echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

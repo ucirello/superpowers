@@ -12,6 +12,8 @@ Subagent (general-purpose):
     design patterns, and best practices. Your job is to review completed work
     against its plan or requirements and identify issues before they cascade.
 
+    Go review the code changes in [REPOSITORY_ROOT] from [FROM_REVISION] to [TO_REVISION].
+
     ## What Was Implemented
 
     [DESCRIPTION]
@@ -20,19 +22,35 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Jujutsu Snapshots to Compare
+    ## JJ Revisions to Review
 
-    **From revision:** [FROM_REVISION]
-    **To revision:** [TO_REVISION]
+    **Repository:** [REPOSITORY_ROOT]
+    **From:** [FROM_REVISION]
+    **To:** [TO_REVISION]
 
     ```bash
-    jj --at-operation=@ diff --stat --from '[FROM_REVISION]' --to '[TO_REVISION]'
-    jj --at-operation=@ diff --git --from '[FROM_REVISION]' --to '[TO_REVISION]'
+    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy diff --stat --from 'commit_id("[FROM_REVISION]")' --to 'commit_id("[TO_REVISION]")'
+    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy diff --from 'commit_id("[FROM_REVISION]")' --to 'commit_id("[TO_REVISION]")'
     ```
+
+    This is an endpoint-to-endpoint tree comparison: review the net changes from
+    the starting revision's tree to the ending revision's tree.
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate workspace files, the working-copy commit (`@`), bookmarks, or repository operation state. Pin every read-only Jujutsu command to the operation that was current when your command started: use `jj --at-operation=@ show`, `jj --at-operation=@ diff`, and `jj --at-operation=@ log`. Loading with `--at-operation=@` cannot integrate divergent operation heads and implies ignoring the working copy. Prefer `jj --at-operation=@ file show -r '[REVISION]' [FILESET]` when you need file contents from another revision. If materializing another revision is unavoidable, ask the coordinator to create a separate workspace rather than changing this one. Its path must be under the repository-local temporary directory: `REPO_ROOT=$(jj workspace root 2>/dev/null || pwd); if command -v cygpath >/dev/null 2>&1; then REPO_ROOT=$(cygpath -u "$REPO_ROOT"); fi; REVIEW_PATH="$REPO_ROOT/.tmp/[WORKSPACE_NAME]"; mkdir -p "$REPO_ROOT/.tmp"; jj workspace add --name '[WORKSPACE_NAME]' -r '[REVISION]' "$REVIEW_PATH"`. The `pwd` fallback keeps the temporary directory local when the command is prepared outside a Jujutsu repository. Creating and later forgetting that workspace are coordinator-owned mutations, not review steps.
+    Your review is read-only in this workspace. Do not mutate working-copy files,
+    the working-copy revision, bookmarks, or repository state. Use
+    `jj --repository [REPOSITORY_ROOT] --ignore-working-copy show`, `diff`, and
+    `log` to inspect history without snapshotting or updating the working copy.
+    If you need a file from another revision, read it directly without creating
+    or moving a workspace:
+
+    ```bash
+    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy file show -r 'commit_id("[REVISION]")' "path/to/file"
+    ```
+
+    Never edit reviewed files or run a command
+    that creates, abandons, rebases, describes, or otherwise modifies changes.
 
     ## You Do Not Dispatch Subagents
 
@@ -113,7 +131,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to land?** [Yes | No | With fixes]
+    **Ready to integrate?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -137,8 +155,9 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[FROM_REVISION]` - earlier snapshot's exact commit ID, resolved by the coordinator before dispatch
-- `[TO_REVISION]` - later snapshot's exact commit ID, resolved by the coordinator before dispatch
+- `[REPOSITORY_ROOT]` — root reported by `jj workspace root`
+- `[FROM_REVISION]` — starting revision
+- `[TO_REVISION]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -175,7 +194,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to land: With fixes**
+**Ready to integrate: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

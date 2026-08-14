@@ -7,16 +7,18 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent JJ changes.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated workspace, it should have been prepared via the `superpowers:using-git-worktrees` skill at execution time.
 
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+
+**Temporary storage:** Use the repository-local `.tmp/` directory.
 
 ## Scope Check
 
@@ -49,7 +51,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe the change and start the next change" - step
+- "Describe and finalize the JJ change" - step
 
 ## Plan Document Header
 
@@ -78,19 +80,6 @@ include this section.]
 
 ---
 ```
-
-## Commit Messages
-
-Repository-local instructions and the commit-message syntax used by the
-repository always take precedence over general guidance.
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-Apply compatible Go guidance to message quality, clarity, and structure without
-choosing syntax during planning. Prefer a concise summary and add a body when it
-helps explain what changed and why.
-
-Jujutsu automatically snapshots the working copy, so do not add or stage files.
-At each task boundary, inspect `jj status` and `jj diff`, describe the current
-change using the standards above, then use `jj new` to begin the next change.
 
 ## Task Structure
 
@@ -133,12 +122,15 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Describe the change and start the next change**
+- [ ] **Step 5: Describe and finalize the JJ change**
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Apply compatible Go guidance to clarity and structure: use a concise summary that explains what the change does and add an explanatory body when useful. Do not impose a fixed prefix, type, scope, subject, or body.
 
 ```bash
-jj status
-jj diff
-jj describe -m "<message composed from the standards above>"
+jj file track tests/path/test.py src/path/file.py
+jj describe -m "<runtime-composed description>"
 jj new
 ```
 ````

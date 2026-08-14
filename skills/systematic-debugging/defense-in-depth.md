@@ -53,29 +53,29 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function jjGitInit(directory: string) {
-  // In tests, keep temporary repositories under the workspace-local .tmp.
+function workspaceTmpDir(): string {
+  let root = process.cwd();
+  try {
+    root = execFileSync('jj', ['workspace', 'root'], { encoding: 'utf8' }).trim();
+  } catch {
+    // Outside a JJ workspace, keep temporary state local to the current directory.
+  }
+  return normalize(resolve(root, '.tmp'));
+}
+
+async function jjInit(directory: string) {
+  // In tests, refuse JJ initialization outside $(jj workspace root)/.tmp.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    let workspaceRoot = process.cwd();
+    const tmpDir = workspaceTmpDir();
 
-    try {
-      const { stdout } = await execFileAsync('jj', ['root'], { cwd: directory });
-      workspaceRoot = stdout.trim();
-    } catch {
-      // Outside a jj workspace, treat the current directory as the workspace.
-    }
+    const relativePath = relative(tmpDir, normalized);
+    const outsideTmp = relativePath === '..' ||
+      relativePath.startsWith(`..${sep}`) || isAbsolute(relativePath);
 
-    const workspaceTmp = normalize(resolve(workspaceRoot, '.tmp'));
-    const relativeDirectory = relative(workspaceTmp, normalized);
-
-    if (
-      relativeDirectory === '..' ||
-      relativeDirectory.startsWith(`..${sep}`) ||
-      isAbsolute(relativeDirectory)
-    ) {
+    if (outsideTmp) {
       throw new Error(
-        `Refusing jj git init --no-colocate outside workspace .tmp during tests: ${directory}`
+        `Refusing jj git init outside ${tmpDir} during tests: ${directory}`
       );
     }
   }
@@ -87,9 +87,9 @@ async function jjGitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to run jj git init --no-colocate', {
+  logger.debug('About to run jj git init', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -109,19 +109,19 @@ When you find a bug:
 
 ## Example from Session
 
-Bug: Empty `projectDir` caused `jj git init --no-colocate` in source code
+Bug: Empty `projectDir` caused `jj git init` in source code
 
 **Data flow:**
 1. Test setup → empty string
 2. `Project.create(name, '')`
 3. `WorkspaceManager.createWorkspace('')`
-4. `jj git init --no-colocate` runs in `process.cwd()`
+4. `jj git init` runs in `process.cwd()`
 
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses `jj git init --no-colocate` outside the workspace's `.tmp/` in tests
-- Layer 4: Stack trace logging before `jj git init --no-colocate`
+- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp` in tests, with `$(pwd)/.tmp` as the fallback outside JJ
+- Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
 

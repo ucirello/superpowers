@@ -30,21 +30,18 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_ID] (the exact snapshot the previous review saw)
-    **Tip:** [TIP_ID]
+    **Fix base:** [FIX_BASE_COMMIT_ID] (the end commit the previous review saw)
+    **End:** [END_COMMIT_ID]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix revisions, a stat summary,
-    and the fix diff with surrounding context. Do not re-run Jujutsu commands.
+    Read the diff file once — it contains the fix changes, a stat summary,
+    and the fix diff with surrounding context. Do not re-run JJ commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj --at-operation=@ diff --stat --from [FIX_BASE_ID] --to [TIP_ID]` and
-    `jj --at-operation=@ diff --git --context 10 --from [FIX_BASE_ID] --to [TIP_ID]`.
+    `jj diff --from 'commit_id("[FIX_BASE_COMMIT_ID]")' --to 'commit_id("[END_COMMIT_ID]")' --stat` and
+    `jj diff --from 'commit_id("[FIX_BASE_COMMIT_ID]")' --to 'commit_id("[END_COMMIT_ID]")'`.
 
-    Your review is read-only on this checkout. Do not mutate the working
-    files, working-copy revision, bookmarks, or operation state in any way.
-    Pin every read-only Jujutsu command to `--at-operation=@`; this prevents
-    loading from integrating divergent operation heads and implies ignoring
-    the working copy.
+    Your review is read-only in this workspace. Do not mutate the working-copy
+    change, descriptions, revisions, or bookmarks in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -62,7 +59,7 @@ Subagent (general-purpose):
     re-review code the fix did not touch: if you notice an issue entirely
     outside the fix diff, report it under Out-of-Scope Observations — it
     does not block this task and does not extend the loop. A broad
-    whole-stack review happens after all tasks are complete.
+    whole-work review happens after all tasks are complete.
 
     ## Tests
 
@@ -110,11 +107,9 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_ID]` — exact commit ID snapshot the previous review saw, resolved
-  by the coordinator before dispatch
-- `[TIP_ID]` — exact current commit ID snapshot, resolved by the coordinator
-  before dispatch
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE TIP` printed
+- `[FIX_BASE_COMMIT_ID]` — immutable commit the previous review saw
+- `[END_COMMIT_ID]` — immutable commit containing the fix's final state
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE END` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

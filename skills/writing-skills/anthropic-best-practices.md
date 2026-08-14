@@ -212,15 +212,15 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Jujutsu Change Description Helper skill:**
+**Jujutsu Description Helper skill:**
+
+```yaml  theme={null}
+description: Generate clear Jujutsu descriptions by analyzing jj diffs. Use when the user asks for help writing descriptions or reviewing working-copy changes.
+```
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Repository-local instructions and the syntax and style visible in history take precedence. Apply only compatible Go quality guidance, such as keeping the first line concise and using the body to explain what changed and why; do not impose a fixed type, scope, subject, or body template.
-
-```yaml  theme={null}
-description: Generate repository-conventional change descriptions by analyzing `jj diff`. Use when the user asks for help writing change descriptions or reviewing the current working-copy change.
-```
+Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Otherwise use compatible Go guidance: a clear imperative summary, a concise first line, and an explanatory body when useful. Do not impose a fixed prefix, type, scope, subject, or body.
 
 Avoid vague descriptions like these:
 
@@ -657,21 +657,19 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Change description guidance
+## Jujutsu description guidance
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Repository-local instructions and the syntax and style visible in history take precedence. Apply only compatible Go quality guidance: keep the first line concise, make it complete the repository's expected description of what the change does, omit a trailing period when that matches local style, and use a wrapped body to explain what changed and why when useful. Do not impose a fixed type, scope, subject, body, or template.
+Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Otherwise use compatible Go guidance: a clear imperative summary, a concise first line, and an explanatory body when useful. Do not impose a fixed prefix, type, scope, subject, or body.
 
-Inspect the current change with `jj diff` and its description with `jj log -r @`. Use neutral placeholders when demonstrating structure:
+Inspect the working-copy change with `jj diff`, derive a description from the actual change, and apply it with:
 
-```
-<repository-conventional first line>
-
-<optional explanation of what changed and why>
+```bash
+jj describe -m '<message>'
 ```
 
-Update the working-copy change description with `jj describe`; use `jj new` only when a new child change should be created afterward.
+Replace `<message>` with a description that follows those present repository standards; the placeholder imposes no fixed prefix, type, scope, subject, or body.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

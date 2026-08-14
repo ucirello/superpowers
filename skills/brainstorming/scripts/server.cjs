@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const childProcess = require('child_process');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -194,15 +195,17 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 // ========== Helper Functions ==========
 
 function defaultSessionDir() {
-  let workspaceRoot = process.cwd();
+  let root;
   try {
-    workspaceRoot = require('child_process')
-      .execFileSync('jj', ['workspace', 'root'], { encoding: 'utf-8' })
-      .trim();
+    root = childProcess.execFileSync('jj', ['workspace', 'root'], {
+      cwd: process.cwd(),
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
   } catch (e) {
-    // Support direct invocation without Jujutsu by using a local .tmp directory.
+    root = process.cwd();
   }
-  return path.join(workspaceRoot, '.tmp', 'brainstorm');
+  return path.join(root || process.cwd(), '.tmp', 'rocketclaw', 'brainstorm');
 }
 
 function isFullDocument(html) {

@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before landing changes to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before integration to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before landing changes on the trunk bookmark
+- Before advancing the main bookmark
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,14 +23,17 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Select Jujutsu revisions:**
-```bash
-jj status  # snapshot the current working copy before resolving review boundaries
-FROM_REVISION=$(jj log --no-graph -r 'first_parent(@)' -T 'commit_id ++ "\n"')
-TO_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
-```
+**1. Get JJ revision IDs and the repository root:**
 
-Choose the base revset appropriate to the review: `first_parent(@)` selects one parent even when `@` is a merge commit, `trunk()` selects the trunk revision, and `<bookmark>@<remote>` selects a remote bookmark. Resolve both boundary revsets to their exact commit IDs before dispatch. Never pass workspace-relative revsets such as `@`, `@-`, or `first_parent(@)` as reviewer snapshots; they can resolve differently in another workspace or operation.
+Record `FROM_REVISION` as a full commit ID before implementation starts so a
+multi-change task retains its true base. At review time, use `@` when it contains
+completed work; otherwise use the completed parent of the fresh empty change.
+
+```bash
+REPOSITORY_ROOT=$(jj workspace root)
+FROM_REVISION="$RECORDED_BASE_COMMIT_ID"
+TO_REVISION=$(jj --ignore-working-copy log -r 'exactly(coalesce(@ & ~empty(), @-), 1)' --no-graph -T 'commit_id ++ "\n"')
+```
 
 **2. Dispatch code reviewer subagent:**
 
@@ -39,8 +42,13 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{FROM_REVISION}` - Earlier snapshot's exact commit ID
-- `{TO_REVISION}` - Later snapshot's exact commit ID
+- `{REPOSITORY_ROOT}` - Root reported by `jj workspace root`
+- `{FROM_REVISION}` - Starting revision
+- `{TO_REVISION}` - Ending revision
+
+Compose the request from those repository-derived values using this exact sentence:
+
+`Go review the code changes in {REPOSITORY_ROOT} from {FROM_REVISION} to {TO_REVISION}.`
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -55,14 +63,17 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-FROM_REVISION=$(jj log --no-graph -r 'first_parent(@)' -T 'commit_id ++ "\n"')
-TO_REVISION=$(jj log --no-graph -r '@' -T 'commit_id ++ "\n"')
+REPOSITORY_ROOT=$(jj workspace root)
+FROM_REVISION="$RECORDED_BASE_COMMIT_ID"
+TO_REVISION=$(jj --ignore-working-copy log -r 'exactly(coalesce(@ & ~empty(), @-), 1)' --no-graph -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
+  REQUEST: Go review the code changes in ${REPOSITORY_ROOT} from ${FROM_REVISION} to ${TO_REVISION}.
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
   PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  FROM_REVISION: [exact commit ID printed above]
-  TO_REVISION: [exact commit ID printed above]
+  REPOSITORY_ROOT: ${REPOSITORY_ROOT}
+  FROM_REVISION: ${FROM_REVISION}
+  TO_REVISION: ${TO_REVISION}
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

@@ -7,7 +7,7 @@
 #
 # Options:
 #   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         instead of the workspace-local .tmp. Files persist after server stops.
+#                         instead of .tmp/rocketclaw. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -18,6 +18,7 @@
 #   --background          Force background mode (overrides Codex auto-foreground).
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INVOCATION_DIR="$(pwd -P)"
 
 # Parse arguments
 PROJECT_DIR=""
@@ -99,7 +100,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
+# Windows POSIX-like shells reap nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -114,18 +115,19 @@ umask 077
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
+  PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd -P)" || exit 1
   SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
   # Persist the bound port and key per project so a restart reuses them and an
   # already-open browser tab reconnects to the same URL with a valid cookie.
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
-  if command -v cygpath >/dev/null 2>&1; then
-    WORKSPACE_ROOT="$(cygpath -u "$WORKSPACE_ROOT")"
+  if WORKSPACE_ROOT="$(jj workspace root 2>/dev/null)" && [[ -n "$WORKSPACE_ROOT" ]]; then
+    TEMP_ROOT="${WORKSPACE_ROOT}/.tmp"
+  else
+    TEMP_ROOT="${INVOCATION_DIR}/.tmp"
   fi
-  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm/${SESSION_ID}"
-  EPHEMERAL_SESSION="true"
+  SESSION_DIR="${TEMP_ROOT}/rocketclaw/brainstorm/${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
@@ -135,8 +137,8 @@ SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
 
 # Create fresh session directory with content and state peers
 mkdir -p "${SESSION_DIR}/content" "$STATE_DIR"
-if [[ "${EPHEMERAL_SESSION:-false}" == "true" ]]; then
-  : > "${STATE_DIR}/ephemeral-session"
+if [[ -n "${TEMP_ROOT:-}" ]]; then
+  printf '%s\n' "$TEMP_ROOT" > "${STATE_DIR}/temp-root"
 fi
 
 SERVER_ID=""
