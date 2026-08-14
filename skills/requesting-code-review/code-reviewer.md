@@ -12,6 +12,8 @@ Subagent (general-purpose):
     design patterns, and best practices. Your job is to review completed work
     against its plan or requirements and identify issues before they cascade.
 
+    Go review the code changes in [REPOSITORY_ROOT] from [FROM_REVISION] to [TO_REVISION].
+
     ## What Was Implemented
 
     [DESCRIPTION]
@@ -20,19 +22,35 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## JJ Revisions to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Repository:** [REPOSITORY_ROOT]
+    **From:** [FROM_REVISION]
+    **To:** [TO_REVISION]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy diff --stat --from 'commit_id("[FROM_REVISION]")' --to 'commit_id("[TO_REVISION]")'
+    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy diff --from 'commit_id("[FROM_REVISION]")' --to 'commit_id("[TO_REVISION]")'
     ```
+
+    This is an endpoint-to-endpoint tree comparison: review the net changes from
+    the starting revision's tree to the ending revision's tree.
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in this workspace. Do not mutate working-copy files,
+    the working-copy revision, bookmarks, or repository state. Use
+    `jj --repository [REPOSITORY_ROOT] --ignore-working-copy show`, `diff`, and
+    `log` to inspect history without snapshotting or updating the working copy.
+    If you need a file from another revision, read it directly without creating
+    or moving a workspace:
+
+    ```bash
+    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy file show -r 'commit_id("[REVISION]")' "path/to/file"
+    ```
+
+    Never edit reviewed files or run a command
+    that creates, abandons, rebases, describes, or otherwise modifies changes.
 
     ## You Do Not Dispatch Subagents
 
@@ -113,7 +131,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready to integrate?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -137,8 +155,9 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[REPOSITORY_ROOT]` — root reported by `jj workspace root`
+- `[FROM_REVISION]` — starting revision
+- `[TO_REVISION]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -175,7 +194,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready to integrate: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

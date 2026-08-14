@@ -212,11 +212,15 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Jujutsu Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate clear Jujutsu descriptions by analyzing jj diffs. Use when the user asks for help writing descriptions or reviewing working-copy changes.
 ```
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Otherwise use compatible Go guidance: a clear imperative summary, a concise first line, and an explanatory body when useful. Do not impose a fixed prefix, type, scope, subject, or body.
 
 Avoid vague descriptions like these:
 
@@ -653,39 +657,19 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Jujutsu description guidance
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
+Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Otherwise use compatible Go guidance: a clear imperative summary, a concise first line, and an explanatory body when useful. Do not impose a fixed prefix, type, scope, subject, or body.
 
-Add login endpoint and token validation middleware
-```
+Inspect the working-copy change with `jj diff`, derive a description from the actual change, and apply it with:
 
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
+```bash
+jj describe -m '<message>'
 ```
 
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Replace `<message>` with a description that follows those present repository standards; the placeholder imposes no fixed prefix, type, scope, subject, or body.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

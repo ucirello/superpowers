@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Describe and finalize your JJ change
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,18 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before finalizing the change, not after every edit.
+
+    Before finalizing each change, inspect `jj status`, review your work with
+    `jj diff`, and set its description with `jj describe -m
+    "[CHANGE_DESCRIPTION]"`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and any runtime-provided
+    history-inspection syntax take precedence, including the repository's message
+    syntax. Where compatible with those standards, use Go-quality guidance: a
+    concise summary that explains what the change does and a body that explains
+    why when needed. Do not impose a fixed prefix, type, scope, subject, or body. Use
+    `jj new` to finalize that described change and begin a fresh one; do not
+    create or move bookmarks unless the task explicitly requires it. Replace
+    `[CHANGE_DESCRIPTION]` with a description derived from the actual change.
 
     ## You Do Not Dispatch Subagents
 
@@ -140,7 +151,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Changes created (short commit ID + description)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
