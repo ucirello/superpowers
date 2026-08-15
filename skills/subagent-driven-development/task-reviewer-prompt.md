@@ -15,7 +15,7 @@ Subagent (general-purpose):
   prompt: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
-    not an integration review — a broad whole-work review happens separately after
+    not an integration review — a broad whole-change review happens separately after
     all tasks are complete.
 
     ## What Was Requested
@@ -31,18 +31,18 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base:** [BASE_COMMIT_ID]
-    **End:** [END_COMMIT_ID]
+    **Base revision:** [BASE_REV]
+    **Head revision:** [HEAD_REV]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the change list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not re-run JJ commands.
+    mid-function — and say so in your report. Do not re-run jj commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj diff --from 'commit_id("[BASE_COMMIT_ID]")' --to 'commit_id("[END_COMMIT_ID]")' --stat` and
-    `jj diff --from 'commit_id("[BASE_COMMIT_ID]")' --to 'commit_id("[END_COMMIT_ID]")'`.
+    `jj --ignore-working-copy diff --from [BASE_REV] --to [HEAD_REV] --stat` and
+    `jj --ignore-working-copy diff --from [BASE_REV] --to [HEAD_REV]`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -51,7 +51,7 @@ Subagent (general-purpose):
     checking the call sites is the right method.
 
     Your review is read-only in this workspace. Do not mutate the working-copy
-    change, descriptions, revisions, or bookmarks in any way.
+    change, revisions, bookmarks, or workspace state in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -198,10 +198,10 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_COMMIT_ID]` — immutable commit immediately before this task's changes
-- `[END_COMMIT_ID]` — immutable commit containing the task's final state
+- `[BASE_REV]` — exact content revision recorded before this task, as a commit ID
+- `[HEAD_REV]` — exact reviewed content revision, as a commit ID
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE END` prints the unique
+  package to (`scripts/review-package PLAN_FILE BASE_REV HEAD_REV` prints the unique
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

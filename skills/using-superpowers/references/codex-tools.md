@@ -80,30 +80,35 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create workspaces or finish changes should detect their
-environment with read-only JJ commands before proceeding:
+Skills that create workspaces or finish bookmarks should detect their
+environment with read-only jj commands before proceeding:
 
 ```bash
-ROOT=$(jj workspace root 2>/dev/null)
-jj workspace list
-BOOKMARKS=$(jj bookmark list --revision @ --template 'name ++ "\n"' 2>/dev/null)
+JJ_ROOT=$(jj --ignore-working-copy root)
+WORKSPACES=$(jj --ignore-working-copy workspace list)
+BOOKMARKS=$(jj --ignore-working-copy log --no-graph -r @ -T 'local_bookmarks')
 ```
 
-- A workspace explicitly identified by the user or harness as task-specific → skip creation
-- `BOOKMARKS` empty → no bookmark targets the current change (create one before push/PR)
+- `WORKSPACES` includes the current workspace → reuse it instead of creating another
+- `BOOKMARKS` empty → the working-copy change has no local bookmark; create one before pushing or opening a PR
 
-See `superpowers:using-git-worktrees` Step 0 and `superpowers:finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+Use these signals when applying workspace-creation and change-finishing skills.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark/push operations in an externally managed
-workspace, the agent describes the current change and informs the user to use
-the App's native controls. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Apply compatible Go guidance to clarity and structure: use a concise summary that explains what the change does and add an explanatory body when useful. Do not impose a fixed prefix, type, scope, subject, or body.
+When the sandbox blocks bookmark or push operations in an externally
+managed workspace, leave the working-copy change ready and inform the
+user to use the App's native controls:
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
+- **"Create branch"** — the compatibility UI label for naming the change, then pushing and opening a PR
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, inspect files with `jj status`, and output
-suggested bookmark names, change descriptions, and PR descriptions for the
-user to copy.
+The agent can still run tests and output suggested bookmark names, change
+messages, and PR descriptions. For a change message, inspect repository-local
+instructions and `git log`; repository-local instructions and syntax observed
+there take precedence over compatible Go guidance.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Apply only compatible Go guidance, such as clarity and useful rationale. Do not
+impose fixed or conventional syntax.

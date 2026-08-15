@@ -30,18 +30,18 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_COMMIT_ID] (the end commit the previous review saw)
-    **End:** [END_COMMIT_ID]
+    **Fix base revision:** [FIX_BASE_REV] (the revision the previous review saw)
+    **Head revision:** [HEAD_REV]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the fix changes, a stat summary,
-    and the fix diff with surrounding context. Do not re-run JJ commands.
+    and the fix diff with surrounding context. Do not re-run jj commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj diff --from 'commit_id("[FIX_BASE_COMMIT_ID]")' --to 'commit_id("[END_COMMIT_ID]")' --stat` and
-    `jj diff --from 'commit_id("[FIX_BASE_COMMIT_ID]")' --to 'commit_id("[END_COMMIT_ID]")'`.
+    `jj --ignore-working-copy diff --from [FIX_BASE_REV] --to [HEAD_REV] --stat` and
+    `jj --ignore-working-copy diff --from [FIX_BASE_REV] --to [HEAD_REV]`.
 
     Your review is read-only in this workspace. Do not mutate the working-copy
-    change, descriptions, revisions, or bookmarks in any way.
+    change, revisions, bookmarks, or workspace state in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -59,7 +59,7 @@ Subagent (general-purpose):
     re-review code the fix did not touch: if you notice an issue entirely
     outside the fix diff, report it under Out-of-Scope Observations — it
     does not block this task and does not extend the loop. A broad
-    whole-work review happens after all tasks are complete.
+    whole-change review happens after all tasks are complete.
 
     ## Tests
 
@@ -107,9 +107,9 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_COMMIT_ID]` — immutable commit the previous review saw
-- `[END_COMMIT_ID]` — immutable commit containing the fix's final state
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE END` printed
+- `[FIX_BASE_REV]` — exact content revision the previous review saw, as a commit ID
+- `[HEAD_REV]` — exact reviewed content revision, as a commit ID
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE_REV HEAD_REV` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

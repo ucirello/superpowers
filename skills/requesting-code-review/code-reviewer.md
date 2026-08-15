@@ -12,8 +12,6 @@ Subagent (general-purpose):
     design patterns, and best practices. Your job is to review completed work
     against its plan or requirements and identify issues before they cascade.
 
-    Go review the code changes in [REPOSITORY_ROOT] from [FROM_REVISION] to [TO_REVISION].
-
     ## What Was Implemented
 
     [DESCRIPTION]
@@ -22,35 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## JJ Revisions to Review
+    ## Revisions to Review
 
-    **Repository:** [REPOSITORY_ROOT]
-    **From:** [FROM_REVISION]
-    **To:** [TO_REVISION]
+    **Base:** [BASE_REVISION]
+    **End:** [END_REVISION]
 
     ```bash
-    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy diff --stat --from 'commit_id("[FROM_REVISION]")' --to 'commit_id("[TO_REVISION]")'
-    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy diff --from 'commit_id("[FROM_REVISION]")' --to 'commit_id("[TO_REVISION]")'
+    jj --ignore-working-copy diff --stat --from [BASE_REVISION] --to [END_REVISION]
+    jj --ignore-working-copy diff --from [BASE_REVISION] --to [END_REVISION]
     ```
-
-    This is an endpoint-to-endpoint tree comparison: review the net changes from
-    the starting revision's tree to the ending revision's tree.
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate working-copy files,
-    the working-copy revision, bookmarks, or repository state. Use
-    `jj --repository [REPOSITORY_ROOT] --ignore-working-copy show`, `diff`, and
-    `log` to inspect history without snapshotting or updating the working copy.
-    If you need a file from another revision, read it directly without creating
-    or moving a workspace:
-
-    ```bash
-    jj --repository "[REPOSITORY_ROOT]" --ignore-working-copy file show -r 'commit_id("[REVISION]")' "path/to/file"
-    ```
-
-    Never edit reviewed files or run a command
-    that creates, abandons, rebases, describes, or otherwise modifies changes.
+    Your review is read-only on the reviewed workspace and revisions. Do not mutate source files, the working-copy commit, bookmarks, or workspace metadata. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, `jj --ignore-working-copy log`, and `jj --ignore-working-copy file show` to inspect revisions without snapshotting the working copy. If external tooling requires a materialized revision, ask the controller to provide a separate managed review workspace; do not create one during review.
 
     ## You Do Not Dispatch Subagents
 
@@ -131,7 +113,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to integrate?** [Yes | No | With fixes]
+    **Ready to merge?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -155,9 +137,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[REPOSITORY_ROOT]` — root reported by `jj workspace root`
-- `[FROM_REVISION]` — starting revision
-- `[TO_REVISION]` — ending revision
+- `[BASE_REVISION]` — starting revision
+- `[END_REVISION]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -194,7 +175,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to integrate: With fixes**
+**Ready to merge: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

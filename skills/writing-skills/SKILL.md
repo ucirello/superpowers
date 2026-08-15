@@ -662,10 +662,10 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Supporting files only for tools or heavy reference
 
 **Deployment:**
-- [ ] Describe the change and push it to your fork with Jujutsu (if configured)
+- [ ] Inspect repository-local instructions and `git log`; repository-local instructions and syntax observed there take precedence over compatible Go guidance
 - [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-- [ ] Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Otherwise use compatible Go guidance: a clear summary, a concise first line, and an explanatory body when useful. Do not impose a fixed prefix, type, scope, subject, or body
-- [ ] Use `jj describe -m '<message>'`, then `jj git push`; replace `<message>` with a repository-appropriate description and use the repository's configured bookmark workflow
+- [ ] Apply only compatible Go guidance, such as clarity and useful rationale; do not impose fixed or conventional syntax
+- [ ] Describe the skill change with `jj describe` and push to your fork with `jj git push` (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow

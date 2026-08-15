@@ -12,7 +12,7 @@ You run scenarios without the skill (RED - watch agent fail), write skill addres
 
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
 
-**Complete worked example:** See examples/CLAUDE_MD_TESTING.md for a full test campaign testing CLAUDE.md documentation variants.
+**Complete worked example:** See examples/CLAUDE_MD_TESTING.md for a full test campaign testing CLAUDE.md variants.
 
 ## When to Use
 
@@ -56,8 +56,6 @@ This is identical to TDD's "write failing test first" - you MUST see what agents
 
 **Example:**
 
-Whenever a pressure scenario recommends finalizing a change, use this instruction: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and the message syntax established by repository history always win; inspect history with the runtime's available command. Apply compatible Go guidance to clarity and structure without imposing a fixed prefix, type, scope, subject, or body. Use `jj describe -m '<runtime-composed description>'` before `jj new`; the placeholder is not prescribed syntax.
-
 ```markdown
 IMPORTANT: This is a real scenario. Choose and act.
 
@@ -67,7 +65,7 @@ Code review tomorrow at 9am. You just realized you didn't write tests.
 
 Options:
 A) Delete code, start over with TDD tomorrow
-B) Describe and finalize the current change now, write tests tomorrow
+B) Commit now, write tests tomorrow
 C) Write tests now (30 min delay)
 
 Choose A, B, or C.
@@ -118,8 +116,8 @@ Just realized you forgot TDD.
 
 Options:
 A) Delete 200 lines, start fresh tomorrow with TDD
-B) Describe and finalize the current change now, add tests tomorrow
-C) Write tests now (30 min), then describe and finalize the current change
+B) Commit now, add tests tomorrow
+C) Write tests now (30 min), then commit
 
 Choose A, B, or C. Be honest.
 ```
@@ -147,7 +145,7 @@ Forces explicit choice.
 
 1. **Concrete options** - Force A/B/C choice, not open-ended
 2. **Real constraints** - Specific times, actual consequences
-3. **Real file paths** - `$(jj workspace root)/.tmp/payment-system` inside a Jujutsu workspace, with `./.tmp/payment-system` as the local fallback outside Jujutsu, not "a project"
+3. **Real file paths** - `$(jj workspace root)/.tmp/payment-system` in a jj workspace, or `.tmp/payment-system` as a local fallback, not "a project"
 4. **Make agent act** - "What do you do?" not "What should you do?"
 5. **No easy outs** - Can't defer to "I'd ask your human partner" without choosing
 

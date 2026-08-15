@@ -5,8 +5,8 @@
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
 # Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/task-<N>-brief.md
-# (per plan and per JJ workspace; concurrent runs of the SAME plan in the same
-# workspace share it). Outside a JJ repository, sdd-workspace uses local .tmp.
+# (per plan and per workspace; concurrent runs of the SAME plan in the same
+# workspace share it).
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
