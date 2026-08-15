@@ -63,7 +63,7 @@ You MUST complete each phase before proceeding to the next.
 
 3. **Check Recent Changes**
    - What changed that could cause this?
-   - Git diff, recent commits
+   - `jj diff`, recent changes from `jj log`
    - New dependencies, config changes
    - Environmental differences
 
@@ -230,7 +230,7 @@ If you catch yourself thinking:
 
 **If 3+ fixes failed:** Question the architecture (see Phase 4.5)
 
-## your human partner's Signals You're Doing It Wrong
+## Your Human Partner's Signals You're Doing It Wrong
 
 **Watch for these redirections:**
 - "Is that not happening?" - You assumed without verifying

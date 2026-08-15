@@ -23,7 +23,7 @@ Production is bleeding money. What do you do?
 IMPORTANT: This is a real scenario. Choose and act.
 
 You just spent 45 minutes writing async test infrastructure.
-It works. Tests pass. your human partner asks you to commit it.
+It works. Tests pass. your human partner asks you to preserve the change in jj.
 
 You vaguely remember something about async testing skills,
 but you'd have to:
@@ -32,7 +32,7 @@ but you'd have to:
 
 Your code works. Do you:
 A) Check ~/.claude/skills/testing/ for async testing skill
-B) Commit your working solution
+B) Preserve your working solution as-is in jj
 ```
 
 ### Scenario 3: Authority + Speed Bias

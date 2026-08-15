@@ -3,7 +3,7 @@ name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 ---
 
-# Finishing a Development Branch
+# Finishing a Development Bookmark
 
 ## Overview
 
@@ -28,49 +28,68 @@ Tests failing (<N> failures). Must fix before completing:
 ## Step 2: Detect Environment
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-# Capture now, while still inside the workspace — Step 5 changes directory
-# before cleanup (Step 6) needs this value
-WORKTREE_PATH=$(git rev-parse --show-toplevel)
+jj status
+# Capture these while still inside the workspace. Later steps may operate
+# from another workspace, but cleanup still needs these values.
+WORKSPACE_ROOT=$(jj workspace root)
+WORKSPACE_NAME=$(jj workspace list --no-pager -T 'if(target.current_working_copy(), name ++ "\n")')
+FEATURE_REVISION=$(jj log -r @- --no-graph -T 'commit_id ++ "\n"')
+jj workspace list
+jj bookmark list --revision "$FEATURE_REVISION"
 ```
+
+Use `jj workspace list` to determine whether this repository has another
+workspace from which integration and cleanup can safely run. Use
+`jj bookmark list --revision "$FEATURE_REVISION"` to identify a feature
+bookmark pointing to the completed revision. After `jj commit`, the finalized
+content is at `@-`; `@` is the new empty working-copy revision. Jujutsu has no
+active bookmark or detached HEAD. A bookmark gives the completed revision a
+stable local name, but its captured commit ID is sufficient for local
+integration.
 
 This determines which menu to show and how cleanup works:
 
 | State | Menu | Cleanup |
 |-------|------|---------|
-| `GIT_DIR == GIT_COMMON` (normal repo) | Standard 3 options | No worktree to clean up |
-| `GIT_DIR != GIT_COMMON`, named branch | Standard 3 options | Provenance-based (see Step 6) |
-| `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 2 options (no merge) | Externally managed — leave in place |
+| Only one workspace | Standard 3 options | No secondary workspace to clean up |
+| Multiple workspaces, owned path | Standard 3 options | Provenance-based (see Step 6) |
+| Multiple workspaces, host-owned path | Standard 3 options | Leave in place |
 
-## Step 3: Determine Base Branch
+## Step 3: Determine Base Bookmark and Remotes
 
-The base branch is whatever this work forked from — usually named in the
-plan, the conversation, or the branch's upstream. If it is not already
-known, ask: "This branch split from <your best guess> - is that correct?"
+The base bookmark is whatever this work forked from — usually named in the
+plan, the conversation, or the feature bookmark's tracked remote. If it is
+not already known, ask: "This work split from <your best guess> - is that correct?"
 Confirm before merging: merging into the wrong base is expensive to undo.
+
+Determine and confirm the remote that supplies the base bookmark and the
+remote that should receive a push. They may differ. Infer them from tracked
+bookmarks, repository configuration, the plan, or the conversation; ask if
+either is ambiguous. Record them as `<base-remote>` and `<push-remote>` rather
+than assuming a remote name.
 
 ## Step 4: Present Options
 
-**Normal repo and named-branch worktree — present exactly these 3 options:**
+**Bookmarked work — present exactly these 3 options:**
 
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
+1. Merge back to <base-bookmark> locally
 2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
+3. Keep the bookmark as-is (I'll handle it later)
 
 Which option?
 ```
 
-**Detached HEAD — present exactly these 2 options:**
+**Unbookmarked revision — present exactly these 3 options:**
 
 ```
-Implementation complete. You're on a detached HEAD (externally managed workspace).
+Implementation complete. This revision has no feature bookmark.
 
-1. Push as new branch and create a Pull Request
-2. Keep as-is (I'll handle it later)
+1. Merge back to <base-bookmark> locally
+2. Push under a new bookmark and create a Pull Request
+3. Keep as-is (I'll handle it later)
 
 Which option?
 ```
@@ -85,49 +104,88 @@ is theirs.
 
 ### Option 1: Merge Locally
 
+Select another workspace from `jj workspace list` as the integration
+workspace. If there is no other workspace, use the current workspace and do
+not clean it up in Step 6. Then fetch and inspect the base bookmark before
+integrating:
+
 ```bash
-# Get main repo root for CWD safety
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
-cd "$MAIN_ROOT"
+cd "<integration-workspace-root>"
+jj git fetch --remote <base-remote>
+jj status
+jj log -r '<base-bookmark>|<base-bookmark>@<base-remote>|<feature-revision>'
+```
 
-# Merge first — verify success before removing anything
-git checkout <base-branch>
-git pull
-git merge <feature-branch>
+Stop and resolve any conflicted bookmark or unexpected remote movement. If
+the base bookmark is an ancestor of the feature revision, this is a
+fast-forward integration: advance the base bookmark directly to the captured
+feature revision. Do not try to edit a revision that is checked out in the
+feature workspace from a second workspace.
 
-# Verify tests on merged result
+```bash
+jj bookmark set <base-bookmark> -r <feature-revision>
+```
+
+If the base and feature revisions have diverged, create a merge change with
+both as parents, then advance the base bookmark to that merge change:
+
+```bash
+jj new <base-bookmark> <feature-revision>
+jj describe
+jj bookmark set <base-bookmark> -r @
+```
+
+At the `jj describe` composition site, inspect the repository's existing
+change descriptions with `jj log` and infer its current conventions. Follow
+the local style when it is clear; otherwise apply the Go guidance to the
+specific merge's purpose and details. Do not impose a fixed prefix, type,
+scope, capitalization, or subject syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Then verify the integrated result in the workspace that holds it: use the
+feature workspace for a fast-forward, or the integration workspace for a
+merge change.
+
+```bash
 <test command>
 ```
 
-If tests fail on the merged result: stop, leave the worktree and branch in
-place, and investigate — nothing has been pushed, so the merge is local
+If tests fail on the merged result: stop, leave the workspace and bookmarks
+in place, and investigate — nothing has been pushed, so the merge is local
 and recoverable.
 
-Once the merged result is green: clean up the worktree (Step 6), then
-delete the branch:
+Once the merged result is green: clean up the feature workspace (Step 6),
+then, if one exists, forget the local feature bookmark without scheduling a
+remote deletion. An unbookmarked revision integrates directly by its captured
+commit ID and needs no bookmark:
 
 ```bash
-git branch -d <feature-branch>
+jj bookmark forget <feature-bookmark>
 ```
 
 ### Option 2: Push and Create PR
 
 ```bash
-git push -u origin <feature-branch>
-# From a detached HEAD, name the new branch on the remote:
-# git push origin HEAD:refs/heads/<new-branch>
+jj git push --remote <push-remote> --bookmark <feature-bookmark>
+# For an unbookmarked revision, or when choosing a new bookmark for the PR:
+jj git push --remote <push-remote> --named <new-bookmark>=<feature-revision>
 ```
 
-Then create the pull/merge request against <base-branch> with the forge's
+A bookmark is required for push/PR behavior. The PR flow may use an existing
+feature bookmark or choose a new bookmark name.
+
+Then create the pull/merge request against <base-bookmark> with the forge's
 tooling — its CLI if one is available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
-Keep the worktree — your human partner iterates on PR feedback there.
+Keep the workspace — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+For bookmarked work, report: "Keeping bookmark <name>. Workspace preserved at <path>."
+For unbookmarked work, report: "Keeping revision <feature-revision>. Workspace preserved at <path>."
+A bookmark is required only if your human partner wants the kept revision to
+have a stable local name.
 
 ### If your human partner asks to discard the work
 
@@ -136,78 +194,104 @@ work away. Confirm first:
 
 ```
 This will permanently delete:
-- Branch <name>
-- All commits: <commit-list>
-- Worktree at <path>
+- Bookmark <name>, if any
+- All revisions: <revision-list>
+- Workspace at <path>
 
 Type 'discard' to confirm.
 ```
 
-Wait for that exact confirmation. When it arrives:
+Wait for that exact confirmation. Before changing anything, record the exact
+revision IDs in `<base-bookmark>..<feature-revision>`. When confirmation
+arrives, forget the feature bookmark without scheduling a remote deletion:
 
 ```bash
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
-cd "$MAIN_ROOT"
+cd "<integration-workspace-root>"
+# If the completed revision has a feature bookmark:
+jj bookmark forget <feature-bookmark>
 ```
 
-Then clean up the worktree (Step 6) and force-delete the branch:
+Then clean up the feature workspace (Step 6) and abandon only the recorded
+revisions:
 
 ```bash
-git branch -D <feature-branch>
+jj abandon <recorded-revision-ids>
 ```
 
 ## Step 6: Cleanup Workspace
 
 **Runs for Option 1 and confirmed discards.** Options 2 and 3 always
-preserve the worktree. Both callers have already changed directory to the
-main repo root — worktree removal must run from outside the worktree —
-and use the `GIT_DIR`/`GIT_COMMON`/`WORKTREE_PATH` values captured in
-Step 2, from before that directory change.
+preserve the workspace. Both callers have already changed to another
+workspace when one exists and use the `WORKSPACE_ROOT` value captured in
+Step 2, from before that directory change. They also use the captured
+`WORKSPACE_NAME` when unregistering it.
 
-**If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
+**If this is the repository's only workspace:** There is no secondary
+workspace to clean up. Done.
 
-**If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`:** Superpowers
-created this worktree — we own cleanup:
-
-```bash
-git worktree remove "$WORKTREE_PATH"
-git worktree prune  # Self-healing: clean up any stale registrations
-```
-
-**If removal is refused** (`contains modified or untracked files`): the
-worktree holds files that exist nowhere else — uncommitted plans, notes,
-or scratch work. Never `--force` on your own initiative. Show your human
-partner what is at stake and ask:
+**If `WORKSPACE_ROOT` is under `.rocketclaw/workspaces/`, `.workspaces/`, or
+`workspaces/`, or exactly matches the using-git-worktrees pattern
+`.tmp/jj-workspace-$WORKSPACE_NAME-<numeric-pid>-<numeric-counter>/workspace`:**
+We own cleanup. Do not treat any other `.tmp` path as owned. First inspect the
+working-copy revision:
 
 ```bash
-git -C "$WORKTREE_PATH" status --porcelain -uall
+jj -R "$WORKSPACE_ROOT" status
+jj -R "$WORKSPACE_ROOT" diff --summary -r @
 ```
 
+If `@` contains changes that were not included in the integrated revision,
+or files that exist nowhere else, never delete them on your own initiative.
+Show your human partner what is at stake and ask:
+
 ```
-Worktree removal refused — these files were never committed:
+Workspace cleanup found changes that were not integrated:
 
 <file list>
 
-1. Commit them to <branch> before cleanup
-2. Move them into <main repo root>
+1. Record them in a revision before cleanup
+2. Move them into <integration workspace root>
 3. Delete them (unrecoverable)
 
 Which?
 ```
 
-Carry out the choice, then remove the worktree.
+At the change-description composition site for option 1, inspect the
+repository's existing change descriptions with `jj log` and infer its current
+conventions. Follow the local style when it is clear; otherwise apply the Go
+guidance to the specific change's purpose and details. Do not impose a fixed
+prefix, type, scope, capitalization, or subject syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Carry out the choice. Once the workspace contains nothing that would be
+lost, explain that ignored files are not visible to `jj status` or `jj diff`
+and ask for explicit confirmation before recursive deletion:
+
+```
+Workspace cleanup will recursively delete <path>. Ignored files may exist
+there even though jj status and jj diff are clean.
+
+Type 'cleanup' to confirm.
+```
+
+Wait for that exact confirmation. Then unregister the captured workspace name
+and delete its directory from outside it:
+
+```bash
+jj workspace forget "$WORKSPACE_NAME"
+rm -rf -- "$WORKSPACE_ROOT"
+```
 
 **Otherwise:** The host environment owns this workspace — leave it in
 place. If your platform provides a workspace-exit tool, use it.
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | yes | - | - | yes |
+| Option | Merge | Push | Keep Workspace | Cleanup Bookmark |
+|--------|-------|------|----------------|------------------|
+| 1. Merge locally | yes | - | - | yes, if any |
 | 2. Create PR | - | yes | yes | - |
 | 3. Keep as-is | - | - | yes | - |
-| Discard (explicit request only) | - | - | - | yes (force) |
+| Discard (explicit request only) | - | - | - | yes, if any (abandon revisions) |
 
 ## Common Rationalizations
 
@@ -217,9 +301,9 @@ place. If your platform provides a workspace-exit tool, use it.
 | "They obviously want it merged" | Integration is your human partner's decision. Present the menu and wait. |
 | "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
-| "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
-| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
-| "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show your human partner and ask. |
-| "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
-| "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
-| "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
+| "The PR is up, so the workspace is clutter now" | PR feedback gets fixed in that workspace. It stays until the work lands. |
+| "This other workspace looks stale — I'll clean it too" | Clean up only workspaces under `.rocketclaw/workspaces/`, `.workspaces/`, `workspaces/`, or the exact owned `.tmp/jj-workspace-$WORKSPACE_NAME-<numeric-pid>-<numeric-counter>/workspace` pattern. Everything else belongs to the host. |
+| "The working copy is already a revision, so cleanup cannot lose anything" | Ignored or otherwise unincluded files can still exist only in that workspace. Explicit human confirmation is required before recursive deletion even when JJ reports a clean workspace. |
+| "The merged-result failure is probably flaky" | A failing merged result stops everything. Bookmarks and workspace stay put while you investigate. |
+| "The base bookmark is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
+| "The push was rejected — overriding the remote will fix it" | A rejected push means the remote moved. Fetch, inspect, and resolve the bookmark state; do not bypass Jujutsu's push safety checks. |

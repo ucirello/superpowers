@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**jj Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive jj change descriptions by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing working-copy changes. Repository-local instructions and syntax observed in `git log` take precedence over compatible Go guidance. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Do not impose fixed or conventional syntax.
 ```
 
 Avoid vague descriptions like these:
@@ -655,37 +655,43 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Commit message format
 
-Generate commit messages following these examples:
+Inspect repository-local instructions and `git log` first; repository-local instructions and syntax observed there take precedence over compatible Go guidance.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Apply only compatible Go guidance, such as clarity and useful rationale; do not impose fixed or conventional syntax. For example:
 
 **Example 1:**
 Input: Added user authentication with JWT tokens
 Output:
 ```
-feat(auth): implement JWT-based authentication
+Implement JWT-based authentication
 
-Add login endpoint and token validation middleware
+Add login and token validation so authenticated requests can be
+verified consistently.
 ```
 
 **Example 2:**
 Input: Fixed bug where dates displayed incorrectly in reports
 Output:
 ```
-fix(reports): correct date formatting in timezone conversion
+Correct report date formatting
 
-Use UTC timestamps consistently across report generation
+Use UTC timestamps so reports render dates consistently across
+time zones.
 ```
 
 **Example 3:**
 Input: Updated dependencies and refactored error handling
 Output:
 ```
-chore: update dependencies and refactor error handling
+Update dependencies and standardize error handling
 
 - Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
+- Use one error response format so clients can handle failures consistently
 ```
 
-Follow this style: type(scope): brief description, then detailed explanation.
+Follow the repository-local syntax rather than requiring a fixed prefix, type, scope, subject form, or body format.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
