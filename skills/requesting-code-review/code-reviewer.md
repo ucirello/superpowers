@@ -20,19 +20,30 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Jujutsu Range to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_REVSET]
+    **Head:** [HEAD_REVSET]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    BASE_REVSET='[BASE_REVSET]'
+    HEAD_REVSET='[HEAD_REVSET]'
+    jj --ignore-working-copy log -r "exactly(($BASE_REVSET), 1) | exactly(($HEAD_REVSET), 1)"
+    jj --ignore-working-copy log -r "($BASE_REVSET)..($HEAD_REVSET)"
+    jj --ignore-working-copy diff --stat --from "$BASE_REVSET" --to "$HEAD_REVSET"
+    jj --ignore-working-copy diff --from "$BASE_REVSET" --to "$HEAD_REVSET"
     ```
+
+    Each endpoint revset must resolve to exactly one revision. The `jj log` range lists revisions reachable from the head but not the base; `jj diff --from/--to` compares the endpoint trees.
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in this workspace. Do not rewrite revisions, edit
+    the current working-copy revision, create another workspace, or change
+    bookmark state. Use `jj --ignore-working-copy file show`, `jj
+    --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj
+    --ignore-working-copy log` to inspect revisions without snapshotting or
+    updating the current working copy. Never run `jj edit` in this workspace.
 
     ## You Do Not Dispatch Subagents
 
@@ -86,6 +97,8 @@ Subagent (general-purpose):
     If you find issues with the plan itself rather than the implementation,
     say so.
 
+    If you evaluate, edit, or recommend a change description or commit message, runtime repository instructions and the repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, keep the description clear and concise and preserve useful rationale rather than merely restating the diff. Do not impose a fixed message, prefix, type, scope, subject, body, or template.
+
     ## Output Format
 
     ### Strengths
@@ -113,7 +126,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready to land?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -137,8 +150,10 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REVSET]` — revset resolving to the starting revision
+- `[HEAD_REVSET]` — revset resolving to the ending revision
+
+When composing a change description or editing, validating, or recommending a commit message, runtime repository instructions and the repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, keep the description clear and concise and preserve useful rationale rather than merely restating the diff. Do not impose a fixed message, prefix, type, scope, subject, body, or template.
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -175,7 +190,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready to land: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

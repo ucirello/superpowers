@@ -80,29 +80,57 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish changes should detect their
+environment with read-only Jujutsu commands before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root 2>/dev/null)
+WORKSPACES=$(jj --ignore-working-copy workspace list)
+CURRENT_BOOKMARKS=$(jj --ignore-working-copy bookmark list --revision @)
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- Temporary storage belongs under `$(jj workspace root)/.tmp/`. If
+  `jj workspace root` fails, the directory is not a Jujutsu workspace; do not
+  substitute another VCS's workflow commands, and use the current directory's `.tmp/`
+  only as the fallback.
+- `WORKSPACES` identifies all attached working copies. A current workspace does
+  not prevent creating another with `jj workspace add <workspace-path>`.
+- Empty `CURRENT_BOOKMARKS` is normal: Jujutsu changes do not require bookmarks.
+  Create or move a bookmark only when a named reference is needed for transport.
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
+See `using-jj-workspaces` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
-the user to use the App's native controls:
+Jujutsu automatically snapshots working-copy edits. Before finishing, inspect
+them with `jj status` and `jj diff`, then set the current change description with
+`jj describe` or finish it and start a new change with `jj commit`.
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Runtime repository instructions and the repository-prescribed `git log` syntax
+take precedence. Where compatible, keep the description clear and concise and
+preserve useful rationale rather than merely restating the diff. Do not impose
+a fixed message, prefix, type, scope, subject, body, or template. Apply this
+policy whenever composing, editing, validating, or recommending a change
+description.
+
+For command-line transport, create a neutral bookmark with
+`jj bookmark create <bookmark> --revision <revision>` or move an existing one
+with `jj bookmark move <bookmark> --to <revision>`, push it with
+`jj git push --bookmark <bookmark> --remote <remote>`, and use `gh` for the pull
+request. In a non-colocated repository, invoke GitHub CLI as
+`GIT_DIR=$(jj git root) gh <command>`.
+
+When an externally managed sandbox blocks bookmark or transport operations, the
+agent leaves all work snapshotted and described, then informs the user to use
+the App's native controls:
+
+- **"Create branch"** — creates the App-managed transport reference, then push
+  and open the pull request via the App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+The agent can still run tests, inspect snapshots, set change descriptions, and
+output suggested bookmark names, change descriptions, and pull-request
+descriptions.

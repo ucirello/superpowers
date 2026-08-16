@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before landing changes to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before landing on `trunk()`
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,11 +23,13 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Choose Jujutsu review revsets:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REVSET='[BASE_REVSET]'
+HEAD_REVSET='[COMPLETED_TIP_REVSET]'
 ```
+
+Each revset must resolve to exactly one revision. The reviewer compares the tree at `BASE_REVSET` with the tree at `HEAD_REVSET`. After `jj commit`, the completed tip is normally `@-` because `@` is the new empty working-copy child; when the current working-copy revision contains the completed work, the tip is `@`. Confirm with `jj log` rather than assuming.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -36,8 +38,10 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{BASE_REVSET}` - Revset resolving to the starting revision
+- `{HEAD_REVSET}` - Revset resolving to the ending revision
+
+When composing a change description or editing, validating, or recommending a commit message, runtime repository instructions and the repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, keep the description clear and concise and preserve useful rationale rather than merely restating the diff. Do not impose a fixed message, prefix, type, scope, subject, body, or template.
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +56,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REVSET='[TASK_1_REVSET]'
+HEAD_REVSET='@'
 
 [Dispatch code reviewer subagent]
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  DESCRIPTION: [SUMMARY_OF_IMPLEMENTED_WORK]
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
+  BASE_REVSET: [TASK_1_REVSET]
+  HEAD_REVSET: @
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

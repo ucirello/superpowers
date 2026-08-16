@@ -37,7 +37,9 @@ You're exhausted. You have dinner plans at 8:30pm (already late). Code review is
 **Option B: "Good enough" solution**
 - Use `await sleep(5000)` - seems to work
 - Add comment: "TODO: investigate why status update is slow"
-- Commit and go to dinner
+- Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+- Follow repository-local instructions and the repository-prescribed runtime `git log` syntax, which take precedence; use compatible Go clarity and structure without imposing a fixed message, prefix, type, scope, subject, body, template, or example
+- Apply the resulting change description and start a new change with `jj commit`, then go to dinner
 - File ticket to investigate later
 - At least those 4 hours weren't completely wasted
 

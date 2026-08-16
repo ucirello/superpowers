@@ -2,9 +2,9 @@
 
 Reference example of extracting, structuring, and bulletproofing a critical skill.
 
-## Source Material
+## Framework
 
-Extracted debugging framework from `~/.claude/CLAUDE.md`:
+The debugging framework includes:
 - 4-phase systematic process (Investigation → Pattern Analysis → Hypothesis → Implementation)
 - Core mandate: ALWAYS find root cause, NEVER fix symptoms
 - Rules designed to resist time pressure and rationalization
@@ -99,7 +99,7 @@ Bulletproof skill that:
 
 ## Key Insight
 
-**Most important bulletproofing:** Anti-patterns section showing exact shortcuts that feel justified in the moment. When Claude thinks "I'll just add this one quick fix", seeing that exact pattern listed as wrong creates cognitive friction.
+**Most important bulletproofing:** Anti-patterns section showing exact shortcuts that feel justified in the moment. When you think "I'll just add this one quick fix", seeing that exact pattern listed as wrong creates cognitive friction.
 
 ## Usage Example
 
@@ -112,8 +112,3 @@ When encountering a bug:
 
 **Time investment:** 5-10 minutes
 **Time saved:** Hours of symptom-whack-a-mole
-
----
-
-*Created: 2025-10-03*
-*Purpose: Reference example for skill extraction and bulletproofing*

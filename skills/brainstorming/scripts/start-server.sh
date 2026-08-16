@@ -6,8 +6,8 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
-#                         instead of /tmp. Files persist after server stops.
+#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
+#                         instead of the workspace's .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -18,6 +18,7 @@
 #   --background          Force background mode (overrides Codex auto-foreground).
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INVOCATION_DIR="$PWD"
 
 # Parse arguments
 PROJECT_DIR=""
@@ -94,6 +95,14 @@ is_windows_like_shell() {
   return 1
 }
 
+to_posix_path() {
+  if is_windows_like_shell && command -v cygpath >/dev/null 2>&1; then
+    cygpath -u "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
 # Some environments reap detached/background processes. Auto-foreground when detected.
 if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   FOREGROUND="true"
@@ -114,13 +123,22 @@ umask 077
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+  if [[ "$PROJECT_DIR" != /* && ! "$PROJECT_DIR" =~ ^[A-Za-z]:[\\/] ]]; then
+    PROJECT_DIR="${INVOCATION_DIR}/${PROJECT_DIR}"
+  fi
+  PROJECT_DIR="$(to_posix_path "$PROJECT_DIR")"
+  SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
   # Persist the bound port and key per project so a restart reuses them and an
   # already-open browser tab reconnects to the same URL with a valid cookie.
-  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-port"
-  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-token"
+  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
+  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
+  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || true)"
+  if [[ -z "$WORKSPACE_ROOT" ]]; then
+    WORKSPACE_ROOT="$INVOCATION_DIR"
+  fi
+  WORKSPACE_ROOT="$(to_posix_path "$WORKSPACE_ROOT")"
+  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"

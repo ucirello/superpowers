@@ -2,9 +2,9 @@
 # Stop the brainstorm server and clean up
 # Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Only deletes session directory if it's
-# under /tmp (ephemeral). Persistent directories (.superpowers/) are
-# kept so mockups can be reviewed later.
+# Kills the server process. Only deletes ephemeral .tmp/brainstorm-*
+# sessions. Persistent directories (.rocketclaw/) are kept so mockups
+# can be reviewed later.
 
 SESSION_DIR="$1"
 
@@ -109,10 +109,10 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Only delete ephemeral /tmp directories
-  if [[ "$SESSION_DIR" == /tmp/* ]]; then
-    rm -rf "$SESSION_DIR"
-  fi
+  # Only delete the launcher's workspace-local ephemeral session directories.
+  case "$SESSION_DIR" in
+    */.tmp/brainstorm-*) rm -rf "$SESSION_DIR" ;;
+  esac
 
   echo '{"status": "stopped"}'
 else
