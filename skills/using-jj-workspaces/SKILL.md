@@ -1,5 +1,5 @@
 ---
-name: using-git-worktrees
+name: using-jj-workspaces
 description: Use when starting feature work that needs isolation from the current workspace or before executing implementation plans - ensures an isolated Jujutsu workspace exists via native tools or jj workspace fallback
 ---
 
@@ -11,7 +11,7 @@ Ensure work happens in an isolated Jujutsu workspace. Prefer the harness's nativ
 
 **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to JJ. Never fight the harness.
 
-**Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated Jujutsu workspace."
+**Announce at start:** "I'm using the using-jj-workspaces skill to set up an isolated Jujutsu workspace."
 
 ## Step 0: Detect Existing Isolation
 

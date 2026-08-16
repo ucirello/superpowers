@@ -659,39 +659,10 @@ Inspect repository-local instructions and `git log` first; repository-local inst
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Apply only compatible Go guidance, such as clarity and useful rationale; do not impose fixed or conventional syntax. For example:
-
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-Implement JWT-based authentication
-
-Add login and token validation so authenticated requests can be
-verified consistently.
-```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-Correct report date formatting
-
-Use UTC timestamps so reports render dates consistently across
-time zones.
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-Update dependencies and standardize error handling
-
-- Upgrade lodash to 4.17.21
-- Use one error response format so clients can handle failures consistently
-```
-
-Follow the repository-local syntax rather than requiring a fixed prefix, type, scope, subject form, or body format.
+Apply only compatible Go guidance, such as clarity and useful rationale; do not
+impose a fixed message, prefix, type, scope, subject, body, template, or
+example. Inspect the current change with `jj diff`, then apply the dynamically
+composed description with `jj describe -m "[change description]"`.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

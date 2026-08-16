@@ -15,7 +15,7 @@ Subagent (general-purpose):
     **Plan to review:** [PLAN_FILE_PATH]
     **Spec for reference:** [SPEC_FILE_PATH]
 
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and syntax observed at runtime always win. When validating or recommending JJ descriptions, apply only compatible Go guidance: require a clear, concise subject and an explanatory body when it improves understanding, without imposing any fixed prefix, capitalization, tense, Conventional Commit form, subject/body/trailer syntax, message, or example.
+    Runtime repository instructions and the repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. When validating or recommending Jujutsu descriptions, apply only compatible Go guidance for clarity and useful rationale, without imposing a fixed message, prefix, type, scope, subject, body, template, or example.
 
     ## What to Check
 

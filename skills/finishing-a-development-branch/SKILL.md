@@ -33,17 +33,23 @@ jj status
 # from another workspace, but cleanup still needs these values.
 WORKSPACE_ROOT=$(jj workspace root)
 WORKSPACE_NAME=$(jj workspace list --no-pager -T 'if(target.current_working_copy(), name ++ "\n")')
-FEATURE_REVISION=$(jj log -r @- --no-graph -T 'commit_id ++ "\n"')
+FEATURE_REVSET='<confirmed-completed-tip>'
+FEATURE_REVISION=$(jj log -r "exactly(($FEATURE_REVSET), 1)" --no-graph -T 'commit_id ++ "\n"')
 jj workspace list
 jj bookmark list --revision "$FEATURE_REVISION"
 ```
 
+Determine from `jj status` and `jj log` whether the completed tip is `@` or
+`@-`, and set `FEATURE_REVSET` accordingly before capturing its exact commit
+ID. After `jj commit`, the finalized content is normally at `@-` and `@` is the
+new empty working-copy revision; if the completed work remains in the current
+working-copy revision, the tip is `@`. Confirm rather than assuming.
+
 Use `jj workspace list` to determine whether this repository has another
 workspace from which integration and cleanup can safely run. Use
 `jj bookmark list --revision "$FEATURE_REVISION"` to identify a feature
-bookmark pointing to the completed revision. After `jj commit`, the finalized
-content is at `@-`; `@` is the new empty working-copy revision. Jujutsu has no
-active bookmark or detached HEAD. A bookmark gives the completed revision a
+bookmark pointing to the completed revision. Jujutsu has no active bookmark or
+detached HEAD. A bookmark gives the completed revision a
 stable local name, but its captured commit ID is sufficient for local
 integration.
 
@@ -135,11 +141,11 @@ jj describe
 jj bookmark set <base-bookmark> -r @
 ```
 
-At the `jj describe` composition site, inspect the repository's existing
-change descriptions with `jj log` and infer its current conventions. Follow
-the local style when it is clear; otherwise apply the Go guidance to the
-specific merge's purpose and details. Do not impose a fixed prefix, type,
-scope, capitalization, or subject syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+At the `jj describe` composition site, runtime repository instructions and the
+repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for
+clarity and useful rationale. Do not impose a fixed message, prefix, type,
+scope, subject, body, or template; use `[change description]` as the neutral
+command placeholder.
 
 Then verify the integrated result in the workspace that holds it: use the
 feature workspace for a fast-forward, or the integration workspace for a
@@ -230,7 +236,7 @@ Step 2, from before that directory change. They also use the captured
 workspace to clean up. Done.
 
 **If `WORKSPACE_ROOT` is under `.rocketclaw/workspaces/`, `.workspaces/`, or
-`workspaces/`, or exactly matches the using-git-worktrees pattern
+`workspaces/`, or exactly matches the using-jj-workspaces pattern
 `.tmp/jj-workspace-$WORKSPACE_NAME-<numeric-pid>-<numeric-counter>/workspace`:**
 We own cleanup. Do not treat any other `.tmp` path as owned. First inspect the
 working-copy revision:
@@ -256,11 +262,11 @@ Workspace cleanup found changes that were not integrated:
 Which?
 ```
 
-At the change-description composition site for option 1, inspect the
-repository's existing change descriptions with `jj log` and infer its current
-conventions. Follow the local style when it is clear; otherwise apply the Go
-guidance to the specific change's purpose and details. Do not impose a fixed
-prefix, type, scope, capitalization, or subject syntax. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+At the change-description composition site for option 1, runtime repository
+instructions and the repository-prescribed `git log` syntax take precedence.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and useful rationale.
+Do not impose a fixed message, prefix, type, scope, subject, body, or template;
+use `[change description]` as the neutral command placeholder.
 
 Carry out the choice. Once the workspace contains nothing that would be
 lost, explain that ignored files are not visible to `jj status` or `jj diff`

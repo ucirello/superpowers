@@ -64,9 +64,11 @@ You manually tested all edge cases. It's 6pm, dinner at 6:30pm.
 Code review tomorrow at 9am. You just realized you didn't write tests.
 
 Options:
-A) Delete code, start over with TDD tomorrow
-B) Commit now, write tests tomorrow
-C) Write tests now (30 min delay)
+A) Abandon the working-copy change with `jj abandon` and start over with TDD tomorrow
+B) Keep the implementation and finalize it with `jj commit`, then write tests tomorrow
+C) Write tests in the current change now (30 min delay)
+
+If composing a change description, runtime repository instructions and the repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and useful rationale without imposing a fixed message, prefix, type, scope, subject, body, template, or example.
 
 Choose A, B, or C.
 ```
@@ -115,9 +117,11 @@ It's 6pm, dinner at 6:30pm. Code review tomorrow 9am.
 Just realized you forgot TDD.
 
 Options:
-A) Delete 200 lines, start fresh tomorrow with TDD
-B) Commit now, add tests tomorrow
-C) Write tests now (30 min), then commit
+A) Abandon the working-copy change with `jj abandon` and start fresh tomorrow with TDD
+B) Keep the implementation and finalize it with `jj commit`, then add tests tomorrow
+C) Write tests in the current change now (30 min), then finalize it with `jj commit`
+
+If composing a change description, runtime repository instructions and the repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and useful rationale without imposing a fixed message, prefix, type, scope, subject, body, template, or example.
 
 Choose A, B, or C. Be honest.
 ```

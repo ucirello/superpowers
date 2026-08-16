@@ -66,12 +66,14 @@ Each agent gets:
 For write-capable agents, create one jj workspace per agent from the same base
 change. **Never dispatch multiple write-capable agents into the same workspace.**
 Use a run-scoped namespace for every workspace name and put the workspace paths
-under `$(jj workspace root)/.tmp`. If no Jujutsu repository exists, use `.tmp`
-in the current directory. This keeps concurrent runs separate without using
-OS-global temporary storage:
+under `$(jj workspace root)/.tmp`. First verify that repository ignore rules
+exclude `.tmp/`, as required by superpowers:using-jj-workspaces. If no Jujutsu
+repository exists, isolated Jujutsu workspaces cannot be created; use `.tmp` in
+the current directory only for local temporary artifacts, report the missing
+repository, and do not dispatch write-capable agents as if they were isolated:
 
 ```bash
-root=$(jj workspace root 2>/dev/null || pwd -P)
+root=$(jj workspace root) || exit 1
 base=$(jj log -r @ --no-graph -T 'change_id ++ "\n"')
 run_root="$root/.tmp/parallel-agents-$(date +%s)-$$"
 mkdir -p "$run_root"
@@ -137,7 +139,7 @@ Before returning, inspect repository-local instructions and recent `git log` mes
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Apply only compatible Go guidance, such as clarity and useful rationale. Do not impose fixed or conventional syntax. Do not add agent attribution.
+Apply only compatible Go guidance, such as clarity and useful rationale. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example. Use `[change description]` as a neutral command placeholder. Do not add agent attribution.
 
 Return: Summary of what you found and what you fixed, plus the jj change ID from
 `jj log -r @ --no-graph -T 'change_id ++ "\n"'`.

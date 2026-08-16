@@ -47,11 +47,11 @@ Subagent (general-purpose):
     While iterating, run the focused test for what you're changing; run the
     full suite once before finishing the change, not after every edit.
 
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Treat that guidance as semantic rather than a fixed subject syntax: local
-    repository conventions win. For Go code, keep changes focused, formatted,
-    idiomatic, documented where exported APIs require it, and validated with
-    the repository's established Go checks.
+    Runtime repository instructions and the repository-prescribed `git log`
+    syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and
+    useful rationale; do not impose a fixed message, prefix, type, scope,
+    subject, body, or template. Use `[change description]` as a neutral command
+    placeholder.
 
     ## You Do Not Dispatch Subagents
 
@@ -129,9 +129,12 @@ Subagent (general-purpose):
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
     you — your report is the test evidence. Describe and finish the fix change.
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Local repository conventions win over fixed examples. Then reply with the same short
-    status contract as your first report.
+    Runtime repository instructions and the repository-prescribed `git log`
+    syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and
+    useful rationale; do not impose a fixed message, prefix, type, scope,
+    subject, body, or template. Use `[change description]` as a neutral command
+    placeholder. Then reply with the same short status contract as your first
+    report.
 
     ## Report Format
 

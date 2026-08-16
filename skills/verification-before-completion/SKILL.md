@@ -109,7 +109,7 @@ Before composing a change description, inspect repository-local instructions and
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Use the result as the JJ change description with `jj describe`. Apply Go guidance only where compatible, and preserve the required semantic content without imposing a fixed syntax or template. JJ tracks the working copy directly, so do not assume a staging step or a separate commit step.
+Use the result as the Jujutsu change description with `jj describe -m '[change description]'` or the configured editor. Apply Go guidance only where compatible, and preserve the required semantic content without imposing a fixed message, prefix, type, scope, subject, body, template, or example. Jujutsu tracks the working copy directly, so do not assume a staging step.
 
 ## When To Apply
 

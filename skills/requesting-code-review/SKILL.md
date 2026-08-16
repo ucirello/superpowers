@@ -23,11 +23,17 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get jj revisions:**
+**1. Get Jujutsu revisions:**
 ```bash
-BASE_REVISION=$(jj log -r '@-' --no-graph -T 'commit_id ++ "\n"')  # or main@origin
-END_REVISION=$(jj log -r '@' --no-graph -T 'commit_id ++ "\n"')
+BASE_REVSET='[BASE_REVSET]'
+END_REVSET='[COMPLETED_TIP_REVSET]'
+BASE_REVISION=$(jj log -r "exactly(($BASE_REVSET), 1)" --no-graph -T 'commit_id ++ "\n"')
+END_REVISION=$(jj log -r "exactly(($END_REVSET), 1)" --no-graph -T 'commit_id ++ "\n"')
 ```
+
+Confirm both endpoints with `jj log`. After `jj commit`, the completed tip is
+normally `@-` because `@` is the new empty child; when completed work remains
+in the working-copy revision, the tip is `@`.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -38,6 +44,12 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
 - `{BASE_REVISION}` - Starting revision
 - `{END_REVISION}` - Ending revision
+
+If the review evaluates, edits, validates, or recommends a change description,
+runtime repository instructions and the repository-prescribed `git log` syntax
+take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and useful
+rationale; do not impose a fixed message, prefix, type, scope, subject, body,
+template, or example.
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,8 +64,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_REVISION=$(jj log -r 'description(substring:"Task 1")' --limit 1 --no-graph -T 'commit_id ++ "\n"')
-END_REVISION=$(jj log -r '@' --no-graph -T 'commit_id ++ "\n"')
+BASE_REVISION='[BASE_REVISION]'
+END_REVISION='[COMPLETED_TIP_REVISION]'
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types

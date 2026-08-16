@@ -13,7 +13,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-jj-workspaces` skill at execution time.
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -124,21 +124,15 @@ Expected: PASS
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Before composing the description, inspect repository-local instructions and recent
-`git log` subjects to determine the syntax in use. Those repository conventions
-override generic guidance. Where compatible, use the Go guidance: write a short
-subject without a trailing period that completes "This change modifies Go to ...";
-add a body explaining the problem and why this change solves it; wrap body text at
-about 72 characters; and state applicable issue relationships explicitly. Do not
-impose a fixed prefix, type, scope, issue keyword, or format that the repository does
-not use.
+Runtime repository instructions and the repository-prescribed `git log` syntax
+take precedence. Apply only compatible Go guidance for clarity and useful
+rationale; do not impose a fixed message, prefix, type, scope, subject, body,
+template, issue syntax, or example.
 
 ```bash
 jj status
 jj diff -- tests/path/test.py src/path/file.py
-jj describe -m "<repository-style subject describing the semantic change>
-
-<body explaining the problem and why this change solves it>"
+jj describe -m "[change description]"
 jj new
 ```
 ````

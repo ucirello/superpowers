@@ -124,7 +124,7 @@ digraph process {
 ## Setup
 
 Ensure the work happens in an isolated jj workspace. The functional routing
-name remains superpowers:using-git-worktrees; use it to create one or verify
+name is superpowers:using-jj-workspaces; use it to create one or verify
 the existing one, then operate with jj workspace and revision concepts.
 Never start implementation with the working-copy change directly on a shared
 or protected bookmark without your human partner's explicit consent.
@@ -287,10 +287,11 @@ commit ID changes as content is edited.
   fix-loop rounds 1-3 resume this agent.
 - Never dispatch multiple implementation subagents in parallel (conflicts).
 - Every implementation dispatch that asks the implementer to describe or
-  finish a change must include this exact guidance: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-  Local repository syntax wins over generic examples. For Go changes, require
-  focused, formatted, idiomatic code, appropriate exported-API documentation,
-  and the repository's established Go validation.
+  finish a change must say that runtime repository instructions and the
+  repository-prescribed `git log` syntax take precedence, and include this
+  exact guidance: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and useful
+  rationale; do not impose a fixed message, prefix, type, scope, subject, body,
+  or template. Use `[change description]` as a neutral command placeholder.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
