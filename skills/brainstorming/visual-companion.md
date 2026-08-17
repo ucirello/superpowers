@@ -55,7 +55,7 @@ without repeating it.
 
 **Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.rocketclaw/brainstorm/` for the session directory.
 
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go to `$(jj workspace root)/.tmp/rocketclaw/` and get cleaned up; outside a jj repository, the fallback is `.tmp/rocketclaw/` under the current directory. Remind the user to add `.rocketclaw/` to `.gitignore` if it is not already there.
+**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go to `$(jj workspace root)/.tmp/rocketclaw/` and get cleaned up; outside a jj repository, the fallback is `.tmp/rocketclaw/` under the current directory. Remind the user to add `.rocketclaw/` and `.tmp/` to `.gitignore` if they are not already there.
 
 **Launching the server by platform:**
 

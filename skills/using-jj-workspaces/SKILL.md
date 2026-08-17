@@ -116,7 +116,7 @@ jj -R "$JJ_ROOT" status
 
 `jj file list` snapshots the containing workspace. If it prints the probe path, `.tmp/` is not ignored. Add `.tmp/` to the repository's root `.gitignore`, verify the probe again, and record that ignore change separately before proceeding.
 
-When composing the description for that ignore-rule change, inspect the actual change with `jj status` and `jj diff`, locate and read applicable repository instructions with `jj file list` and `jj file show -r @ <instruction-path>`, and inspect recent descriptions with `jj log`. Local conventions take precedence over compatible Go guidance. Derive syntax, vocabulary, structure, and detail from those sources and the actual diff; do not impose a fixed format.
+When composing the description for that ignore-rule change, inspect the actual change with `jj status` and `jj diff`, locate and read applicable repository instructions with `jj file list` and `jj file show -r @ <instruction-path>`, and inspect recent descriptions with `jj log`. Runtime repository instructions and repository-prescribed `git log` syntax take precedence over compatible Go guidance. Derive syntax, vocabulary, structure, and detail from those sources and the actual diff; do not impose a fixed format.
 
 > Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
@@ -142,7 +142,7 @@ If creation fails because the name is registered, inspect `jj workspace list` an
 
 The new workspace has its own working-copy change. Give it a description before implementation without imposing a message format.
 
-Locate and read applicable repository instructions with `jj file list` and `jj file show -r @ <instruction-path>`, inspect recent descriptions with `jj log`, and inspect the working-copy change with `jj status` and `jj diff`. Local conventions take precedence over compatible Go guidance. Derive syntax, vocabulary, structure, and detail from those sources and the intended work; do not impose a fixed format.
+Locate and read applicable repository instructions with `jj file list` and `jj file show -r @ <instruction-path>`, inspect recent descriptions with `jj log`, and inspect the working-copy change with `jj status` and `jj diff`. Runtime repository instructions and repository-prescribed `git log` syntax take precedence over compatible Go guidance. Derive syntax, vocabulary, structure, and detail from those sources and the intended work; do not impose a fixed format.
 
 > Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 

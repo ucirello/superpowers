@@ -87,8 +87,8 @@ async function jjInit(directory: string) {
 **Run and capture:**
 ```bash
 WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
-mkdir -p "$WORKSPACE_ROOT/.rocketclaw/artifact"
-npm test 2>&1 | tee "$WORKSPACE_ROOT/.rocketclaw/artifact/jj-init-debug.log" | grep 'DEBUG jj git init'
+mkdir -p "$WORKSPACE_ROOT/.tmp"
+npm test 2>&1 | tee "$WORKSPACE_ROOT/.tmp/jj-init-debug.log" | grep 'DEBUG jj git init'
 ```
 
 **Analyze stack traces:**

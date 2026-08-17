@@ -184,6 +184,13 @@ tooling — its CLI if one is available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
+For GitHub CLI in a non-colocated Jujutsu workspace, expose the backing Git
+repository without switching VCS workflows:
+
+```bash
+GIT_DIR="$(jj git root)" gh pr create <repository-required-options>
+```
+
 Keep the workspace — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
@@ -201,15 +208,13 @@ work away. Confirm first:
 ```
 This will permanently delete:
 - Bookmark <name>, if any
-- All revisions: <revision-list>
 - Workspace at <path>
 
 Type 'discard' to confirm.
 ```
 
-Wait for that exact confirmation. Before changing anything, record the exact
-revision IDs in `<base-bookmark>..<feature-revision>`. When confirmation
-arrives, forget the feature bookmark without scheduling a remote deletion:
+Wait for that exact confirmation. When confirmation arrives, forget the
+feature bookmark without scheduling a remote deletion:
 
 ```bash
 cd "<integration-workspace-root>"
@@ -217,12 +222,10 @@ cd "<integration-workspace-root>"
 jj bookmark forget <feature-bookmark>
 ```
 
-Then clean up the feature workspace (Step 6) and abandon only the recorded
-revisions:
-
-```bash
-jj abandon <recorded-revision-ids>
-```
+Then clean up the feature workspace (Step 6). Do not abandon revisions: other
+bookmarks or workspaces may still refer to descendants, and removing this
+workspace and bookmark is the Jujutsu equivalent of discarding the local
+feature reference.
 
 ## Step 6: Cleanup Workspace
 

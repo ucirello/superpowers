@@ -89,7 +89,7 @@ WORKSPACES=$(jj --ignore-working-copy workspace list)
 BOOKMARKS=$(jj --ignore-working-copy log --no-graph -r @ -T 'local_bookmarks')
 ```
 
-- `WORKSPACES` includes the current workspace → reuse it instead of creating another
+- `WORKSPACES` identifies registered workspaces, but does not by itself prove the current workspace is task-isolated; apply the ownership and path checks in `using-jj-workspaces` before deciding to reuse it
 - `BOOKMARKS` empty → the working-copy change has no local bookmark; create one before pushing or opening a PR
 
 Use these signals when applying workspace-creation and change-finishing skills.
