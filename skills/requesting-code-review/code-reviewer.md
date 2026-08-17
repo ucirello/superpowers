@@ -20,19 +20,25 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Revisions to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_REVISION]
+    **End:** [END_REVISION]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --ignore-working-copy diff --stat --from [BASE_REVISION] --to [END_REVISION]
+    jj --ignore-working-copy diff --from [BASE_REVISION] --to [END_REVISION]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only on the reviewed workspace and revisions. Do not mutate source files, the working-copy commit, bookmarks, or workspace metadata. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, `jj --ignore-working-copy log`, and `jj --ignore-working-copy file show` to inspect revisions without snapshotting the working copy. If external tooling requires a materialized revision, ask the controller to provide a separate managed review workspace; do not create one during review.
+
+    If you evaluate, edit, validate, or recommend a change description,
+    runtime repository instructions and the repository-prescribed `git log`
+    syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and
+    useful rationale; do not impose a fixed message, prefix, type, scope,
+    subject, body, template, or example.
 
     ## You Do Not Dispatch Subagents
 
@@ -137,8 +143,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REVISION]` — starting revision
+- `[END_REVISION]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
