@@ -20,19 +20,55 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Jujutsu Revisions to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_REVISION]
+    **Tip:** [TIP_REVISION]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --ignore-working-copy log -r '[BASE_REVISION]..[TIP_REVISION]'
+    jj --ignore-working-copy diff --from [BASE_REVISION] --to [TIP_REVISION] --stat
+    jj --ignore-working-copy diff --from [BASE_REVISION] --to [TIP_REVISION]
     ```
+
+    The `BASE..TIP` revset selects revisions that are ancestors of the tip
+    but not ancestors of the base. It is for reviewing history. The `--from`
+    and `--to` form compares the file contents at the two endpoints and is for
+    reviewing the aggregate diff. The endpoint symbols may be change IDs,
+    unambiguous commit IDs, or bookmarks; a non-divergent change ID is preferred
+    because it follows the change across rewrites.
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in this workspace. Do not edit the working copy,
+    change its working-copy commit, rewrite revisions, or move bookmarks. Most
+    `jj` commands snapshot the working copy by default, including inspection
+    commands, so always pass the global `--ignore-working-copy` option. Use
+    `jj --ignore-working-copy show [REVISION]`, `jj --ignore-working-copy diff`,
+    and `jj --ignore-working-copy log` to inspect a revision, differences, and
+    history without snapshotting this workspace.
+
+    If you only need one file from another revision, prefer
+    `jj --ignore-working-copy file show -r [REVISION] [PATH]`. If tools require
+    files on disk, create a separate Jujutsu workspace rather than running
+    `jj edit`, `jj new`, `jj prev`, or `jj next` here. Put it under
+    `$(jj workspace root)/.tmp`; if the workspace root cannot be resolved, use
+    the local `./.tmp` directory instead:
+
+    ```bash
+    REVIEW_ROOT=$(jj --ignore-working-copy workspace root 2>/dev/null) || REVIEW_ROOT=.
+    REVIEW_PARENT="$REVIEW_ROOT/.tmp"
+    mkdir -p "$REVIEW_PARENT"
+    jj --ignore-working-copy workspace add --name [UNIQUE_REVIEW_NAME] --revision [REVISION] "$REVIEW_PARENT/[UNIQUE_REVIEW_NAME]"
+    ```
+
+    A workspace has its own working-copy commit, so this leaves the original
+    workspace's working copy unchanged. `workspace add --revision` creates an
+    empty working-copy change on top of the requested revision, with matching
+    file contents. The auxiliary workspace is only for inspection; do not edit
+    it. When cleanup is authorized, forget it with
+    `jj --ignore-working-copy workspace forget [UNIQUE_REVIEW_NAME]` and remove
+    its directory separately.
 
     ## You Do Not Dispatch Subagents
 
@@ -137,8 +173,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[BASE_REVISION]` — starting revision whose file contents form the comparison base
+- `[TIP_REVISION]` — ending revision whose file contents are being reviewed
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

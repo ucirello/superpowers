@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before integration to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before integration into the project trunk
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,21 +23,23 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Identify the Jujutsu revisions:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REVISION=$(jj --ignore-working-copy log --no-graph -r 'first_parent(@)' -T 'change_id ++ "\n"')  # or trunk()
+TIP_REVISION=$(jj --ignore-working-copy log --no-graph -r '@' -T 'change_id ++ "\n"')
 ```
 
-**2. Dispatch code reviewer subagent:**
+`@` is the working-copy commit in the current workspace. Prefer change IDs for review endpoints because they remain associated with a change when its commit is rewritten; a bookmark such as `trunk()` or an unambiguous commit ID is also a valid revision.
 
-Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
+**2. Dispatch a general-purpose code reviewer subagent:**
+
+Dispatch a code reviewer subagent, filling the template at [code-reviewer.md](code-reviewer.md)
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{BASE_REVISION}` - Starting revision whose file contents form the comparison base
+- `{TIP_REVISION}` - Ending revision whose file contents are being reviewed
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +54,15 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+jj --ignore-working-copy log -r '::@'  # locate the earlier change by description
+BASE_REVISION=<task-1-change-id>
+TIP_REVISION=$(jj --ignore-working-copy log --no-graph -r '@' -T 'change_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  BASE_REVISION: <task-1-change-id>
+  TIP_REVISION: <task-2-change-id>
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

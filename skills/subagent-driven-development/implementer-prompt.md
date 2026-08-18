@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Finalize the current Jujutsu change and start a new empty change
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,20 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before finalizing the change, not after every edit.
+
+    ## Finalize the Jujutsu Change
+
+    Follow repository-local runtime instructions first. Inspect `jj status`,
+    `jj diff`, and the repository's existing description style before editing
+    the current change description. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Repository-local instructions and commit-message syntax observed in `git log`
+    at runtime always win. Apply only compatible Go guidance to message quality,
+    clarity, and structure.
+    Use `jj describe -m '<message composed from the standards above>'`,
+    verify the resulting description with `jj log -r @ --no-graph`, and run
+    `jj new` to leave a new empty working-copy change for subsequent work. Do
+    not impose a fixed type, scope, subject pattern, or description template.
 
     ## You Do Not Dispatch Subagents
 
@@ -122,7 +135,12 @@ Subagent (general-purpose):
     Fix them, re-run the tests that cover the amended code, and append a fix
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Then reply with the same short
+    you — your report is the test evidence. Update and verify the Jujutsu
+    change description before running `jj new`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Repository-local instructions and commit-message syntax observed in `git log`
+    at runtime always win. Apply only compatible Go guidance to message quality,
+    clarity, and structure;
+    do not impose a fixed type, scope, subject pattern, or template. Then reply with the same short
     status contract as your first report.
 
     ## Report Format
@@ -140,7 +158,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Changes created (short change ID + description first line)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

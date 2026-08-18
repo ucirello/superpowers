@@ -212,11 +212,14 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate clear Jujutsu change descriptions by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing working-copy changes.
 ```
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Repository-local instructions and commit-message syntax observed in `git log` at runtime always win. Apply only compatible Go guidance to message quality, clarity, and structure; do not impose a fixed type, scope, prefix, subject, body, or template.
 
 Avoid vague descriptions like these:
 
@@ -653,42 +656,14 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Jujutsu change description guidance
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
-
-Add login endpoint and token validation middleware
-```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Repository-local instructions and commit-message syntax observed in `git log` at runtime always win. Apply only compatible Go guidance to message quality, clarity, and structure. Inspect the change with `jj diff`, then use `jj describe` to record a concise summary. Add a body when the rationale, behavior, or important implementation details are not clear from the summary. Follow the repository's existing language and structure rather than imposing fixed types, scopes, prefixes, subjects, bodies, or templates.
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Repository history helps agents match the desired style and level of detail without imposing conventions that do not belong to the project.
 
 ### Conditional workflow pattern
 

@@ -80,29 +80,41 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish changes should detect their
+environment with read-only Jujutsu commands before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root 2>/dev/null || pwd -P)
+WORKSPACES=$(jj --ignore-working-copy workspace list)
+BOOKMARKS=$(jj --ignore-working-copy bookmark list -r @)
+TMP_ROOT="$WORKSPACE_ROOT/.tmp"
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- `WORKSPACES` lists the registered workspaces. Use it together with the
+  current workspace name, root, and session context; reuse the current
+  workspace only when it is already task-specific isolation. A successful
+  `jj workspace root` alone does not distinguish the primary workspace from an
+  isolated one.
+- `BOOKMARKS` empty → create a bookmark before pushing or opening a PR.
+- Store temporary files under `TMP_ROOT`. If `jj workspace root` is
+  unavailable, the command above falls back to the current directory's
+  `.tmp`; do not use OS-global temporary storage.
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+See RocketClaw's workspace-isolation and change-finishing guidance for how
+each workflow uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
-the user to use the App's native controls:
+When the sandbox blocks bookmark or push operations in an externally managed
+workspace, the agent describes the current change and informs the user to use
+the App's native controls:
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
+- **"Create branch"** — lets the App name and publish the work via its native UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+The agent can still run verification, review `jj diff`, and output suggested
+bookmark names, change descriptions, and PR descriptions.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Repository-local instructions and commit-message syntax observed in `git log` at runtime always
+win; apply compatible Go guidance to quality, clarity, and structure without
+imposing a fixed prefix, template, or syntax.

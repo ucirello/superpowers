@@ -7,16 +7,29 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, self-contained changes.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated Jujutsu workspace, it should be created via the `superpowers:using-git-worktrees` skill at execution time. The routing identifier is compatibility-only; its workflow must use `jj workspace`.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+
+## Jujutsu Workflow
+
+Jujutsu snapshots the working copy automatically. Plans must not include staging commands. Treat each task as one current Jujutsu change: after implementation and verification, describe it with `jj describe`, then run `jj new` to start the next change. Use bookmarks only when a named pointer is needed; create, move, or set them with `jj bookmark create`, `jj bookmark move`, or `jj bookmark set`. Use `jj workspace add`, `jj workspace list`, and `jj workspace forget` for isolated working copies.
+
+Every generated plan instruction that composes a Jujutsu change description must include this exact sentence immediately before its command: "Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards." Repository-local instructions and commit-message syntax observed in `git log` at runtime always win. Apply only compatible Go guidance to message quality, clarity, and structure, and do not impose fixed types, scopes, prefixes, subjects, bodies, or templates.
+
+Put all global temporary storage under `$(jj workspace root)/.tmp`. When no Jujutsu workspace is available, fall back to the current directory:
+
+```bash
+temp_root="$(jj workspace root 2>/dev/null || pwd)/.tmp"
+mkdir -p "$temp_root"
+```
 
 ## Scope Check
 
@@ -49,7 +62,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Commit" - step
+- "Finalize the current Jujutsu change and start the next change" - step
 
 ## Plan Document Header
 
@@ -120,11 +133,17 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Describe the current change and start the next change**
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and commit-message syntax observed in `git log` at runtime always win. Apply only compatible Go guidance to message quality, clarity, and structure; do not impose a fixed type, scope, prefix, subject, body, or template.
+
+The message must describe the specific feature implemented in this task.
 
 ```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+jj describe -m "<message composed from the standards above>"
+jj new
 ```
 ````
 
@@ -154,7 +173,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/rocketclaw/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
