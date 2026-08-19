@@ -7,16 +7,18 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent changes with clear descriptions.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, independently reviewable changes.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-jj-workspaces` skill at execution time.
+**Context:** If working in an isolated Jujutsu workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+
+**Temporary files:** Put repository-local temporary files under `$(jj workspace root)/.tmp`; if the workspace root cannot be resolved, use the local `.tmp` directory. Never use a global temporary directory.
 
 ## Scope Check
 
@@ -49,7 +51,9 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe the change and start a new change" - step
+- "Describe and validate the current change, then start the next change" - step
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax takes precedence; use only compatible Go guidance where local history does not decide the wording or structure. Each description must accurately explain the independently reviewable change and its purpose.
 
 ## Plan Document Header
 
@@ -120,21 +124,9 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Describe the change and start a new change**
+- [ ] **Step 5: Describe and validate the change**
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
-Runtime repository instructions and the repository-prescribed `git log` syntax
-take precedence. Apply only compatible Go guidance for clarity and useful
-rationale; do not impose a fixed message, prefix, type, scope, subject, body,
-template, issue syntax, or example.
-
-```bash
-jj status
-jj diff -- tests/path/test.py src/path/file.py
-jj describe -m "[change description]"
-jj new
-```
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax takes precedence; use only compatible Go guidance where local history does not decide the wording or structure. Include the exact `jj describe` invocation with the description composed for this task; do not prescribe or reuse a fixed syntax, message, template, or example. Include `jj diff` and `jj status` checks that validate the intended files and content, then include `jj new` to begin the next change.
 ````
 
 ## No Placeholders
@@ -163,7 +155,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/rocketclaw/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 

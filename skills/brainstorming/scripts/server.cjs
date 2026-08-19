@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const childProcess = require('child_process');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -194,17 +195,16 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 // ========== Helper Functions ==========
 
 function defaultSessionDir() {
-  let root = process.cwd();
   try {
-    root = require('child_process').execFileSync('jj', ['workspace', 'root'], {
-      cwd: root,
+    const root = childProcess.execFileSync('jj', ['--ignore-working-copy', 'workspace', 'root'], {
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore']
-    }).trim() || root;
+    }).trim();
+    if (root) return path.join(root, '.tmp', 'brainstorm-' + process.pid);
   } catch (e) {
-    // Outside a jj repository, keep temporary state local to the current directory.
+    // Use a local workspace when the process is not inside a Jujutsu repository.
   }
-  return path.join(root, '.tmp', 'rocketclaw', 'brainstorm');
+  return path.resolve('.tmp', 'brainstorm-' + process.pid);
 }
 
 function isFullDocument(html) {

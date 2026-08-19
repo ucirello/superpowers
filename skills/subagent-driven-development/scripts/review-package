@@ -1,58 +1,53 @@
 #!/usr/bin/env bash
 # Generate a review package: change list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using recorded endpoint revisions keeps multi-change tasks intact.
+# call. Using the recorded per-task BASE (not a relative guess) keeps
+# multi-change tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE_REV HEAD_REV [OUTFILE]
-# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base8>..<head8>.diff
+# Usage: review-package PLAN_FILE BASE TIP [OUTFILE]
+# Default OUTFILE: <workspace-root>/.tmp/subagent-driven-development/
+# <plan-basename>/review-<base-id>..<tip-id>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE_REV HEAD_REV [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE TIP [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
-base_rev=$2
-head_rev=$3
+base=$2
+tip=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-if ! base_count=$(jj log -r "$base_rev" --no-graph --count); then
-  echo "bad BASE revision: $base_rev" >&2
-  exit 2
-fi
-[ "$base_count" -eq 1 ] \
-  || { echo "BASE revision must resolve to exactly one revision: $base_rev" >&2; exit 2; }
-if ! head_count=$(jj log -r "$head_rev" --no-graph --count); then
-  echo "bad HEAD revision: $head_rev" >&2
-  exit 2
-fi
-[ "$head_count" -eq 1 ] \
-  || { echo "HEAD revision must resolve to exactly one revision: $head_rev" >&2; exit 2; }
+base_count=$(jj --ignore-working-copy log --count -r "$base" 2>/dev/null) \
+  || { echo "bad BASE: $base" >&2; exit 2; }
+tip_count=$(jj --ignore-working-copy log --count -r "$tip" 2>/dev/null) \
+  || { echo "bad TIP: $tip" >&2; exit 2; }
+[ "$base_count" -eq 1 ] || { echo "BASE must resolve to one revision: $base" >&2; exit 2; }
+[ "$tip_count" -eq 1 ] || { echo "TIP must resolve to one revision: $tip" >&2; exit 2; }
+base_id=$(jj --ignore-working-copy log --no-graph -r "$base" -T 'commit_id.shortest(12) ++ "\n"')
+tip_id=$(jj --ignore-working-copy log --no-graph -r "$tip" -T 'commit_id.shortest(12) ++ "\n"')
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  base_id=$(jj log -r "$base_rev" --no-graph -T 'commit_id.shortest(8)')
-  head_id=$(jj log -r "$head_rev" --no-graph -T 'commit_id.shortest(8)')
-  out="$dir/review-${base_id}..${head_id}.diff"
+  out="$dir/review-${base_id}..${tip_id}.diff"
 fi
 
 {
-  echo "# Review package: ${base_rev}..${head_rev}"
+  echo "# Review package: ${base}..${tip}"
   echo
   echo "## Changes"
-  jj log --no-graph -r "${base_rev}..${head_rev}" \
-    -T 'change_id.shortest(8) ++ " " ++ description.first_line() ++ "\n"'
+  jj --ignore-working-copy log --no-graph -r "${base}..${tip}"
   echo
   echo "## Files changed"
-  jj diff --from "$base_rev" --to "$head_rev" --stat
+  jj --ignore-working-copy diff --stat --from "$base" --to "$tip"
   echo
   echo "## Diff"
-  jj diff --from "$base_rev" --to "$head_rev" --context 10
+  jj --ignore-working-copy diff --git --context 10 --from "$base" --to "$tip"
 } > "$out"
 
-changes=$(jj log --no-graph -r "${base_rev}..${head_rev}" --count)
+changes=$(jj --ignore-working-copy log --count -r "${base}..${tip}")
 echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

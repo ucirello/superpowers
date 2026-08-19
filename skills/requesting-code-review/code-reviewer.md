@@ -20,25 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Revisions to Review
+    ## Jujutsu Revisions to Review
 
-    **Base:** [BASE_REVISION]
-    **End:** [END_REVISION]
+    **From (excluded):** [FROM_REV]
+    **To (included):** [TO_REV]
 
     ```bash
-    jj --ignore-working-copy diff --stat --from [BASE_REVISION] --to [END_REVISION]
-    jj --ignore-working-copy diff --from [BASE_REVISION] --to [END_REVISION]
+    jj --ignore-working-copy diff --stat --from [FROM_REV] --to [TO_REV]
+    jj --ignore-working-copy diff --from [FROM_REV] --to [TO_REV]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on the reviewed workspace and revisions. Do not mutate source files, the working-copy commit, bookmarks, or workspace metadata. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, `jj --ignore-working-copy log`, and `jj --ignore-working-copy file show` to inspect revisions without snapshotting the working copy. If external tooling requires a materialized revision, ask the controller to provide a separate managed review workspace; do not create one during review.
-
-    If you evaluate, edit, validate, or recommend a change description,
-    runtime repository instructions and the repository-prescribed `git log`
-    syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and
-    useful rationale; do not impose a fixed message, prefix, type, scope,
-    subject, body, template, or example.
+    Your review is read-only in this workspace. Do not mutate the working copy commit, bookmarks, or repository state. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` to inspect revisions without snapshotting the working copy. If you need a working copy of another revision and are allowed to add a workspace, use a separate path under `$(jj workspace root)/.tmp` (for example, `jj workspace add "$(jj workspace root)/.tmp/review-[REVISION]" -r [REVISION]`); if the workspace root is unavailable, fall back to `.tmp/review-[REVISION]`. Never alter this workspace for the review.
 
     ## You Do Not Dispatch Subagents
 
@@ -119,7 +113,7 @@ Subagent (general-purpose):
 
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready to land?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -143,8 +137,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_REVISION]` — starting revision
-- `[END_REVISION]` — ending revision
+- `[FROM_REV]` — starting revision, excluded from the review
+- `[TO_REV]` — ending revision, included in the review
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -181,7 +175,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready to land: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

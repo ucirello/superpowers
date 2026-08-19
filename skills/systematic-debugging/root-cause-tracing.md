@@ -2,7 +2,7 @@
 
 ## Overview
 
-Bugs often manifest deep in the call stack (Jujutsu repository initialized in the wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
+Bugs often manifest deep in the call stack (`jj git init` in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
 
 **Core principle:** Trace backward through the call chain until you find the original trigger, then fix at the source.
 
@@ -39,7 +39,7 @@ Error: jj git init failed in ~/project/packages/core
 ### 2. Find Immediate Cause
 **What code directly causes this?**
 ```typescript
-await execFileAsync('jj', ['git', 'init', '--no-colocate'], { cwd: projectDir });
+await execFileAsync('jj', ['git', 'init'], { cwd: projectDir });
 ```
 
 ### 3. Ask: What Called This?
@@ -69,7 +69,7 @@ When you can't trace manually, add instrumentation:
 
 ```typescript
 // Before the problematic operation
-async function jjInit(directory: string) {
+async function jjGitInit(directory: string) {
   const stack = new Error().stack;
   console.error('DEBUG jj git init:', {
     directory,
@@ -78,7 +78,7 @@ async function jjInit(directory: string) {
     stack,
   });
 
-  await execFileAsync('jj', ['git', 'init', '--no-colocate'], { cwd: directory });
+  await execFileAsync('jj', ['git', 'init'], { cwd: directory });
 }
 ```
 
@@ -86,9 +86,7 @@ async function jjInit(directory: string) {
 
 **Run and capture:**
 ```bash
-WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
-mkdir -p "$WORKSPACE_ROOT/.tmp"
-npm test 2>&1 | tee "$WORKSPACE_ROOT/.tmp/jj-init-debug.log" | grep 'DEBUG jj git init'
+npm test 2>&1 | grep 'DEBUG jj git init'
 ```
 
 **Analyze stack traces:**
@@ -113,7 +111,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Symptom:** `.jj` created in `packages/core/` (source code)
 
 **Trace chain:**
-1. `jj git init --no-colocate` runs in `process.cwd()` ← empty cwd parameter
+1. `jj git init` runs in `process.cwd()` ← empty cwd parameter
 2. WorkspaceManager called with empty projectDir
 3. Session.create() passed empty string
 4. Test accessed `context.tempDir` before beforeEach
@@ -126,8 +124,8 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses Jujutsu initialization outside `$(jj workspace root)/.tmp`, falling back to local `.tmp`
-- Layer 4: Stack trace logging before Jujutsu initialization
+- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` as a fallback
+- Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle
 

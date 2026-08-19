@@ -1,4 +1,5 @@
 .worktrees/
+.tmp/
 .private-journal/
 .claude/
 .rocketclaw/

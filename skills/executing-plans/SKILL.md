@@ -16,7 +16,7 @@ Load plan, review critically, execute all tasks, report when complete.
 ## The Process
 
 ### Step 1: Load and Review Plan
-1. Ensure an isolated workspace: use superpowers:using-jj-workspaces to create one or verify the existing one
+1. Ensure an isolated workspace: use superpowers:using-git-worktrees to create one or verify the existing one
 2. Read plan file
 3. Review critically - identify any questions or concerns about the plan
 4. If concerns: Raise them with your human partner before starting
@@ -61,4 +61,4 @@ After all tasks complete and verified:
 - Don't skip verifications
 - Reference skills when plan says to
 - Stop when blocked, don't guess
-- Never start implementation in the main workspace without explicit user consent
+- Never start implementation in the workspace used for the shared integration change; use a dedicated JJ workspace and working-copy change unless the user explicitly consents

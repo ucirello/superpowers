@@ -63,7 +63,7 @@ You MUST complete each phase before proceeding to the next.
 
 3. **Check Recent Changes**
    - What changed that could cause this?
-   - `jj diff`, recent changes from `jj log`
+   - `jj diff`, recent revisions from `jj log`
    - New dependencies, config changes
    - Environmental differences
 
@@ -230,7 +230,7 @@ If you catch yourself thinking:
 
 **If 3+ fixes failed:** Question the architecture (see Phase 4.5)
 
-## Your Human Partner's Signals You're Doing It Wrong
+## your human partner's Signals You're Doing It Wrong
 
 **Watch for these redirections:**
 - "Is that not happening?" - You assumed without verifying

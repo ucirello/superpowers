@@ -81,34 +81,29 @@ default_subagent_reasoning_effort = "medium"
 ## Environment Detection
 
 Skills that create workspaces or finish bookmarks should detect their
-environment with read-only jj commands before proceeding:
+environment with read-only Jujutsu commands before proceeding:
 
 ```bash
-JJ_ROOT=$(jj --ignore-working-copy root)
-WORKSPACES=$(jj --ignore-working-copy workspace list)
-BOOKMARKS=$(jj --ignore-working-copy log --no-graph -r @ -T 'local_bookmarks')
+WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root)
+WORKSPACES=$(jj --ignore-working-copy workspace list -T 'name ++ "\t" ++ root ++ "\n"')
+BOOKMARKS=$(jj --ignore-working-copy bookmark list -r @ -T 'name ++ "\n"')
 ```
 
-- `WORKSPACES` identifies registered workspaces, but does not by itself prove the current workspace is task-isolated; apply the ownership and path checks in `using-jj-workspaces` before deciding to reuse it
-- `BOOKMARKS` empty → the working-copy change has no local bookmark; create one before pushing or opening a PR
+- If `WORKSPACE_ROOT` matches the root of an existing task workspace in `WORKSPACES`, reuse it rather than creating another workspace.
+- If `jj bookmark list -r @` is empty, the current change has no local bookmark; create or move one before a named-bookmark push or PR.
 
-Use these signals when applying workspace-creation and change-finishing skills.
+See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
+Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
 When the sandbox blocks bookmark or push operations in an externally
-managed workspace, leave the working-copy change ready and inform the
-user to use the App's native controls:
+managed workspace, finish the current Jujutsu change and inform the user
+to use the App's native controls:
 
-- **"Create branch"** — the compatibility UI label for naming the change, then pushing and opening a PR
+- **"Create branch"** — names the remote branch, then push/open the PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests and output suggested bookmark names, change
-messages, and PR descriptions. For a change message, inspect repository-local
-instructions and `git log`; repository-local instructions and syntax observed
-there take precedence over compatible Go guidance.
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
-Apply only compatible Go guidance, such as clarity and useful rationale. Do not
-impose fixed or conventional syntax.
+The agent can still run tests, inspect `jj status` and `jj diff`, describe
+the change with `jj describe`, and suggest bookmark names and PR descriptions.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and history always win; apply Go guidance only where compatible, and do not impose fixed message syntax or examples.

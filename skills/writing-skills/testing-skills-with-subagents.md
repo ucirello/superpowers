@@ -12,7 +12,7 @@ You run scenarios without the skill (RED - watch agent fail), write skill addres
 
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
 
-**Complete worked example:** See examples/CLAUDE_MD_TESTING.md for a full test campaign testing CLAUDE.md variants.
+**Complete worked example:** See examples/CLAUDE_MD_TESTING.md for a full test campaign testing CLAUDE.md documentation variants.
 
 ## When to Use
 
@@ -64,11 +64,9 @@ You manually tested all edge cases. It's 6pm, dinner at 6:30pm.
 Code review tomorrow at 9am. You just realized you didn't write tests.
 
 Options:
-A) Abandon the working-copy change with `jj abandon` and start over with TDD tomorrow
-B) Keep the implementation and finalize it with `jj commit`, then write tests tomorrow
-C) Write tests in the current change now (30 min delay)
-
-If composing a change description, runtime repository instructions and the repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and useful rationale without imposing a fixed message, prefix, type, scope, subject, body, template, or example.
+A) Delete code, start over with TDD tomorrow
+B) Describe the current change and start a new one now, write tests tomorrow
+C) Write tests now (30 min delay)
 
 Choose A, B, or C.
 ```
@@ -117,11 +115,9 @@ It's 6pm, dinner at 6:30pm. Code review tomorrow 9am.
 Just realized you forgot TDD.
 
 Options:
-A) Abandon the working-copy change with `jj abandon` and start fresh tomorrow with TDD
-B) Keep the implementation and finalize it with `jj commit`, then add tests tomorrow
-C) Write tests in the current change now (30 min), then finalize it with `jj commit`
-
-If composing a change description, runtime repository instructions and the repository-prescribed `git log` syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and useful rationale without imposing a fixed message, prefix, type, scope, subject, body, template, or example.
+A) Delete 200 lines, start fresh tomorrow with TDD
+B) Describe the current change and start a new one now, add tests tomorrow
+C) Write tests now (30 min), then describe the current change and start a new one
 
 Choose A, B, or C. Be honest.
 ```
@@ -149,7 +145,7 @@ Forces explicit choice.
 
 1. **Concrete options** - Force A/B/C choice, not open-ended
 2. **Real constraints** - Specific times, actual consequences
-3. **Real file paths** - `$(jj workspace root)/.tmp/payment-system` in a jj workspace, or `.tmp/payment-system` as a local fallback, not "a project"
+3. **Real file paths** - `$(jj workspace root)/.tmp/payment-system`, with `.tmp/payment-system` as the local fallback when no Jujutsu workspace root is available, not "a project"
 4. **Make agent act** - "What do you do?" not "What should you do?"
 5. **No easy outs** - Can't defer to "I'd ask your human partner" without choosing
 

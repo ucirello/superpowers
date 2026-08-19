@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Resolve and ensure the workspace directory SDD uses for one plan's
+# Resolve and ensure the workspace-local directory SDD uses for one plan's
 # short-lived artifacts: task briefs, implementer reports, review packages,
 # and the progress ledger. Print the plan directory's absolute path.
 #
-# One directory per plan (.rocketclaw/sdd/<plan-basename>/) so a follow-up
-# plan in the same workspace can never read or overwrite another plan's
+# One directory per plan (.tmp/subagent-driven-development/<plan-basename>/)
+# so a follow-up plan in the same workspace can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The artifacts live outside .jj/ so implementers can write their reports.
-# A self-ignoring .gitignore at .rocketclaw/sdd/ keeps every plan's artifacts
-# out of `jj status` and out of accidental changes without modifying a tracked
-# file.
+# The workspace lives under the Jujutsu workspace root's .tmp directory. If
+# the command runs outside a Jujutsu workspace, it falls back to .tmp under
+# the current directory. Jujutsu currently uses .gitignore files for ignore
+# rules, so the owned artifact namespace ignores itself before artifacts are
+# written and cannot be auto-tracked into the working-copy revision.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -31,9 +32,14 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
-root=$(jj workspace root)
-base="$root/.rocketclaw/sdd"
+if root=$(jj --ignore-working-copy workspace root 2>/dev/null); then
+  :
+else
+  root=$PWD
+fi
+base="$root/.tmp/subagent-driven-development"
 dir="$base/$slug"
-mkdir -p "$dir"
+mkdir -p "$base"
 printf '*\n' > "$base/.gitignore"
+mkdir -p "$dir"
 cd "$dir" && pwd
