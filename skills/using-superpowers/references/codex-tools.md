@@ -106,4 +106,8 @@ to use the App's native controls:
 
 The agent can still run tests, inspect `jj status` and `jj diff`, describe
 the change with `jj describe`, and suggest bookmark names and PR descriptions.
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and history always win; apply Go guidance only where compatible, and do not impose fixed message syntax or examples.
+When composing the Jujutsu change description, use this instruction:
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local instructions and history always win; apply Go guidance only where compatible, and do not impose fixed message syntax or examples. Bookmark names and PR descriptions follow their own repository-local conventions.

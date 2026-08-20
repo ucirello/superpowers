@@ -30,11 +30,11 @@ Tests failing (<N> failures). Must fix before completing:
 Run:
 
 ```bash
-WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root)
-jj --ignore-working-copy workspace list
-jj --ignore-working-copy status
-jj --ignore-working-copy log -r '::@'
-jj --ignore-working-copy bookmark list --all-remotes
+WORKSPACE_ROOT=$(jj workspace root)
+jj workspace list
+jj status
+jj log -r '::@'
+jj bookmark list --all-remotes
 ```
 
 Record the current workspace name from `jj workspace list`, the revision that
@@ -107,14 +107,15 @@ Rebase the completed line of work onto the updated base and then advance the
 base bookmark to its head:
 
 ```bash
-jj rebase -b <work-revision> -o <base-bookmark>
-jj bookmark move <base-bookmark> --to <rebased-work-head>
+jj rebase -r '<base-bookmark>..<work-revision>' -o <base-bookmark>
+jj bookmark move <base-bookmark> --to <work-revision>
 
 # Verify tests on the integrated result
 <test command>
 ```
 
-Use the actual rebased head shown by Jujutsu, not an assumed revision symbol.
+Use the recorded work revision's stable change ID after the rebase, not an
+assumed revision symbol.
 If the rebase produces conflicts, resolve them and verify the resulting diff
 before testing.
 

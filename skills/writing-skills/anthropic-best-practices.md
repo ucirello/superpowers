@@ -655,7 +655,7 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Change description format
 
-Inspect the current change with `jj diff` and past commit messages with `git log` before composing its description.
+Inspect the current change with `jj diff` and past commit messages with `jj log` before composing its description.
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 

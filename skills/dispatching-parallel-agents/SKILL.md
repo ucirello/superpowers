@@ -135,7 +135,7 @@ These are timing/race condition issues. Your task:
 
 Do NOT just increase timeouts - find the real issue.
 
-Before returning, inspect repository-local instructions and recent `git log` messages, then describe your change in that repository-local style with `jj describe`. Repository-local instructions and syntax observed in `git log` take precedence over compatible Go guidance.
+Before returning, inspect repository-local instructions and recent `jj log` descriptions, then describe your change in that repository-local style with `jj describe`. Repository-local instructions and syntax observed in `jj log` take precedence over compatible Go guidance.
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 

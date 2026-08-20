@@ -126,7 +126,7 @@ Expected: PASS
 
 - [ ] **Step 5: Describe and validate the change**
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax takes precedence; use only compatible Go guidance where local history does not decide the wording or structure. Include the exact `jj describe` invocation with the description composed for this task; do not prescribe or reuse a fixed syntax, message, template, or example. Include `jj diff` and `jj status` checks that validate the intended files and content, then include `jj new` to begin the next change.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax takes precedence; use only compatible Go guidance where local history does not decide the wording or structure. Require the executor to inspect the completed change and compose its description at runtime, using `jj describe -m '<message composed from the standards above>'`; do not prescribe or reuse a fixed syntax, message, template, or example. Include `jj diff` and `jj status` checks that validate the intended files and content, then include `jj new` to begin the next change.
 ````
 
 ## No Placeholders
