@@ -202,4 +202,4 @@ You understand 1,2,3,6. Unclear on 4,5.
 
 ## GitHub Thread Replies
 
-When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
+When replying to inline review comments on GitHub, reply in the comment thread (`GIT_DIR=$(jj git root) gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment. Setting `GIT_DIR` from Jujutsu keeps GitHub CLI repository discovery working in non-colocated repositories.
