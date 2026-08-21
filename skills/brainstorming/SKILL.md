@@ -97,7 +97,7 @@ your path and complete them in order.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — set `SPEC_PATH=docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`, save the document there, and finish that fileset with `jj commit "$SPEC_PATH"`. Follow repository-local instructions and existing description syntax first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use the Go guidance to control description quality.
+6. **Write design doc** — set `SPEC_PATH=docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`, save the document there, and finish that fileset with `jj commit "$SPEC_PATH"`. Follow repository-local instructions and existing description syntax first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use the Go guidance to control description quality. Do not impose a fixed description syntax, stock wording, template, or example.
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -206,7 +206,7 @@ is the whole process.
 - Write the validated design (spec) to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Finish the design document as its own Jujutsu change with `jj commit "$SPEC_PATH"`. Follow repository-local instructions and existing description syntax first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use the Go guidance to control description quality.
+- Finish the design document as its own Jujutsu change with `jj commit "$SPEC_PATH"`. Follow repository-local instructions and existing description syntax first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use the Go guidance to control description quality. Do not impose a fixed description syntax, stock wording, template, or example.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
@@ -223,7 +223,7 @@ After the spec review loop passes, ask the user to review the written spec befor
 
 > "Spec written and recorded in its own Jujutsu change at `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Before editing the change description, follow repository-local instructions and existing description syntax first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use the Go guidance to control description quality. Only proceed once the user approves.
+Wait for the user's response. If they request changes, make them and re-run the spec review loop. Before editing the change description, follow repository-local instructions and existing description syntax first. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Where compatible, use the Go guidance to control description quality. Do not impose a fixed description syntax, stock wording, template, or example. Only proceed once the user approves.
 
 **Implementation:**
 

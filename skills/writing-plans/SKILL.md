@@ -53,7 +53,7 @@ independently testable deliverable.
 - "Run the tests and make sure they pass" - step
 - "Describe and validate the current change, then start the next change" - step
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax takes precedence; use only compatible Go guidance where local history does not decide the wording or structure. Each description must accurately explain the independently reviewable change and its purpose.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax takes precedence; use only compatible Go guidance where local history does not decide the wording or structure. Each description must accurately explain the independently reviewable change and its purpose. Do not impose a fixed description syntax, stock wording, template, or example.
 
 ## Plan Document Header
 
