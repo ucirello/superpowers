@@ -2,7 +2,7 @@
 
 ## Overview
 
-Bugs often manifest deep in the call stack (`jj git init` in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
+Bugs often manifest deep in the call stack (`jj git init` in the wrong directory, file created in the wrong location, database opened with the wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
 
 **Core principle:** Trace backward through the call chain until you find the original trigger, then fix at the source.
 
@@ -101,12 +101,12 @@ If something appears during tests but you don't know which test:
 Use the bisection script `find-polluter.sh` in this directory:
 
 ```bash
-./find-polluter.sh '.jj' 'src/**/*.test.ts'
+./find-polluter.sh 'packages/core/.jj' 'src/**/*.test.ts'
 ```
 
 Runs tests one-by-one, stops at first polluter. See script for usage.
 
-## Real Example: Empty projectDir
+## Real Example Adapted to JJ: Empty projectDir
 
 **Symptom:** `.jj` created in `packages/core/` (source code)
 
@@ -124,7 +124,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` as a fallback
+- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, falling back to local `.tmp` when no workspace is available
 - Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle
@@ -162,7 +162,7 @@ digraph principle {
 
 ## Real-World Impact
 
-From debugging session (2025-10-03):
+From the debugging session (2025-10-03), before adaptation to the JJ workflow:
 - Found root cause through 5-level trace
 - Fixed at source (getter validation)
 - Added 4 layers of defense

@@ -31,19 +31,18 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base:** [BASE_REVISION]
-    **Tip:** [TIP_REVISION]
+    **Base revision:** [BASE_REVISION]
+    **Target revision:** [TARGET_REVISION]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the change list, a stat summary,
+    Read the diff file once — it contains the revision list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
     mid-function — and say so in your report. Do not re-run Jujutsu commands.
-    If the diff file is missing, fetch the diff yourself:
-    `jj --ignore-working-copy diff --stat --from [BASE_REVISION] --to
-    [TIP_REVISION]` and `jj --ignore-working-copy diff --git --context 10
-    --from [BASE_REVISION] --to [TIP_REVISION]`.
+    If the diff file is missing, derive the diff yourself:
+    `jj --ignore-working-copy diff --from [BASE_REVISION] --to [TARGET_REVISION] --stat`
+    and `jj --ignore-working-copy diff --from [BASE_REVISION] --to [TARGET_REVISION]`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -51,9 +50,8 @@ Subagent (general-purpose):
     lock ordering, a function or API contract, or shared mutable state,
     checking the call sites is the right method.
 
-    Your review is read-only in this workspace. Do not mutate workspace files,
-    the working-copy change, bookmarks, or repository operation
-    state in any way.
+    Your review is read-only on this checkout. Do not mutate the working
+    files, working-copy revision, revision graph, or bookmarks in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -156,8 +154,7 @@ Subagent (general-purpose):
     If the plan or brief explicitly mandates something this rubric calls a
     defect (a test that asserts nothing, verbatim duplication of a logic
     block), that IS a finding — report it as Important, labeled
-    plan-mandated. The plan's authorship does not grade its own work; the
-    human decides.
+    plan-mandated. The plan does not grade itself; the controller decides.
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
@@ -200,10 +197,12 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_REVISION]` — revision before this task
-- `[TIP_REVISION]` — task's last completed revision
+- `[BASE_REVISION]` — revision before this task; use its recorded commit ID
+  for an exact diff boundary
+- `[TARGET_REVISION]` — revision containing the task result; use its recorded
+  commit ID for an exact diff boundary
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE TIP` prints the unique
+  package to (`scripts/review-package PLAN_FILE BASE_REVISION TARGET_REVISION` prints the unique
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

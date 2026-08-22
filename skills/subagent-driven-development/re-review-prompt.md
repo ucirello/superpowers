@@ -30,20 +30,18 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_REVISION] (the tip the previous review saw)
-    **Tip:** [TIP_REVISION]
+    **Fix base revision:** [FIX_BASE_REVISION] (the revision the previous review saw)
+    **Target revision:** [TARGET_REVISION]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix changes, a stat summary,
+    Read the diff file once — it contains the fix revisions, a stat summary,
     and the fix diff with surrounding context. Do not re-run Jujutsu commands.
-    If the diff file is missing, fetch the diff yourself:
-    `jj --ignore-working-copy diff --stat --from [FIX_BASE_REVISION] --to
-    [TIP_REVISION]` and `jj --ignore-working-copy diff --git --context 10
-    --from [FIX_BASE_REVISION] --to [TIP_REVISION]`.
+    If the diff file is missing, derive the diff yourself:
+    `jj --ignore-working-copy diff --from [FIX_BASE_REVISION] --to [TARGET_REVISION] --stat`
+    and `jj --ignore-working-copy diff --from [FIX_BASE_REVISION] --to [TARGET_REVISION]`.
 
-    Your review is read-only in this workspace. Do not mutate workspace files,
-    the working-copy change, bookmarks, or repository operation
-    state in any way.
+    Your review is read-only on this checkout. Do not mutate the working
+    files, working-copy revision, revision graph, or bookmarks in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -109,9 +107,10 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_REVISION]` — the tip the previous review saw
-- `[TIP_REVISION]` — fix round's last completed revision
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE TIP` printed
+- `[FIX_BASE_REVISION]` — the revision the previous review saw
+- `[TARGET_REVISION]` — the revision containing the fix; use its recorded
+  commit ID for an exact diff boundary
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE_REVISION TARGET_REVISION` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

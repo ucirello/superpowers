@@ -8,9 +8,9 @@ Use this template when dispatching a code reviewer subagent.
 Subagent (general-purpose):
   description: "Review code changes"
   prompt: |
-    You are a Senior Code Reviewer with expertise in software architecture,
-    design patterns, and best practices. Your job is to review completed work
-    against its plan or requirements and identify issues before they cascade.
+    Review the completed work with attention to software architecture, design
+    patterns, and established practices. Compare it with its plan or requirements
+    and identify issues before they cascade.
 
     ## What Was Implemented
 
@@ -22,17 +22,26 @@ Subagent (general-purpose):
 
     ## Jujutsu Revisions to Review
 
-    **From (excluded):** [FROM_REV]
-    **To (included):** [TO_REV]
+    **Start:** [START_REVISION]
+    **End:** [END_REVISION]
+
+    If supplied, read `[DIFF_FILE]`; it contains the revision list, stat, and
+    complete diff with context. Otherwise inspect the range directly:
 
     ```bash
-    jj --ignore-working-copy diff --stat --from [FROM_REV] --to [TO_REV]
-    jj --ignore-working-copy diff --from [FROM_REV] --to [TO_REV]
+    jj --ignore-working-copy diff --stat --from [START_REVISION] --to [END_REVISION]
+    jj --ignore-working-copy diff --from [START_REVISION] --to [END_REVISION]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only in this workspace. Do not mutate the working copy commit, bookmarks, or repository state. Use `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` to inspect revisions without snapshotting the working copy. If you need a working copy of another revision and are allowed to add a workspace, use a separate path under `$(jj workspace root)/.tmp` (for example, `jj workspace add "$(jj workspace root)/.tmp/review-[REVISION]" -r [REVISION]`); if the workspace root is unavailable, fall back to `.tmp/review-[REVISION]`. Never alter this workspace for the review.
+    Keep the review read-only in the current workspace. Do not mutate its working
+    copy revision, other revisions, bookmarks, or workspace state. Use `jj --ignore-working-copy show`,
+    `jj --ignore-working-copy diff`, and `jj --ignore-working-copy log` to inspect
+    history without snapshotting the working copy. Do not create another
+    workspace during review. Resolve
+    `WORKSPACE_ROOT=$(jj workspace root 2>/dev/null || pwd -P)` and place any
+    temporary artifacts under `$WORKSPACE_ROOT/.tmp`.
 
     ## You Do Not Dispatch Subagents
 
@@ -111,9 +120,11 @@ Subagent (general-purpose):
     ### Recommendations
     [Improvements for code quality, architecture, or process]
 
+    If recommending edits to revision descriptions, repository-local instructions and existing log syntax take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Do not prescribe a fixed message, template, or prefix; use `[JJ_DESCRIPTION]` as a neutral placeholder.
+
     ### Assessment
 
-    **Ready to land?** [Yes | No | With fixes]
+    **Ready to integrate?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -137,8 +148,9 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[FROM_REV]` — starting revision, excluded from the review
-- `[TO_REV]` — ending revision, included in the review
+- `[START_REVISION]` — starting revision
+- `[END_REVISION]` — ending revision
+- `[DIFF_FILE]` — optional review package containing the revision list, stat, and diff
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -175,7 +187,7 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to land: With fixes**
+**Ready to integrate: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

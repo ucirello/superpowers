@@ -53,22 +53,27 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
+import { execFileSync } from 'node:child_process';
+import { sep } from 'node:path';
+
 async function jjGitInit(directory: string) {
-  // In tests, refuse repository initialization outside the workspace-local temp directory.
+  // Store test repositories under "$(jj workspace root)/.tmp"; when the
+  // command is unavailable, use the local "./.tmp" directory.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    let workspaceRoot = '.';
+    let workspaceRoot = process.cwd();
     try {
-      const { stdout } = await execFileAsync('jj', ['workspace', 'root']);
-      workspaceRoot = stdout.trim();
+      workspaceRoot = execFileSync('jj', ['workspace', 'root'], {
+        encoding: 'utf8',
+      }).trim();
     } catch {
-      // Fall back to ./.tmp when the current directory is not a Jujutsu workspace.
+      // The current directory supplies the local .tmp fallback.
     }
-    const tempDir = normalize(resolve(workspaceRoot, '.tmp'));
+    const tmpDir = normalize(resolve(workspaceRoot, '.tmp'));
 
-    if (normalized !== tempDir && !normalized.startsWith(`${tempDir}${sep}`)) {
+    if (normalized !== tmpDir && !normalized.startsWith(`${tmpDir}${sep}`)) {
       throw new Error(
-        `Refusing jj git init outside $(jj workspace root)/.tmp during tests: ${directory}`
+        `Refusing jj git init outside ${tmpDir} during tests: ${directory}`
       );
     }
   }
@@ -100,7 +105,7 @@ When you find a bug:
 3. **Add validation at each layer** - Entry, business, environment, debug
 4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
 
-## Example from Session
+## Example Adapted to JJ
 
 Bug: Empty `projectDir` caused `jj git init` in source code
 
@@ -113,10 +118,10 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` as a fallback, in tests
+- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` as the fallback
 - Layer 4: Stack trace logging before `jj git init`
 
-**Result:** All 1847 tests passed, bug impossible to reproduce
+**Original-session result:** All 1847 tests passed, bug impossible to reproduce
 
 ## Key Insight
 

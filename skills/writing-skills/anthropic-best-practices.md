@@ -212,11 +212,13 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Jujutsu Change Description Helper skill:**
+**JJ Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing `jj diff`. Use when the user asks for help writing change descriptions or reviewing the current change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local conventions take precedence; apply only compatible Go guidance where local history does not decide wording or structure. Use `jj describe` without imposing a fixed syntax, prefix, scope, or template.
+description: Generate descriptive change messages by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
+
+Repository-local instructions and the runtime's change-log syntax always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply compatible Go guidance to clarity and structure without replacing repository-local syntax.
 
 Avoid vague descriptions like these:
 
@@ -653,15 +655,15 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Change description format
+## Change message guidance
 
-Inspect the current change with `jj diff` and past commit messages with `jj log` before composing its description.
+Repository-local instructions and the runtime's change-log syntax always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Inspect the current change with `jj diff`, then use `jj describe -m '<message composed from the standards above>'`. Apply compatible Go guidance to clarity and structure without replacing repository-local syntax.
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Do not impose fixed prefixes, types, scopes, subjects, bodies, or templates that override evidence from repository-local instructions and runtime history.
 
-Repository-local conventions take precedence. Apply only compatible Go guidance where local history does not decide wording or structure. Use `jj describe` to edit the current change description without imposing a fixed syntax, prefix, scope, template, or example.
+**Input:** `[JJ_DIFF]`
 
-Input: the current `jj diff` and relevant repository history. Output: a repository-conformant summary and, when useful, a body explaining motivation and behavior.
+**Output:** `[MESSAGE_COMPOSED_FROM_REPOSITORY_STANDARDS]`
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

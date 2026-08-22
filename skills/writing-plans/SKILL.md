@@ -7,18 +7,18 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent, independently reviewable changes.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent focused JJ commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated Jujutsu workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated JJ workspace, use the `superpowers:using-git-worktrees` routing reference at execution time, but follow repository instructions for creating the JJ workspace.
 
 **Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
-**Temporary files:** Put repository-local temporary files under `$(jj workspace root)/.tmp`; if the workspace root cannot be resolved, use the local `.tmp` directory. Never use a global temporary directory.
+**Temporary files:** Resolve `WORKSPACE_ROOT=$(jj workspace root 2>/dev/null || pwd -P)` and put repository-wide temporary artifacts under `$WORKSPACE_ROOT/.tmp`.
 
 ## Scope Check
 
@@ -51,9 +51,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Describe and validate the current change, then start the next change" - step
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax takes precedence; use only compatible Go guidance where local history does not decide the wording or structure. Each description must accurately explain the independently reviewable change and its purpose. Do not impose a fixed description syntax, stock wording, template, or example.
+- "Describe the current JJ commit and start the next" - step
 
 ## Plan Document Header
 
@@ -124,10 +122,28 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Describe and validate the change**
+- [ ] **Step 5: Describe the current JJ commit and start the next**
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax takes precedence; use only compatible Go guidance where local history does not decide the wording or structure. Require the executor to inspect the completed change and compose its description at runtime, using `jj describe -m '<message composed from the standards above>'`; do not prescribe or reuse a fixed syntax, message, template, or example. Include `jj diff` and `jj status` checks that validate the intended files and content, then include `jj new` to begin the next change.
+Inspect repository instructions and recent history using the log syntax available at runtime. Compose the description according to the JJ Commit Descriptions section below.
+
+```bash
+jj status
+jj diff
+jj log -n 10
+jj describe -m "<description composed from repository instructions, recent history, and the completed change>"
+jj new
+```
 ````
+
+## JJ Commit Descriptions
+
+Every commit step must tell the implementer to inspect the repository instructions and recent history before composing the description. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository instructions and the log syntax available at runtime always win. Use the runtime's JJ log command when that is how history is exposed; do not force the literal command named in the sentence above when it is not valid in the current environment.
+
+Where compatible with those local standards, make the first line a concise summary that clearly states what the change does. Keep it short enough to scan in history, omit a trailing period, and use wording that completes the thought "this change modifies the project to ...". When the reason or consequences are not obvious, add a body after a blank line, write complete sentences, explain what changed and why, and wrap prose at a readable width except where links or other literal content require longer lines. Follow the repository's established form for issue references and other metadata.
+
+Do not prescribe fixed prefixes, types, scopes, subjects, body text, or a particular commit convention. In plan commands, give `jj describe` only a neutral placeholder that requires the implementer to compose the description from the completed change and the repository's current conventions. `jj` snapshots the working copy automatically, so do not add a staging step. After describing and reviewing the current commit, use `jj new` to begin a fresh working-copy commit for the next task.
 
 ## No Placeholders
 

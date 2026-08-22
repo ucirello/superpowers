@@ -1,102 +1,90 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from the current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or Jujutsu workspaces
+description: Use when starting feature work that needs isolation from the current workspace or before executing implementation plans - ensures an isolated Jujutsu workspace exists via harness-native tools or jj workspace commands
 ---
 
-# Using Isolated Jujutsu Workspaces
+# Using Jujutsu Workspaces
 
 ## Overview
 
-Ensure work happens in an isolated workspace. Prefer the platform's native worktree tools when they manage isolation for the harness. Otherwise, create a Jujutsu workspace rather than a legacy worktree.
+Ensure work happens in an isolated Jujutsu workspace. Prefer the harness's native Jujutsu workspace tools. When none are available, use `jj workspace`; do not fall back to another version-control system.
 
-**Core principle:** Detect existing isolation first. Then use native tools. Then fall back to `jj workspace add`. Never create parallel worktree state behind the harness.
+**Core principle:** Detect existing workspace context first. Then use native tools. Then use `jj workspace`. Never fight the harness.
 
-**Announce at start:** "I'm setting up an isolated workspace before starting work."
+**Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
-## Step 0: Detect Existing Isolation
+## Step 0: Establish Repository and Workspace Context
 
-**Before creating anything, check whether the current JJ workspace is already dedicated to this work.**
+**Before creating anything, confirm that the current context is a Jujutsu repository and inspect its workspaces.**
 
 ```bash
-WORKSPACE_ROOT=$(jj workspace root 2>/dev/null)
+workspace_root=$(jj workspace root)
 jj workspace list
-jj status
-jj bookmark list -r @
 ```
 
-`jj workspace root` prints the current workspace root. `jj workspace list` shows every workspace and marks the current one in its normal output. `jj status` reports the working-copy change (`@`), its parents, changed files, conflicts, and conflicted bookmarks.
+`jj workspace root` prints the current workspace root. `jj workspace list` prints every workspace in the repository and its working-copy change; use both outputs rather than inferring context from directory names.
 
-Jujutsu has no active or checked-out bookmark. `jj bookmark list -r @` only reports bookmarks currently pointing at `@`; an empty result is normal and does not mean the workspace is detached.
+**If the harness already placed this task in a dedicated workspace:** Report "Already in isolated workspace at `<path>` (`<workspace-name>`)." Skip to Step 2. Do not create a workspace inside it.
 
-**If the harness or the user's instructions identify the current workspace as isolated for this task:** Skip to Step 2 (Project Setup). Do NOT create another workspace.
+Determine this from harness context, explicit instructions, and the workspace list. Multiple listed workspaces alone do not prove that the current one is dedicated to this task.
 
-Report its actual state:
-- "Already in isolated workspace at `<path>` on change `<change-id>`."
-- If bookmarks point at `@`, append: "Bookmarks at this change: `<names>`."
-- If none point at `@`, append: "No bookmark currently points at this change."
+**If `jj workspace root` fails:** Stop and report that this workflow requires a Jujutsu repository. Do not initialize a repository or use a fallback unless the user explicitly asks.
 
-**If `jj workspace root` fails:** Stop and report that the current directory is not a JJ workspace. Do not silently substitute another version-control system's worktree commands.
+Has the user already indicated their workspace preference in the current instructions? If not, ask for consent before creating one:
 
-If the current workspace is not already dedicated to this task, has the user already indicated their isolation preference in the instructions? If not, ask for consent before creating a workspace:
+> "Would you like me to set up an isolated Jujutsu workspace? It keeps this task's working copy separate from your current work."
 
-> "Would you like me to set up an isolated workspace? It protects the current working-copy change from task changes."
-
-Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
+Honor an existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
 
 ## Step 1: Create Isolated Workspace
 
 **You have two mechanisms. Try them in this order.**
 
-### 1a. Native Worktree Tools (preferred)
+### 1a. Harness-Native Workspace Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+The user has asked for an isolated workspace. If the harness provides a native tool that creates and enters a **Jujutsu workspace**, use it and skip to Step 2.
 
-Native tools handle directory placement, branch creation, and cleanup automatically. Creating a manual worktree when you have a native tool creates phantom state your harness can't see or manage.
+Native tools may own directory placement, workspace naming, context switching, and cleanup. Do not bypass them with a manual command. A native tool for another version-control system does not apply.
 
-Only proceed to Step 1b if you have no native worktree tool available.
+Only proceed to Step 1b if no harness-native Jujutsu workspace tool is available.
 
-### 1b. Jujutsu Workspace Fallback
+### 1b. Native JJ Workspace Commands
 
-**Only use this if Step 1a does not apply** - you have no native worktree tool available. Create a workspace with Jujutsu.
+Use `jj workspace add` directly. A workspace gets its own working-copy change; it does not need a bookmark for isolation. Create a bookmark only when the repository's delivery workflow actually requires a named pointer, such as publishing that change.
 
-#### Directory Selection
+#### Name and Directory Selection
 
-Use a project-local `.tmp` directory under the current JJ workspace root. If root discovery is unavailable only while calculating a local path, fall back to the current directory; Step 0 still requires a working JJ repository before workspace creation.
+Workspace names share a repository-wide namespace. Choose a short, unique, task-specific `<workspace-name>`; include the harness or session context when needed to avoid collisions. Check `jj workspace list` before choosing it.
 
-```bash
-workspace_root=$(jj workspace root 2>/dev/null || pwd -P)
-location="$workspace_root/.tmp"
-path="$location/$WORKSPACE_NAME"
-```
+Follow this destination priority. Explicit user instructions and repo-local runtime conventions win over defaults.
 
-An explicit user destination takes precedence. Do not reuse path mappings or global worktree directories from another harness.
+1. Use the destination required by the harness, repository instructions, or user.
+2. Otherwise use the repository-local temporary namespace: `$WORKSPACE_ROOT/.tmp/workspaces/<workspace-name>` after resolving `WORKSPACE_ROOT=$(jj workspace root 2>/dev/null || pwd -P)`.
+3. If that root cannot be resolved but the current directory is confirmed to be the intended repository context, use the repo-local fallback `.tmp/workspaces/<workspace-name>`.
 
-#### Safety Verification
+Do not use a shared unnamespaced temporary path. Keep all generated workspace paths scoped by workspace name and current repository context.
 
-Jujutsu automatically tracks new files unless ignore rules exclude them. Before creating a nested workspace, verify that the root `.gitignore` excludes `.tmp/`. If it does not, add `.tmp/` before proceeding so the containing workspace cannot snapshot the nested workspace contents.
+#### Temporary Path Safety
 
-If adding the ignore rule changes the current working-copy change, inspect the exact change with `jj diff` and `jj status`, then describe it before starting another change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and existing history take precedence; inspect the local convention dynamically and use only compatible Go guidance where the repository does not decide wording or structure. Use `jj describe -m '<message composed from the standards above>'`, then `jj new` before creating the task workspace.
-
-**Why critical:** Ignored files are not automatically tracked by JJ; without the rule, the containing workspace can snapshot the nested workspace files.
+Before creating a workspace under `.tmp`, confirm that repository instructions designate it for temporary ignored content. If they do not, ask before changing ignore configuration. Do not create or describe a separate change merely to support workspace setup.
 
 #### Create the Workspace
 
 ```bash
-mkdir -p "$location"
-jj workspace add "$path" --name "$WORKSPACE_NAME" -r @-
+WORKSPACE_ROOT=$(jj workspace root 2>/dev/null || pwd -P)
+path="$WORKSPACE_ROOT/.tmp/workspaces/$WORKSPACE_NAME"
+jj workspace add --name "$WORKSPACE_NAME" "$path"
 cd "$path"
-jj status
 jj workspace root
-jj bookmark list -r @
 ```
 
-`-r @-` creates the new working-copy change on the parent of the current working-copy change, isolating it from changes in the original `@`. The workspace starts without an active bookmark because JJ has no active-bookmark concept. Do not create or move a bookmark merely to imitate branch creation; use `jj bookmark set <name> -r @` only when the user or repository workflow requires a named publishing pointer.
+By default, `jj workspace add` creates a new working-copy change with the same parents as the current working-copy change. Use `--revision <revset>` only when the task must start from a different explicit revision. Do not add `--message` with a fixed template.
 
-**Sandbox fallback:** If `jj workspace add` fails with a permission error (sandbox denial), tell the user the sandbox blocked workspace creation and work in the current directory instead. Then run setup and baseline tests in place.
+**Sandbox fallback:** If workspace creation fails because the destination is denied, report the blocked path and ask whether to use an allowed destination or work in place. Do not silently switch version-control systems.
 
 ## Step 2: Project Setup
 
-Auto-detect and run appropriate setup:
+Use repository-local instructions and runtime tooling first. Only when the repository provides no setup command, auto-detect a compatible default:
 
 ```bash
 # Node.js
@@ -129,34 +117,47 @@ npm test / cargo test / pytest / go test ./...
 ### Report
 
 ```
-Workspace ready at <full-path>
-Working-copy change: <change-id>
-Bookmarks at @: <names-or-none>
+Workspace ready at <full-path> (<workspace-name>)
 Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
+
+## Step 4: Cleanup
+
+When the isolated workspace is no longer needed, preserve or deliver its changes according to the repository workflow before cleanup. If the harness created the workspace, use its native cleanup tool.
+
+For a manually created workspace, identify it with `jj workspace list`, then run this from another workspace:
+
+```bash
+jj workspace forget "$WORKSPACE_NAME"
+```
+
+`jj workspace forget` removes the workspace record but does not delete files. Remove the workspace directory separately only after confirming its changes and untracked files are no longer needed. Bookmarks are independent and should not be deleted merely because a workspace was forgotten.
 
 ## Quick Reference
 
 | Situation | Action |
 |-----------|--------|
-| Already in a task-dedicated workspace | Skip creation (Step 0) |
-| Native worktree tool available | Use it (Step 1a) |
+| Already in task-dedicated workspace | Skip creation (Step 0) |
+| `jj workspace root` fails | Stop; no VCS fallback |
+| Native JJ workspace tool available | Use it (Step 1a) |
 | No native tool | Use `jj workspace add` (Step 1b) |
-| No explicit destination | Use `$(jj workspace root)/.tmp/<workspace-name>` |
-| `jj workspace root` fails | Report that JJ is unavailable; do not use another version-control fallback |
-| `.tmp/` is not ignored | Add it to root `.gitignore`, inspect, describe, then start a new change |
-| Permission error on create | Sandbox fallback, work in place |
+| No destination guidance | Use `$WORKSPACE_ROOT/.tmp/workspaces/<workspace-name>` after resolving the root with JJ or `pwd -P` |
+| Workspace name already exists | Choose a unique context-qualified name |
+| Different starting revision required | Add `--revision <revset>` |
+| Named publication pointer required | Create or move a bookmark at delivery time |
+| Permission error on create | Ask for an allowed destination or consent to work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
+| Workspace no longer needed | `jj workspace forget <workspace-name>`, then separately remove files |
 
 ## Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|
-| "I'm obviously isolated - no need to check" | Run Step 0. Harness-created isolation is easy to miss; `jj workspace root`, `jj workspace list`, and `jj status` expose the actual state. |
-| "A manual worktree is quicker than learning JJ workspace syntax" | `jj workspace add <destination> -r @-` creates the isolated working-copy change without introducing parallel worktree state. |
-| "The workspace directory is surely ignored already" | Verify `.tmp/` in the root ignore rules. JJ automatically tracks new, non-ignored files. |
-| "I need a branch name for the new workspace" | JJ workspaces have working-copy changes, not active branches. Create or move a bookmark only when the publishing workflow requires one. |
-| "Any directory name works" | Explicit user instructions win; otherwise keep temporary workspaces under the current workspace root's `.tmp/`. |
-| "The workspace is fresh - baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
+| "I'm obviously isolated; no need to check" | Run `jj workspace root` and `jj workspace list`. Directory names do not establish task context. |
+| "A manual command is quicker than finding a native tool" | A harness-native JJ workspace tool owns placement, context switching, and cleanup. Bypassing it creates state the harness may not manage. |
+| "A workspace needs a branch-like name" | JJ workspaces already have names and independent working-copy changes. Add a bookmark only for a real publication or repository workflow requirement. |
+| "Any temporary directory works" | Explicit instructions and repo-local conventions win; otherwise use the repository-scoped `.tmp/workspaces/<workspace-name>` namespace. |
+| "Forgetting a workspace deletes it" | `jj workspace forget` only removes its repository record. Files remain until separately and deliberately removed. |
+| "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
