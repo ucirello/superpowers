@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before integration to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before integrating into `trunk()`
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,21 +23,25 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Get stable Jujutsu revision IDs:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+jj status  # Snapshot the current working copy before resolving revisions.
+START_REVISION=$(jj --ignore-working-copy log -r 'exactly(<task-or-feature-base>, 1)' --no-graph -T 'commit_id')
+END_REVISION=$(jj --ignore-working-copy log -r 'exactly(@, 1)' --no-graph -T 'commit_id')
 ```
+
+Use the recorded boundary from before the task or feature began. Do not default
+to `first_parent(@)`, which omits earlier revisions in a stack.
 
 **2. Dispatch code reviewer subagent:**
 
 Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
 
 **Placeholders:**
-- `{DESCRIPTION}` - Brief summary of what you built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `[DESCRIPTION]` - Brief summary of what you built
+- `[PLAN_OR_REQUIREMENTS]` - What it should do
+- `[START_REVISION]` - Starting revision
+- `[END_REVISION]` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -50,16 +54,16 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 ```
 [Just completed Task 2: Add verification function]
 
-You: Let me request code review before proceeding.
+[Request code review before proceeding]
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+START_REVISION=$(jj --ignore-working-copy log -r 'exactly([START_REVSET], 1)' --no-graph -T 'commit_id')
+END_REVISION=$(jj --ignore-working-copy log -r 'exactly(@, 1)' --no-graph -T 'commit_id')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  START_REVISION: [START_COMMIT_ID]
+  END_REVISION: [END_COMMIT_ID]
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests
@@ -68,7 +72,7 @@ HEAD_SHA=$(git rev-parse HEAD)
     Minor: Magic number (100) for reporting interval
   Assessment: Ready to proceed
 
-You: [Fix progress indicators]
+[Fix progress indicators]
 [Continue to Task 3]
 ```
 

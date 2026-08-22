@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Organize the work into described Jujutsu revisions
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,22 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before finalizing the task's revisions, not after every edit.
+
+    Repository-local instructions and runtime log syntax win. Do not use an OS
+    temporary directory for context or handoff files. Resolve
+    `WORKSPACE_ROOT=$(jj workspace root 2>/dev/null || pwd -P)` and use
+    `$WORKSPACE_ROOT/.tmp`.
+
+    Before composing, editing, or validating a Jujutsu change description:
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+    Use the repository's observed style rather than a fixed type, scope,
+    prefix, message, or template. Describe the task's working-copy change with
+    `jj describe -m <description>`, where the placeholder is replaced by the
+    description you composed. If the task requires multiple revisions,
+    describe each one before using `jj new` for the next. Do not leave any
+    task revision undescribed. Jujutsu snapshots the working copy and has no
+    index or staging step.
 
     ## You Do Not Dispatch Subagents
 
@@ -140,7 +155,8 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Revisions finalized (short change ID + description subject)
+    - Final stack head (leave `@` at this revision before reporting)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

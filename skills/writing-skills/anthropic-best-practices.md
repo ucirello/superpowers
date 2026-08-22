@@ -212,11 +212,13 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**JJ Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive change messages by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
+
+Repository-local instructions and the runtime's change-log syntax always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply compatible Go guidance to clarity and structure without replacing repository-local syntax.
 
 Avoid vague descriptions like these:
 
@@ -653,39 +655,15 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Change message guidance
 
-Generate commit messages following these examples:
+Repository-local instructions and the runtime's change-log syntax always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Inspect the current change with `jj diff`, then use `jj describe -m '<message composed from the standards above>'`. Apply compatible Go guidance to clarity and structure without replacing repository-local syntax.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
+Do not impose fixed prefixes, types, scopes, subjects, bodies, or templates that override evidence from repository-local instructions and runtime history.
 
-Add login endpoint and token validation middleware
-```
+**Input:** `[JJ_DIFF]`
 
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+**Output:** `[MESSAGE_COMPOSED_FROM_REPOSITORY_STANDARDS]`
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
