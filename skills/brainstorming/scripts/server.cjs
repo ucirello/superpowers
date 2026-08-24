@@ -99,19 +99,7 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-function defaultSessionDir() {
-  let root = process.cwd();
-  try {
-    root = require('child_process').execFileSync('jj', ['workspace', 'root'], {
-      encoding: 'utf-8',
-      stdio: ['ignore', 'pipe', 'ignore']
-    }).trim() || root;
-  } catch (e) { /* outside a Jujutsu repository; use local .tmp */ }
-  return path.join(root, '.tmp', 'brainstorm');
-}
-
 const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
-const TEMPORARY_SESSION = !process.env.BRAINSTORM_DIR || process.env.BRAINSTORM_TEMPORARY === 'true';
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
@@ -172,7 +160,7 @@ h1 { color: #333; } p { color: #666; }
 </style>
 </head>
 <body><h1>Brainstorm Companion</h1>
-<p>Waiting for the AI Assistant to push a screen...</p></body></html>`;
+<p>Waiting for the agent to push a screen...</p></body></html>`;
 }
 
 const FORBIDDEN_PAGE = `<!DOCTYPE html>
@@ -182,7 +170,7 @@ const FORBIDDEN_PAGE = `<!DOCTYPE html>
 h1 { color: #333; } p { color: #666; } code { background: #f0f0f0; padding: 0.1em 0.3em; border-radius: 4px; }</style>
 </head>
 <body><h1>Session key required</h1>
-<p>This page needs the full URL your AI Assistant gave you, including the
+<p>This page needs the full URL your coding agent gave you, including the
 <code>?key=&hellip;</code> part. Copy the complete URL and open it again.</p></body></html>`;
 
 function bootstrapPage(key) {
@@ -204,6 +192,20 @@ const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8')
 const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
+
+function defaultSessionDir() {
+  let root = process.cwd();
+  try {
+    root = require('child_process').execFileSync('jj', ['--ignore-working-copy', 'workspace', 'root'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim() || root;
+  } catch (e) {
+    // Outside a Jujutsu repository, keep temporary files local to the current directory.
+  }
+  return path.join(root, '.tmp', 'brainstorm', process.pid + '-' + Math.floor(Date.now() / 1000));
+}
 
 function isFullDocument(html) {
   const trimmed = html.trimStart().toLowerCase();
@@ -578,10 +580,7 @@ function startServer() {
     for (const socket of clients) {
       try { socket.destroy(); } catch (e) { /* already gone */ }
     }
-    server.close(() => {
-      if (TEMPORARY_SESSION) fs.rmSync(SESSION_DIR, { recursive: true, force: true });
-      process.exit(0);
-    });
+    server.close(() => process.exit(0));
   }
 
   function ownerAlive() {
@@ -645,7 +644,6 @@ function startServer() {
     if (err.code === 'EADDRINUSE' && !triedFallback) {
       if (tokenSource === 'env') {
         console.error('Server failed to bind: preferred port is in use and BRAINSTORM_TOKEN is set; refusing fallback with explicit token');
-        if (TEMPORARY_SESSION) fs.rmSync(SESSION_DIR, { recursive: true, force: true });
         process.exit(1);
       }
       triedFallback = true;
@@ -657,7 +655,6 @@ function startServer() {
       server.listen(PORT, HOST, onListen);
     } else {
       console.error('Server failed to bind:', err.message);
-      if (TEMPORARY_SESSION) fs.rmSync(SESSION_DIR, { recursive: true, force: true });
       process.exit(1);
     }
   });

@@ -31,18 +31,18 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base:** [BASE_REV]
-    **End:** [END_REV]
+    **Base revision:** [BASE_REVISION]
+    **Current revision:** [CURRENT_REVISION]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the revision list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not regenerate the package.
+    mid-function — and say so in your report. Do not re-run Jujutsu commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj --ignore-working-copy diff --from [BASE_REV] --to [END_REV] --stat`
-    and `jj --ignore-working-copy diff --from [BASE_REV] --to [END_REV]`.
+    `jj --ignore-working-copy diff --from [BASE_REVISION] --to [CURRENT_REVISION] --stat` and
+    `jj --ignore-working-copy diff --from [BASE_REVISION] --to [CURRENT_REVISION] --git`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -50,8 +50,8 @@ Subagent (general-purpose):
     lock ordering, a function or API contract, or shared mutable state,
     checking the call sites is the right method.
 
-    Your review is read-only in this workspace. Do not mutate workspace files,
-    the working-copy revision, revision graph, or bookmarks.
+    Your review is read-only in this workspace. Do not mutate the working
+    copy commit, bookmarks, or operation state in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -198,10 +198,11 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_REV]` — revision before this task
-- `[END_REV]` — completed task revision
+- `[BASE_REVISION]` — commit ID immediately before this task's revisions
+- `[CURRENT_REVISION]` — commit ID of this task's latest completed revision
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE END` prints the unique
+  package to (`scripts/review-package PLAN_FILE BASE_REVISION CURRENT_REVISION`
+  prints the unique
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

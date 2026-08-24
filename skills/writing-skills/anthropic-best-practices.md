@@ -212,13 +212,17 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Jujutsu Change Description Helper skill:**
+**JJ Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
+description: Generate descriptive change descriptions by analyzing JJ diffs. Use when the user asks for help describing changes or reviewing the current change.
 ```
 
-Read repository-local instructions and inspect `git log`; repository-local instructions and the observed syntax always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Review the actual change with `jj diff`, then apply the resulting description with `jj describe`.
+Inspect the current change with `jj diff --from @- --to @` and the repository's existing descriptions with `jj log` before writing or editing its description.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Use `jj describe` to edit the description. Repository-local syntax and conventions take precedence. Where the history does not settle a detail, use compatible Go guidance: clear, concise prose that explains what changed and why. Do not impose a fixed prefix, type, scope, or message template.
 
 Avoid vague descriptions like these:
 
@@ -655,17 +659,13 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Spreadsheet summary style
+## JJ change descriptions
 
-Generate summaries following these examples:
+Inspect the current change with `jj diff --from @- --to @` and the repository's existing descriptions with `jj log` before writing or editing its description.
 
-**Example 1:**
-Input: Monthly revenue table with a 12% increase and two missing regions
-Output: Revenue increased 12% month over month. Regional data is incomplete for East and West.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 2:**
-Input: Support-volume table showing 430 tickets, 86% resolved within SLA
-Output: Support handled 430 tickets; 86% met the SLA. Highlight the 14% outside SLA for follow-up.
+Use `jj describe` to edit the description. Repository-local syntax and conventions take precedence. Where the history does not settle a detail, use compatible Go guidance: clear, concise prose that explains what changed and why. Do not impose a fixed prefix, type, scope, or message template.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

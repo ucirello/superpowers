@@ -42,7 +42,7 @@ digraph when_to_use {
 **Don't use when:**
 - Failures are related (fix one might fix others)
 - Need to understand full system state
-- Agents would edit the same files or use the same non-versioned resources
+- Agents would interfere with each other
 
 ## The Pattern
 
@@ -61,40 +61,16 @@ Each agent gets:
 - **Specific scope:** One test file or subsystem
 - **Clear goal:** Make these tests pass
 - **Constraints:** Don't change other code
-- **Expected output:** Summary of what you found and fixed, plus the jj change ID for edits
-
-For write-capable agents, create one jj workspace per agent from the same base
-change. **Never dispatch multiple write-capable agents into the same workspace.**
-Use a run-scoped namespace for every workspace name and put the workspace paths
-under `$(jj workspace root)/.tmp`. First verify that repository ignore rules
-exclude `.tmp/`, as required by superpowers:using-jj-workspaces. If no Jujutsu
-repository exists, isolated Jujutsu workspaces cannot be created; use `.tmp` in
-the current directory only for local temporary artifacts, report the missing
-repository, and do not dispatch write-capable agents as if they were isolated:
-
-```bash
-root=$(jj workspace root) || exit 1
-base=$(jj log -r @ --no-graph -T 'change_id ++ "\n"')
-run_root="$root/.tmp/parallel-agents-$(date +%s)-$$"
-mkdir -p "$run_root"
-namespace=$(basename "$run_root")
-
-jj workspace add --name "$namespace-agent-1" -r "$base" "$run_root/agent-1"
-jj workspace add --name "$namespace-agent-2" -r "$base" "$run_root/agent-2"
-jj workspace add --name "$namespace-agent-3" -r "$base" "$run_root/agent-3"
-```
-
-Give each agent only its own workspace path and name. Read-only investigations
-need no extra workspace.
+- **Expected output:** Summary of what you found and fixed
 
 ### 3. Dispatch in Parallel
 
 Issue all three subagent dispatches in the same response — they run in parallel:
 
 ```text
-Subagent (general-purpose): "In <agent-1-path>, fix agent-tool-abort.test.ts failures"
-Subagent (general-purpose): "In <agent-2-path>, fix batch-completion-behavior.test.ts failures"
-Subagent (general-purpose): "In <agent-3-path>, fix tool-approval-race-conditions.test.ts failures"
+Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
+Subagent (general-purpose): "Fix batch-completion-behavior.test.ts failures"
+Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
 # All three run concurrently.
 ```
 
@@ -104,11 +80,9 @@ Multiple dispatch calls in one response = parallel execution. One per response =
 
 When agents return:
 - Read each summary
-- Inspect each reported change with `jj show <change-id>`
-- Combine the independent changes with `jj new <change-id-1> <change-id-2> ...`
-- Resolve any conflicts in the combined change
+- Verify fixes don't conflict
 - Run full test suite
-- Forget each temporary workspace with `jj workspace forget <workspace-name>`, then remove its directory
+- Integrate all changes
 
 ## Agent Prompt Structure
 
@@ -135,14 +109,7 @@ These are timing/race condition issues. Your task:
 
 Do NOT just increase timeouts - find the real issue.
 
-Before returning, inspect repository-local instructions and recent `jj log` descriptions, then describe your change in that repository-local style with `jj describe`. Repository-local instructions and syntax observed in `jj log` take precedence over compatible Go guidance.
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
-Apply only compatible Go guidance, such as clarity and useful rationale. Do not impose a fixed message, prefix, type, scope, subject, body, template, or example. Use `[change description]` as a neutral command placeholder. Do not add agent attribution.
-
-Return: Summary of what you found and what you fixed, plus the jj change ID from
-`jj log -r @ --no-graph -T 'change_id ++ "\n"'`.
+Return: Summary of what you found and what you fixed.
 ```
 
 ## Common Mistakes
@@ -157,19 +124,16 @@ Return: Summary of what you found and what you fixed, plus the jj change ID from
 **✅ Constraints:** "Do NOT change production code" or "Fix tests only"
 
 **❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause, changes, and jj change ID"
-
-**❌ Shared workspace:** Parallel agents overwrite or absorb each other's edits
-**✅ Isolated workspaces:** One uniquely named temporary jj workspace per writer
+**✅ Specific:** "Return summary of root cause and changes"
 
 ## When NOT to Use
 
 **Related failures:** Fixing one might fix others - investigate together first
 **Need full context:** Understanding requires seeing entire system
 **Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using the same non-versioned resources)
+**Shared state:** Agents would interfere (editing same files, using same resources)
 
-## Example
+## Real Example from Session
 
 **Scenario:** 6 test failures across 3 files after major refactoring
 

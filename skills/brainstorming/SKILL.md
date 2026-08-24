@@ -97,7 +97,7 @@ your path and complete them in order.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md` and record it as an isolated Jujutsu change
+6. **Write design doc** — save to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md` and finalize the Jujutsu change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repo-local instructions and `git log` syntax win; apply compatible Go quality guidance, then run `jj describe -m "<message derived from those standards>"` and `jj new` without imposing a fixed type, scope, or template.
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -206,10 +206,7 @@ is the whole process.
 - Write the validated design (spec) to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Record the design document as an isolated Jujutsu change. Inspect it with `jj status` and `jj diff`.
-- Read repository-local instructions and run the repository-prescribed `git log` command, or plain `git log` if none is prescribed, before composing the change description. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and `git log` syntax always win. Use a description derived from the completed design rather than a fixed prefix or template.
-- If the working-copy change contains unrelated work, run `jj split -m "<description composed from the standards above>" <spec-path>`. The spec is then `@-`; record its full commit ID, and run `jj new <spec-commit-id>` so implementation planning continues from the spec while the unrelated remainder stays in its separate change.
-- If the working-copy change contains only the spec, apply the composed description with `jj describe -m "<description composed from the standards above>"`, then run `jj new @` to continue in a fresh working-copy change.
+- Finalize the design as a Jujutsu change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repo-local instructions and `git log` syntax win; apply compatible Go quality guidance, then run `jj describe -m "<message derived from those standards>"` and `jj new` without imposing a fixed type, scope, or template.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
@@ -224,7 +221,7 @@ Fix any issues inline. No need to re-review — just fix and move on.
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:
 
-> "Spec written and recorded as an isolated change at `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
+> "Spec written to `<path>` and finalized as a Jujutsu change. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
 

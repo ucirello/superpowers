@@ -33,7 +33,7 @@ digraph when_to_use {
 
 ### 1. Observe the Symptom
 ```
-Error: jj git init failed in ~/project/packages/core
+Error: jj git init failed in $(jj workspace root)/packages/core
 ```
 
 ### 2. Find Immediate Cause
@@ -44,7 +44,7 @@ await execFileAsync('jj', ['git', 'init', '.'], { cwd: projectDir });
 
 ### 3. Ask: What Called This?
 ```typescript
-WorkspaceManager.createSessionWorkspace(projectDir, sessionId)
+WorktreeManager.createSessionWorktree(projectDir, sessionId)
   → called by Session.initializeWorkspace()
   → called by Session.create()
   → called by test at Project.create()
@@ -112,7 +112,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 
 **Trace chain:**
 1. `jj git init .` runs in `process.cwd()` ← empty cwd parameter
-2. WorkspaceManager called with empty projectDir
+2. WorktreeManager called with empty projectDir
 3. Session.create() passed empty string
 4. Test accessed `context.tempDir` before beforeEach
 5. setupCoreTest() returns `{ tempDir: '' }` initially
@@ -124,7 +124,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, falling back to the local `.tmp` directory when no jj workspace exists
+- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, falling back to local `./.tmp` when no JJ workspace exists
 - Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle

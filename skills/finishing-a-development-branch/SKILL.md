@@ -3,7 +3,7 @@ name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 ---
 
-# Finishing a Development Branch
+# Finishing Development Work
 
 ## Overview
 
@@ -27,53 +27,81 @@ Tests failing (<N> failures). Must fix before completing:
 
 ## Step 2: Detect Environment
 
+Jujutsu has no index, detached state, or active bookmark. The working copy is
+the revision `@`; bookmarks are independent names that may point to it.
+
 ```bash
-WORKSPACE_PATH=$(jj workspace root)
-jj workspace list
-jj status
-jj log -r '@ | @-'
-jj bookmark list -r '::@'
+# Capture now, while still inside the workspace. Later steps may change CWD.
+WORKSPACE_ROOT=$(jj workspace root)
+WORKSPACE_NAME=$(jj workspace list -T 'if(target.current_working_copy(), name ++ "\n")')
+WORK_REVSET=@
+if [ -z "$(jj diff -r @ --summary)" ] && [ -z "$(jj log --no-graph -r @ -T 'description')" ]; then
+  WORK_REVSET=@-
+fi
+WORK_REVISION=$(jj log --no-graph -r "exactly($WORK_REVSET, 1)" -T 'commit_id ++ "\n"')
+WORK_BOOKMARKS=$(jj log --no-graph -r "$WORK_REVISION" -T 'local_bookmarks.map(|b| b.name()).join("\n") ++ "\n"')
 ```
 
-Determine `FEATURE_REV` from the completed work, not from a fixed relative
-position. If `@` contains the completed work, use `@`; if the preceding
-workflow left an empty `@` after recording the completed work, use `@-`.
-Confirm with `jj diff -r <feature-revision>`.
+If temporary files are needed, place them under `$(jj workspace root)/.tmp`;
+if workspace-root lookup fails, use `.tmp`. Do not use a global temporary
+directory.
 
-Determine `FEATURE_BOOKMARK`, when needed, from the plan, conversation, or
-bookmarks in `::<feature-revision>`. Do not assume a bookmark points directly
-to the completed revision: Jujutsu does not automatically advance bookmarks.
-Ask if more than one non-base bookmark could represent the work.
+If exactly one local bookmark points to `<work-revision>`, use it as `<work-bookmark>`. If
+several do, ask which identifies this work. If none do, the work is an unnamed
+revision and `<work-revision>` is the captured full commit ID. An empty,
+undescribed `@` created after `jj commit` is skipped in favor of its single
+parent.
 
-This determines how publishing and cleanup work:
+This determines which menu to show and how cleanup works:
 
 | State | Menu | Cleanup |
 |-------|------|---------|
-| Feature revision has a known local bookmark | Standard 3 options | Provenance-based (see Step 6) |
-| Feature revision has no feature bookmark | Standard 3 options; create one only for publishing | Provenance-based (see Step 6) |
-| Multiple bookmarks could represent the work | Stop and ask which bookmark represents it | Do not clean up until clarified |
-
-Record the current workspace name from `jj workspace list`, the workspace path
-as `WORKSPACE_PATH`, the completed revision as `FEATURE_REV`, and the selected
-bookmark, when present, as `FEATURE_BOOKMARK`.
+| Default workspace | Standard 3 options | No workspace to clean up |
+| Workspace under `.rocketclaw/workspaces/` or `.workspaces/`, named bookmark | Standard 3 options | Provenance-based (see Step 6) |
+| Other workspace, named bookmark | Standard 3 options | Externally managed — leave in place |
+| Other workspace, unnamed revision | Reduced 2 options (no local merge) | Externally managed — leave in place |
 
 ## Step 3: Determine Base Bookmark
 
 The base bookmark is whatever this work forked from — usually named in the
-plan, the conversation, or the tracked remote bookmark. If it is not already
-known, ask: "This work split from <your best guess> - is that correct?"
+plan, the conversation, or visible in the revision graph. If it is not already
+known, inspect `jj log -r 'fork_point(@ | trunk()) | @ | trunk()'`, make a best
+guess, and ask: "This work split from <your best guess> - is that correct?"
 Confirm before merging: merging into the wrong base is expensive to undo.
+
+## Commit Descriptions
+
+Whenever a step below needs a revision description, read repository guidance
+and inspect the repository's existing descriptions first. Repository-local
+syntax wins over Go guidance. Apply compatible Go guidance for a clear, concise
+subject and an explanatory body when useful, but do not impose a fixed prefix,
+type, scope, subject, body, or template.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Compose a description for the actual change; do not use canned merge wording or
+another fixed message. Apply it with `jj describe -r <revision>` so the editor
+can preserve multiline text, or with `jj describe -r <revision> -m '<composed-description>'`.
 
 ## Step 4: Present Options
 
-**Present exactly these 3 options:**
+**Default or named-bookmark workspace — present exactly these 3 options:**
 
 ```
 Implementation complete. What would you like to do?
 
 1. Merge back to <base-bookmark> locally
 2. Push and create a Pull Request
-3. Keep the change as-is (I'll handle it later)
+3. Keep the work as-is (I'll handle it later)
+
+Which option?
+```
+
+**Externally managed workspace with an unnamed revision — present exactly these 2 options:**
+
+```
+Implementation complete. This is an unnamed revision in an externally managed workspace.
+
+1. Push under a new bookmark and create a Pull Request
+2. Keep as-is (I'll handle it later)
 
 Which option?
 ```
@@ -88,162 +116,193 @@ is theirs.
 
 ### Option 1: Merge Locally
 
-Use only the applicable integration path. Determine ancestry with `jj log -r
-'<base-bookmark>::<feature-revision>'`; do not create a two-parent revision for
-a fast-forward. Before composing or editing the integration revision's
-description, read repo-local instructions and run the repository-prescribed
-`git log` command, or plain `git log` when none is prescribed.
-Repo-local instructions and the syntax used in `git log` always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Describe the reason for the integration and preserve the semantic content of the integrated work; derive the form from the repository rather than using a fixed message, type, scope, prefix, template, or example.
+Determine the intended remote with `jj git remote list`; if more than one is
+plausible, ask rather than assuming `origin`. Fetch first. A tracked base bookmark advances on fetch when only the remote has
+moved; stop and resolve it if the bookmark becomes conflicted.
 
 ```bash
-# Update the remote view first. A tracked base bookmark advances automatically.
-jj git fetch --remote origin
+jj git fetch --remote <remote>
+jj bookmark list <base-bookmark>
 
-# If <base-bookmark> is an ancestor of <feature-revision>, fast-forward it.
-jj bookmark move <base-bookmark> --to <feature-revision>
+# Create a merge revision with the updated base first and the work second.
+jj new <base-bookmark> <work-revision>
+```
 
-# If the histories diverged, create a two-parent integration revision instead.
-jj new <base-bookmark> <feature-revision>
-jj describe
-jj bookmark move <base-bookmark> --to @
+Compose and apply the merge revision's description according to **Commit
+Descriptions**, then verify tests on the merge result:
 
-# Verify tests on merged result
+```bash
+jj describe -r @
+MERGE_REVISION=$(jj log --no-graph -r @ -T 'commit_id ++ "\n"')
 <test command>
 ```
 
-If tests fail on the merged result: stop, leave the workspace and bookmarks in
-place, and investigate — nothing has been pushed, so the merge is local
-and recoverable.
+If tests fail on the merged result: stop, leave the workspace, merge revision,
+and bookmarks in place, and investigate — nothing has been pushed, so the merge
+is local and recoverable through Jujutsu's operation log.
 
-Once the integrated result is green: forget the feature bookmark locally when
-one exists, then
-clean up the workspace (Step 6). Use `forget`, not `delete`, so cleanup does not
-schedule deletion of an existing remote bookmark:
+Once the merged result is green, advance the base bookmark to the merge
+revision:
 
 ```bash
-jj bookmark forget <feature-bookmark>  # only when a feature bookmark exists
+jj bookmark move <base-bookmark> --to "$MERGE_REVISION"
 ```
+
+Clean up the workspace (Step 6), then forget `<work-bookmark>` if the work had
+one:
+
+```bash
+jj bookmark forget <work-bookmark>
+```
+
+`bookmark forget` is intentional: unlike `bookmark delete`, it does not
+schedule deletion of a same-named remote bookmark.
 
 ### Option 2: Push and Create PR
 
-```bash
-# Existing feature bookmark: first move it to the completed revision.
-jj bookmark move <feature-bookmark> --to <feature-revision>
-jj git push --remote origin --bookmark <feature-bookmark>
+Determine the intended remote with `jj git remote list`; if more than one is
+plausible, ask rather than assuming `origin`.
 
-# Work without a feature bookmark: create and push one at the completed revision.
-jj git push --remote origin --named <new-bookmark>=<feature-revision>
+Before pushing, ensure every revision in `<base-bookmark>..<work-revision>` has
+a non-empty, repository-conformant description. Compose any missing description
+according to **Commit Descriptions**; never bypass this with
+`--allow-empty-description`.
+
+For named work:
+
+```bash
+jj git push --remote <remote> --bookmark <work-bookmark>
 ```
 
-Then create the pull/merge request against <base-bookmark> with the forge's
-tooling — its CLI if one is available, or the creation URL most forges
-print when you push — following the repo's PR template and conventions if
-present, and report the URL to your human partner.
+For an unnamed revision, ask for a bookmark name, then create and push it in one
+operation:
+
+```bash
+jj git push --remote <remote> --named <new-bookmark>=<work-revision>
+```
+
+Then create the pull/merge request against `<base-bookmark>` with the forge's
+tooling — its CLI if one is available, or the creation URL most forges print
+when you push — following the repo's PR template and conventions if present,
+and report the URL to your human partner. `gh` may be used for GitHub.
 
 Keep the workspace — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
 
-Report: "Keeping change <revision> as-is. Workspace preserved at <path>."
+For named work, report: "Keeping bookmark <name>. Workspace preserved at <path>."
+For unnamed work, report: "Keeping revision <change-id>. Workspace preserved at <path>."
 
 ### If your human partner asks to discard the work
 
 This path exists only as a response to an explicit request to throw the
-work away. Confirm first:
+work away. Show the revisions selected by
+`jj log -r '<base-bookmark>..<work-revision>'` and confirm first:
 
 ```
-This will permanently delete:
-- Bookmark <name>
-- All revisions: <revision-list>
-- Workspace at <path>
+This will abandon:
+- Bookmark <name>, if present
+- Revisions: <revision-list>
+- Workspace at <path>, if owned by this workflow
 
+Non-versioned files removed with the workspace are not recoverable.
 Type 'discard' to confirm.
 ```
 
-Wait for that exact confirmation. When it arrives:
+Wait for that exact confirmation. When it arrives, forget the bookmark without
+propagating a remote deletion if one exists:
 
 ```bash
-# Stop if another bookmark or workspace depends on a descendant of this range.
-jj log -r '(<base-bookmark>..<feature-revision>):: & (bookmarks() | working_copies()) ~ (<base-bookmark>..<feature-revision>)'
-jj log -r '<base-bookmark>..<feature-revision>'
-jj bookmark forget <feature-bookmark>  # only when one exists
-jj abandon '<base-bookmark>..<feature-revision>'
+jj bookmark forget <work-bookmark>
 ```
 
-If the first command lists another bookmark or workspace revision, stop and
-show the dependency; the original confirmation did not authorize rewriting
-that work. Otherwise, clean up the workspace (Step 6).
+Skip that command for unnamed work. Then abandon the work revisions:
+
+```bash
+jj abandon '<base-bookmark>..<work-revision>'
+```
+
+`jj abandon` remains recoverable through the operation log until repository
+garbage collection. Then clean up the workspace (Step 6).
 
 ## Step 6: Cleanup Workspace
 
-**Runs for Option 1 and confirmed discards.** Options 2 and 3 always
-preserve the workspace. Use the workspace name and `WORKSPACE_PATH` captured
-in Step 2.
+**Runs for Option 1 and confirmed discards.** Options 2 and 3 always preserve
+the workspace. Use the `WORKSPACE_ROOT` and `WORKSPACE_NAME` values captured in
+Step 2.
 
-**If `WORKSPACE_PATH` equals the destination recorded by the workspace-creation
-workflow and that destination is under the owning workspace root's `.tmp/`
-directory:** this workflow created the workspace, so we own cleanup. Verify
-the recorded owning root and destination against `jj workspace list` and
-`jj workspace root --name <workspace-name>`; never infer ownership from a
-similar-looking path alone.
-First inspect `jj status` and the workspace directory for ignored or otherwise
-untracked scratch files. Jujutsu snapshots tracked working-copy changes
-automatically, but ignored files may exist only there.
+**If this is the default workspace:** No workspace to clean up. Done.
 
-If there are no such files, change to the owning workspace, forget the
-workspace registration from there, and remove only the captured path:
+**If `WORKSPACE_ROOT` is under `.rocketclaw/workspaces/`, `.workspaces/`,
+`.tmp/workspaces/`, or the sibling `rocketclaw-workspaces/` location:**
+This workflow owns cleanup. Jujutsu snapshots trackable working-copy files
+automatically, but ignored and otherwise non-versioned files are not revisions.
+Before deleting anything:
 
 ```bash
-cd <owning-workspace-root>
-jj workspace forget <workspace-name>
-rm -rf -- "$WORKSPACE_PATH"
+jj status
+jj file list
 ```
 
-Never remove a path outside that repo-local namespace. If Jujutsu is
-unavailable while selecting a temporary location, use the current directory's
-`.tmp/` as the local fallback; never use an OS-global temporary directory.
+Inventory the workspace's filesystem, including ignored files, and compare it
+with `jj file list`. Exclude only Jujutsu's `.jj` metadata and temporary
+inventory files under `$(jj workspace root)/.tmp` (or `.tmp` if root lookup
+fails).
 
-**If scratch files are present:** the workspace holds files that exist nowhere
-else — plans, notes, or ignored work. Never delete them on your own initiative.
-Show your human partner what is at stake and ask:
+**If any non-versioned files exist:** they exist nowhere in Jujutsu — plans,
+notes, build output, or scratch work. Show your human partner what is at stake
+and ask:
 
 ```
-Workspace cleanup found files that are not in a revision:
+Workspace removal would delete these non-versioned files:
 
 <file list>
 
-1. Include them in <bookmark> before cleanup
-2. Move them into <owning workspace root>
+1. Add them to an appropriate revision before cleanup
+2. Move them into the default workspace
 3. Delete them (unrecoverable)
 
 Which?
 ```
 
-Carry out the choice, then forget and remove the workspace.
+Carry out the choice and repeat the inventory. Only after no files are at risk,
+change to the default workspace, forget the workspace registration, and remove
+its directory:
 
-**Otherwise:** The host environment owns this workspace — leave it in
-place. If your platform provides a workspace-exit tool, use it.
+```bash
+DEFAULT_ROOT=$(jj workspace root --name default)
+cd "$DEFAULT_ROOT"
+jj workspace forget "$WORKSPACE_NAME"
+rm -rf -- "$WORKSPACE_ROOT"
+```
+
+Never remove the default workspace. If no workspace named `default` exists,
+use another preserved workspace returned by `jj workspace list` as
+`DEFAULT_ROOT`; do not use the workspace being removed.
+
+**Otherwise:** The host environment owns this workspace — leave it in place. If
+your platform provides a workspace-exit tool, use it.
 
 ## Quick Reference
 
 | Option | Merge | Push | Keep Workspace | Cleanup Bookmark |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | yes | - | - | yes |
+|--------|-------|------|----------------|------------------|
+| 1. Merge locally | yes | - | - | yes (forget locally) |
 | 2. Create PR | - | yes | yes | - |
 | 3. Keep as-is | - | - | yes | - |
-| Discard (explicit request only) | - | - | - | yes (abandon) |
+| Discard (explicit request only) | - | - | - | yes (forget and abandon revisions) |
 
 ## Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|
-| "Tests passed earlier this session" | Run the suite on the tree you are about to integrate. A green run only proves the tree it ran on. |
+| "Tests passed earlier this session" | Run the suite on the revision you are about to integrate. A green run only proves the tree it ran on. |
 | "They obviously want it merged" | Integration is your human partner's decision. Present the menu and wait. |
 | "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
-| "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
+| "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes abandonment and workspace deletion. |
 | "The PR is up, so the workspace is clutter now" | PR feedback gets fixed in that workspace. It stays until the work lands. |
-| "This other workspace looks stale — I'll clean it too" | Clean up only the captured workspace at its recorded path under the owning root's `.tmp/`. Everything else belongs to the host. |
-| "The files are probably reproducible — `rm -rf` is just finishing cleanup" | Ignored files may exist only in that workspace. Show your human partner and ask. |
-| "The merged-result failure is probably flaky" | A failing merged result stops everything. Bookmark and workspace stay put while you investigate. |
+| "This other workspace looks stale — I'll clean it too" | Clean up only the captured workspace in one of the workflow-owned locations listed in Step 6. Everything else belongs to the host. |
+| "Jujutsu snapshots everything, so filesystem deletion is safe" | Ignored and otherwise non-versioned files can exist only in that workspace. Inventory them and ask before deletion. |
+| "The merged-result failure is probably flaky" | A failing merged result stops everything. Revisions, bookmarks, and workspace stay put while you investigate. |
 | "The base bookmark is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
-| "The push was rejected — I'll bypass the safety check" | A rejected push means the remote moved. Run `jj git fetch --remote <remote>`, resolve the bookmark conflict, and retry. |
+| "The push was rejected — forcing it will fix it" | A rejected push means the remote moved or a safety check failed. Fetch and investigate; override safety only on your human partner's explicit request. |

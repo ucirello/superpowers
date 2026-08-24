@@ -34,12 +34,12 @@ digraph when_to_use {
 ## Core Pattern
 
 ```typescript
-// BEFORE: Guessing at timing
+// ❌ BEFORE: Guessing at timing
 await new Promise(r => setTimeout(r, 50));
 const result = getResult();
 expect(result).toBeDefined();
 
-// AFTER: Waiting for condition
+// ✅ AFTER: Waiting for condition
 await waitFor(() => getResult() !== undefined);
 const result = getResult();
 expect(result).toBeDefined();
@@ -79,18 +79,18 @@ async function waitFor<T>(
 }
 ```
 
-See `condition-based-waiting-example.ts` in this directory for a complete implementation with domain-specific helpers (`waitForEvent`, `waitForEventCount`, `waitForEventMatch`) adapted from an actual debugging session.
+See `condition-based-waiting-example.ts` in this directory for complete implementation with domain-specific helpers (`waitForEvent`, `waitForEventCount`, `waitForEventMatch`) from actual debugging session.
 
 ## Common Mistakes
 
-**Polling too fast:** `setTimeout(check, 1)` - wastes CPU
-**Fix:** Poll every 10ms
+**❌ Polling too fast:** `setTimeout(check, 1)` - wastes CPU
+**✅ Fix:** Poll every 10ms
 
-**No timeout:** Loop forever if condition never met
-**Fix:** Always include timeout with clear error
+**❌ No timeout:** Loop forever if condition never met
+**✅ Fix:** Always include timeout with clear error
 
-**Stale data:** Cache state before loop
-**Fix:** Call getter inside loop for fresh data
+**❌ Stale data:** Cache state before loop
+**✅ Fix:** Call getter inside loop for fresh data
 
 ## When Arbitrary Timeout IS Correct
 
@@ -108,7 +108,7 @@ await new Promise(r => setTimeout(r, 200));   // Then: wait for timed behavior
 
 ## Real-World Impact
 
-From the debugging session (2025-10-03), before adaptation to the JJ workflow:
+From debugging session (2025-10-03):
 - Fixed 15 flaky tests across 3 files
 - Pass rate: 60% → 100%
 - Execution time: 40% faster

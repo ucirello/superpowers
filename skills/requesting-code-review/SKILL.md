@@ -1,11 +1,11 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before integrating changes to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
 ---
 
 # Requesting Code Review
 
-Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history.
+Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation - never your session's history.
 
 **Core principle:** Review early, review often.
 
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before integrating into trunk
+- Before merge to main
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,27 +23,25 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Record the Jujutsu revision range:**
+**1. Get full commit IDs:**
 ```bash
-BASE_REV=$(jj log -r '<revision-before-the-work>' --no-graph -T 'commit_id ++ "\n"')
-END_REV=$(jj log -r '<completed-revision>' --no-graph -T 'commit_id ++ "\n"')
+BASE_COMMIT_ID=$(jj --ignore-working-copy log --no-graph -r 'exactly(@-, 1)' -T 'commit_id ++ "\n"')  # or exactly(trunk(), 1)
+HEAD_COMMIT_ID=$(jj --ignore-working-copy log --no-graph -r 'exactly(@, 1)' -T 'commit_id ++ "\n"')
 ```
 
-Capture the base before implementation and the completed revision after it.
-If `jj new` left an empty working-copy change at `@`, the completed revision is
-usually `@-`; if the completed work is still in `@`, use `@`. Confirm the range
-with `jj diff --from "$BASE_REV" --to "$END_REV"` rather than assuming a fixed
-parent/current layout.
+`exactly(..., 1)` fails unless each revset resolves to one revision. Use the
+full `commit_id`, not a short commit ID or a change ID, so the review endpoints
+cannot move if a change is rewritten.
 
 **2. Dispatch code reviewer subagent:**
 
 Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
 
 **Placeholders:**
-- `[DESCRIPTION]` - Brief summary of what you built
-- `[PLAN_OR_REQUIREMENTS]` - What it should do
-- `[BASE_REV]` - Starting revision
-- `[END_REV]` - Ending revision
+- `{DESCRIPTION}` - Brief summary of what you built
+- `{PLAN_OR_REQUIREMENTS}` - What it should do
+- `{BASE_COMMIT_ID}` - Starting full commit ID
+- `{HEAD_COMMIT_ID}` - Ending full commit ID
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -58,14 +56,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_REV=$(jj log -r '<recorded-task-base>' --no-graph -T 'commit_id ++ "\n"')
-END_REV=$(jj log -r '<completed-task-revision>' --no-graph -T 'commit_id ++ "\n"')
+BASE_COMMIT_ID=$(jj --ignore-working-copy log --no-graph -r 'exactly(latest(description(substring:"Task 1")), 1)' -T 'commit_id ++ "\n"')
+HEAD_COMMIT_ID=$(jj --ignore-working-copy log --no-graph -r 'exactly(@, 1)' -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
   PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  BASE_REV: a7981ec
-  END_REV: 3df7661
+  BASE_COMMIT_ID: a7981ec8f8a32bbc1041ec5a71c3f945acd899e0
+  HEAD_COMMIT_ID: 3df7661180d12d58661b4829c5c4f72a9a8c3ef2
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

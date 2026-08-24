@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Describe the completed Jujutsu change and start a new empty change
+    4. Finish the change with `jj commit`
     5. Self-review (see below)
     6. Report back
 
@@ -47,11 +47,11 @@ Subagent (general-purpose):
     While iterating, run the focused test for what you're changing; run the
     full suite once before finishing the change, not after every edit.
 
-    Before writing or editing the change description, read the repository-local
-    instructions and run `git log`; repository-local instructions and the
-    observed history take precedence over generic conventions. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Use the resulting text with `jj describe`, then run `jj new` to leave the
-    completed change as `@-` and a new empty working-copy change as `@`.
+    Before `jj commit`, inspect repository-local contribution guidance and
+    recent descriptions with `jj log -r ::@`. Repository-local syntax wins;
+    apply compatible Go guidance for a clear, concise subject and an explanatory
+    body when useful, but do not impose a fixed prefix, type, scope, subject,
+    body, or template. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
     ## You Do Not Dispatch Subagents
 
@@ -146,7 +146,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Revisions created (short change ID + description first line)
+    - Changes created (short change ID + short commit ID + description first line)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

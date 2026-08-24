@@ -4,7 +4,7 @@ Reference example of extracting, structuring, and bulletproofing a critical skil
 
 ## Source Material
 
-Extracted debugging framework:
+Extracted debugging framework from `~/.claude/CLAUDE.md`:
 - 4-phase systematic process (Investigation → Pattern Analysis → Hypothesis → Implementation)
 - Core mandate: ALWAYS find root cause, NEVER fix symptoms
 - Rules designed to resist time pressure and rationalization
@@ -22,7 +22,7 @@ Extracted debugging framework:
 - Repetitive variations of same rule
 - Narrative explanations (condensed to principles)
 
-## Structure Following `superpowers:writing-skills`
+## Structure Following skill-creation/SKILL.md
 
 1. **Rich when_to_use** - Included symptoms and anti-patterns
 2. **Type: technique** - Concrete process with steps
@@ -54,7 +54,7 @@ Framework designed to resist rationalization under pressure:
 
 ## Testing Approach
 
-Created 4 validation tests following `skills/writing-skills/testing-skills-with-subagents.md`:
+Created 4 validation tests following skills/meta/testing-skills-with-subagents:
 
 ### Test 1: Academic Context (No Pressure)
 - Simple bug, no time pressure
@@ -82,7 +82,7 @@ Created 4 validation tests following `skills/writing-skills/testing-skills-with-
 - Flowchart for "fix failed" decision
 
 ### Enhancement 1: TDD Reference
-- Added routing to `superpowers:test-driven-development`
+- Added link to skills/testing/test-driven-development
 - Note explaining TDD's "simplest code" ≠ debugging's "root cause"
 - Prevents confusion between methodologies
 
@@ -99,7 +99,7 @@ Bulletproof skill that:
 
 ## Key Insight
 
-**Most important bulletproofing:** Anti-patterns section showing exact shortcuts that feel justified in the moment. When an agent thinks "I'll just add this one quick fix", seeing that exact pattern listed as wrong creates cognitive friction.
+**Most important bulletproofing:** Anti-patterns section showing exact shortcuts that feel justified in the moment. When Claude thinks "I'll just add this one quick fix", seeing that exact pattern listed as wrong creates cognitive friction.
 
 ## Usage Example
 

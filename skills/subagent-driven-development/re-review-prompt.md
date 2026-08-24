@@ -30,18 +30,18 @@ Subagent (general-purpose):
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_REV] (the completed revision the previous review saw)
-    **End:** [END_REV]
+    **Fix base revision:** [FIX_BASE_REVISION] (the revision the previous review saw)
+    **Current revision:** [CURRENT_REVISION]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the fix revisions, a stat summary,
-    and the fix diff with surrounding context. Do not regenerate the package.
+    and the fix diff with surrounding context. Do not re-run Jujutsu commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj --ignore-working-copy diff --from [FIX_BASE_REV] --to [END_REV] --stat`
-    and `jj --ignore-working-copy diff --from [FIX_BASE_REV] --to [END_REV]`.
+    `jj --ignore-working-copy diff --from [FIX_BASE_REVISION] --to [CURRENT_REVISION] --stat` and
+    `jj --ignore-working-copy diff --from [FIX_BASE_REVISION] --to [CURRENT_REVISION] --git`.
 
-    Your review is read-only in this workspace. Do not mutate workspace files,
-    the working-copy revision, revision graph, or bookmarks.
+    Your review is read-only in this workspace. Do not mutate the working
+    copy commit, bookmarks, or operation state in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -107,9 +107,9 @@ Subagent (general-purpose):
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_REV]` — the completed revision the previous review saw
-- `[END_REV]` — completed fix revision
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE END` printed
+- `[FIX_BASE_REVISION]` — commit ID of the revision the previous review saw
+- `[CURRENT_REVISION]` — commit ID of the latest completed fix revision
+- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE_REVISION CURRENT_REVISION` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

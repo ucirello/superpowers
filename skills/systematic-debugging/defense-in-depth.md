@@ -54,23 +54,22 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 
 ```typescript
 async function jjGitInit(directory: string) {
-  // In tests, refuse repository initialization outside the repo-local .tmp.
+  // Prefer workspace-local scratch storage; outside a JJ workspace, use local .tmp.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    let workspaceRoot: string;
-    try {
-      workspaceRoot = execFileSync('jj', ['workspace', 'root'], {
-        encoding: 'utf8',
-      }).trim();
-    } catch {
-      workspaceRoot = process.cwd();
-    }
-    const tmpDir = normalize(resolve(workspaceRoot, '.tmp'));
-    const pathFromTmp = relative(tmpDir, normalized);
+    let scratchRoot: string;
 
-    if (pathFromTmp.startsWith('..') || isAbsolute(pathFromTmp)) {
+    try {
+      const { stdout } = await execFileAsync('jj', ['workspace', 'root']);
+      scratchRoot = normalize(resolve(stdout.trim(), '.tmp'));
+    } catch {
+      scratchRoot = normalize(resolve('.tmp'));
+    }
+
+    const relativePath = relative(scratchRoot, normalized);
+    if (relativePath.startsWith('..') || isAbsolute(relativePath)) {
       throw new Error(
-        `Refusing jj git init outside ${tmpDir} during tests: ${directory}`
+        `Refusing jj git init outside ${scratchRoot} during tests: ${directory}`
       );
     }
   }
@@ -115,7 +114,7 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp` in tests, using local `.tmp` when no jj workspace exists
+- Layer 3: `WorktreeManager` refuses `jj git init` outside `$(jj workspace root)/.tmp` in tests, with local `./.tmp` as the no-workspace fallback
 - Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
