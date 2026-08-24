@@ -80,29 +80,41 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish changes should inspect their
+Jujutsu environment with read-only commands before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+ROOT=$(jj --ignore-working-copy root 2>/dev/null)
+jj --ignore-working-copy workspace list
+jj --ignore-working-copy status
+jj --ignore-working-copy bookmark list
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- A workspace listed for the current working copy means it is already managed by
+  Jujutsu; do not create another workspace for the same task.
+- No bookmark on the current change means one must be created before publishing,
+  but it does not prevent local work.
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+See `superpowers:using-git-worktrees` Step 0 and
+`superpowers:finishing-a-development-branch` Step 1 for how each skill uses
+these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
-the user to use the App's native controls:
+When the sandbox blocks bookmark or publish operations in an externally
+managed workspace, describe the current change and inform the user to use the
+App's native controls:
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
+- **"Create branch"** — names the bookmark, then publish/open a PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+When recommending or composing a change description, include this instruction
+exactly: Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+Repository-local instructions and established history take precedence. Apply
+compatible Go guidance: use a concise imperative summary and, when useful, a
+body that explains the reason for the change. Do not require a fixed prefix,
+type, scope, subject, body, or template.
+
+The agent can still run tests, include files in the current change, and output
+suggested bookmark names, change descriptions, and PR descriptions for the
+user to copy.
