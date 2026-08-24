@@ -15,7 +15,7 @@ Subagent (general-purpose):
   prompt: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
-    not an integration review — a broad whole-change review happens separately after
+    not an integration review — a broad whole-stack review happens separately after
     all tasks are complete.
 
     ## What Was Requested
@@ -31,18 +31,18 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base revision:** [BASE_REVISION]
-    **Target revision:** [TARGET_REVISION]
+    **Base:** [BASE_REV]
+    **End:** [END_REV]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the revision list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not re-run Jujutsu commands.
-    If the diff file is missing, derive the diff yourself:
-    `jj --ignore-working-copy diff --from [BASE_REVISION] --to [TARGET_REVISION] --stat`
-    and `jj --ignore-working-copy diff --from [BASE_REVISION] --to [TARGET_REVISION]`.
+    mid-function — and say so in your report. Do not regenerate the package.
+    If the diff file is missing, fetch the diff yourself:
+    `jj --ignore-working-copy diff --from [BASE_REV] --to [END_REV] --stat`
+    and `jj --ignore-working-copy diff --from [BASE_REV] --to [END_REV]`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -50,8 +50,8 @@ Subagent (general-purpose):
     lock ordering, a function or API contract, or shared mutable state,
     checking the call sites is the right method.
 
-    Your review is read-only on this checkout. Do not mutate the working
-    files, working-copy revision, revision graph, or bookmarks in any way.
+    Your review is read-only in this workspace. Do not mutate workspace files,
+    the working-copy revision, revision graph, or bookmarks.
 
     ## You Do Not Dispatch Subagents
 
@@ -154,7 +154,8 @@ Subagent (general-purpose):
     If the plan or brief explicitly mandates something this rubric calls a
     defect (a test that asserts nothing, verbatim duplication of a logic
     block), that IS a finding — report it as Important, labeled
-    plan-mandated. The plan does not grade itself; the controller decides.
+    plan-mandated. The plan's authorship does not grade its own work; the
+    human decides.
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
@@ -197,12 +198,10 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_REVISION]` — revision before this task; use its recorded commit ID
-  for an exact diff boundary
-- `[TARGET_REVISION]` — revision containing the task result; use its recorded
-  commit ID for an exact diff boundary
+- `[BASE_REV]` — revision before this task
+- `[END_REV]` — completed task revision
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE_REVISION TARGET_REVISION` prints the unique
+  package to (`scripts/review-package PLAN_FILE BASE END` prints the unique
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

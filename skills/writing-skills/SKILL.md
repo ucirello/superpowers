@@ -662,9 +662,9 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Supporting files only for tools or heavy reference
 
 **Deployment:**
-- [ ] Follow repository-local instructions and the runtime's change-log syntax; they always take precedence
+- [ ] Read repository-local instructions and inspect `git log`; repository-local instructions and the observed syntax always win
 - [ ] Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-- [ ] Describe the current JJ change with `jj describe -m '<message composed from the standards above>'`, create or move the repository-appropriate bookmark to that change, start the next change with `jj new`, and publish that bookmark with `jj git push --bookmark <bookmark>` if a Git-backed fork is configured
+- [ ] Describe the current change with `jj describe`, create or move its bookmark as needed, and push with `jj git push` to your fork (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow

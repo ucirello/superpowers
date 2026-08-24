@@ -2,8 +2,8 @@
 # Stop the brainstorm server and clean up
 # Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Repository-local .tmp sessions are deleted;
-# persistent .rocketclaw directories are kept for later review.
+# Kills the server process. Only deletes generated .tmp session directories.
+# Persistent directories (.rocketclaw/) are kept so mockups can be reviewed later.
 
 SESSION_DIR="$1"
 
@@ -15,22 +15,6 @@ fi
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
-TEMP_ROOT_FILE="${STATE_DIR}/temporary-root"
-
-canonical_dir() {
-  (cd "$1" 2>/dev/null && pwd -P)
-}
-
-remove_temporary_session() {
-  [[ -f "$TEMP_ROOT_FILE" ]] || return 0
-  local expected_root session_root
-  expected_root="$(tr -d '\r\n' < "$TEMP_ROOT_FILE" 2>/dev/null || true)"
-  expected_root="$(canonical_dir "$expected_root")" || return 0
-  session_root="$(canonical_dir "$SESSION_DIR")" || return 0
-  [[ "$expected_root" == */.tmp/rocketclaw/brainstorm ]] || return 0
-  [[ "$session_root" == "$expected_root"/* ]] || return 0
-  rm -rf "$session_root"
-}
 
 mark_stopped() {
   local reason="$1"
@@ -93,7 +77,6 @@ if [[ -f "$PID_FILE" ]]; then
   if ! is_brainstorm_server "$pid"; then
     rm -f "$PID_FILE" "$SERVER_ID_FILE"
     mark_stopped "stale_pid"
-    remove_temporary_session
     echo '{"status": "stale_pid"}'
     exit 0
   fi
@@ -125,10 +108,12 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  remove_temporary_session
+  # Only delete generated ephemeral workspace-local directories.
+  if [[ "$SESSION_DIR" == */.tmp/brainstorm-* || "$SESSION_DIR" == */.tmp/brainstorm ]]; then
+    rm -rf "$SESSION_DIR"
+  fi
 
   echo '{"status": "stopped"}'
 else
-  remove_temporary_session
   echo '{"status": "not_running"}'
 fi

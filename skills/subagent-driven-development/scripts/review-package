@@ -1,50 +1,49 @@
 #!/usr/bin/env bash
 # Generate a review package: revision list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE revision (not @-) keeps
-# multi-revision tasks intact.
+# call. Using the recorded per-task BASE keeps multi-revision tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE_REVISION TARGET_REVISION [OUTFILE]
-# Default OUTFILE: <workspace-root>/.tmp/rocketclaw/sdd/<plan-basename>/review-<base-id>..<target-id>.diff
-# (named per boundary pair, so a re-review after fixes gets a distinct file).
+# Usage: review-package PLAN_FILE BASE END [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base8>..<end8>.diff
+# (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE_REVISION TARGET_REVISION [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE END [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
 base=$2
-target=$3
+end=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-base_id=$(jj log --no-graph -r "exactly($base, 1)" -T 'commit_id ++ "\n"') \
-  || { echo "bad BASE revision: $base" >&2; exit 2; }
-target_id=$(jj log --no-graph -r "exactly($target, 1)" -T 'commit_id ++ "\n"') \
-  || { echo "bad TARGET revision: $target" >&2; exit 2; }
+jj --ignore-working-copy log --no-graph -r "exactly($base, 1)" -T 'commit_id ++ "\n"' >/dev/null \
+  || { echo "bad BASE: $base" >&2; exit 2; }
+jj --ignore-working-copy log --no-graph -r "exactly($end, 1)" -T 'commit_id ++ "\n"' >/dev/null \
+  || { echo "bad END: $end" >&2; exit 2; }
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-${base_id}..${target_id}.diff"
+  base_short=$(jj --ignore-working-copy log --no-graph -r "$base" -T 'change_id.shortest(8)')
+  end_short=$(jj --ignore-working-copy log --no-graph -r "$end" -T 'change_id.shortest(8)')
+  out="$dir/review-${base_short}..${end_short}.diff"
 fi
 
 {
-  echo "# Review package: ${base}..${target}"
+  echo "# Review package: ${base}..${end}"
   echo
   echo "## Revisions"
-  jj log --no-graph -r "${base}..${target}" \
-    -T 'change_id.short(12) ++ " " ++ commit_id.short(12) ++ " " ++ description.first_line() ++ "\n"'
+  jj --ignore-working-copy log --no-graph -r "${base}..${end}"
   echo
   echo "## Files changed"
-  jj diff --from "$base" --to "$target" --stat
+  jj --ignore-working-copy diff --from "$base" --to "$end" --stat
   echo
   echo "## Diff"
-  jj diff --from "$base" --to "$target" --context 10
+  jj --ignore-working-copy diff --from "$base" --to "$end" --context 10
 } > "$out"
 
-revisions=$(jj log --no-graph -r "${base}..${target}" -T '"revision\n"' | wc -l | tr -d ' ')
-echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes" >&2
-printf '%s\n' "$out"
+revisions=$(jj --ignore-working-copy log -r "${base}..${end}" --count)
+echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"

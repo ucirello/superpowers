@@ -212,13 +212,13 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**JJ Change Description Helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change messages by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
+description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
 
-Repository-local instructions and the runtime's change-log syntax always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply compatible Go guidance to clarity and structure without replacing repository-local syntax.
+Read repository-local instructions and inspect `git log`; repository-local instructions and the observed syntax always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Review the actual change with `jj diff`, then apply the resulting description with `jj describe`.
 
 Avoid vague descriptions like these:
 
@@ -655,15 +655,17 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Change message guidance
+## Spreadsheet summary style
 
-Repository-local instructions and the runtime's change-log syntax always take precedence. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Inspect the current change with `jj diff`, then use `jj describe -m '<message composed from the standards above>'`. Apply compatible Go guidance to clarity and structure without replacing repository-local syntax.
+Generate summaries following these examples:
 
-Do not impose fixed prefixes, types, scopes, subjects, bodies, or templates that override evidence from repository-local instructions and runtime history.
+**Example 1:**
+Input: Monthly revenue table with a 12% increase and two missing regions
+Output: Revenue increased 12% month over month. Regional data is incomplete for East and West.
 
-**Input:** `[JJ_DIFF]`
-
-**Output:** `[MESSAGE_COMPOSED_FROM_REPOSITORY_STANDARDS]`
+**Example 2:**
+Input: Support-volume table showing 430 tickets, 86% resolved within SLA
+Output: Support handled 430 tickets; 86% met the SLA. Highlight the 14% outside SLA for follow-up.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

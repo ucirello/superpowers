@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before integration to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before integrating changes to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before integrating into `trunk()`
+- Before integrating into trunk
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,15 +23,17 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get stable Jujutsu revision IDs:**
+**1. Record the Jujutsu revision range:**
 ```bash
-jj status  # Snapshot the current working copy before resolving revisions.
-START_REVISION=$(jj --ignore-working-copy log -r 'exactly(<task-or-feature-base>, 1)' --no-graph -T 'commit_id')
-END_REVISION=$(jj --ignore-working-copy log -r 'exactly(@, 1)' --no-graph -T 'commit_id')
+BASE_REV=$(jj log -r '<revision-before-the-work>' --no-graph -T 'commit_id ++ "\n"')
+END_REV=$(jj log -r '<completed-revision>' --no-graph -T 'commit_id ++ "\n"')
 ```
 
-Use the recorded boundary from before the task or feature began. Do not default
-to `first_parent(@)`, which omits earlier revisions in a stack.
+Capture the base before implementation and the completed revision after it.
+If `jj new` left an empty working-copy change at `@`, the completed revision is
+usually `@-`; if the completed work is still in `@`, use `@`. Confirm the range
+with `jj diff --from "$BASE_REV" --to "$END_REV"` rather than assuming a fixed
+parent/current layout.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -40,8 +42,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `[DESCRIPTION]` - Brief summary of what you built
 - `[PLAN_OR_REQUIREMENTS]` - What it should do
-- `[START_REVISION]` - Starting revision
-- `[END_REVISION]` - Ending revision
+- `[BASE_REV]` - Starting revision
+- `[END_REV]` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -54,16 +56,16 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 ```
 [Just completed Task 2: Add verification function]
 
-[Request code review before proceeding]
+You: Let me request code review before proceeding.
 
-START_REVISION=$(jj --ignore-working-copy log -r 'exactly([START_REVSET], 1)' --no-graph -T 'commit_id')
-END_REVISION=$(jj --ignore-working-copy log -r 'exactly(@, 1)' --no-graph -T 'commit_id')
+BASE_REV=$(jj log -r '<recorded-task-base>' --no-graph -T 'commit_id ++ "\n"')
+END_REV=$(jj log -r '<completed-task-revision>' --no-graph -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
   PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
-  START_REVISION: [START_COMMIT_ID]
-  END_REVISION: [END_COMMIT_ID]
+  BASE_REV: a7981ec
+  END_REV: 3df7661
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests
@@ -72,7 +74,7 @@ END_REVISION=$(jj --ignore-working-copy log -r 'exactly(@, 1)' --no-graph -T 'co
     Minor: Magic number (100) for reporting interval
   Assessment: Ready to proceed
 
-[Fix progress indicators]
+You: [Fix progress indicators]
 [Continue to Task 3]
 ```
 

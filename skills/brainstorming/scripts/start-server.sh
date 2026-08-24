@@ -6,9 +6,8 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/.
-#                         Without it, use the JJ workspace's .tmp directory (or
-#                         the current directory's .tmp outside a JJ workspace).
+#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
+#                         instead of the workspace's .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -116,11 +115,6 @@ SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
   TEMPORARY_SESSION="false"
-  mkdir -p "$PROJECT_DIR"
-  if ! PROJECT_DIR="$(cd "$PROJECT_DIR" 2>/dev/null && pwd -P)"; then
-    echo '{"error": "--project-dir could not be created"}'
-    exit 1
-  fi
   SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
   # Persist the bound port and key per project so a restart reuses them and an
   # already-open browser tab reconnects to the same URL with a valid cookie.
@@ -128,15 +122,12 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
   TEMPORARY_SESSION="true"
-  WORKSPACE_ROOT=""
-  if command -v jj >/dev/null 2>&1; then
-    WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || true)"
+  if WORKSPACE_ROOT="$(jj workspace root 2>/dev/null)"; then
+    TEMP_BASE="${WORKSPACE_ROOT}/.tmp"
+  else
+    TEMP_BASE="${PWD}/.tmp"
   fi
-  if [[ -z "$WORKSPACE_ROOT" ]]; then
-    WORKSPACE_ROOT="$(pwd -P)"
-  fi
-  TEMP_ROOT="${WORKSPACE_ROOT}/.tmp/rocketclaw/brainstorm"
-  SESSION_DIR="${TEMP_ROOT}/${SESSION_ID}"
+  SESSION_DIR="${TEMP_BASE}/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
@@ -146,9 +137,6 @@ SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
 
 # Create fresh session directory with content and state peers
 mkdir -p "${SESSION_DIR}/content" "$STATE_DIR"
-if [[ -z "$PROJECT_DIR" ]]; then
-  printf '%s\n' "$TEMP_ROOT" > "${STATE_DIR}/temporary-root"
-fi
 
 SERVER_ID=""
 if [[ -r /dev/urandom ]]; then
@@ -190,12 +178,8 @@ if [[ "$FOREGROUND" == "true" ]]; then
   env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_TEMPORARY="$TEMPORARY_SESSION" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" &
   SERVER_PID=$!
   echo "$SERVER_PID" > "$PID_FILE"
-  status=0
-  wait "$SERVER_PID" || status=$?
-  if [[ -z "$PROJECT_DIR" ]]; then
-    rm -rf -- "$SESSION_DIR"
-  fi
-  exit "$status"
+  wait "$SERVER_PID"
+  exit $?
 fi
 
 # Start server, capturing output to log file
@@ -218,9 +202,6 @@ for _ in {1..50}; do
       sleep 0.1
     done
     if [[ "$alive" != "true" ]]; then
-      if [[ -z "$PROJECT_DIR" ]]; then
-        rm -rf -- "$SESSION_DIR"
-      fi
       echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
       exit 1
     fi
@@ -231,9 +212,5 @@ for _ in {1..50}; do
 done
 
 # Timeout - server didn't start
-kill "$SERVER_PID" 2>/dev/null || true
-if [[ -z "$PROJECT_DIR" ]]; then
-  rm -rf -- "$SESSION_DIR"
-fi
 echo '{"error": "Server failed to start within 5 seconds"}'
 exit 1

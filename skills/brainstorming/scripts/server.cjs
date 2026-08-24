@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const childProcess = require('child_process');
 
 // ========== WebSocket Protocol (RFC 6455) ==========
 
@@ -100,23 +99,19 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-function repositoryLocalSessionDir() {
-  let workspaceRoot;
+function defaultSessionDir() {
+  let root = process.cwd();
   try {
-    workspaceRoot = childProcess.execFileSync('jj', ['workspace', 'root'], {
-      cwd: process.cwd(),
+    root = require('child_process').execFileSync('jj', ['workspace', 'root'], {
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore']
-    }).trim();
-  } catch (e) {
-    workspaceRoot = process.cwd();
-  }
-  return path.join(workspaceRoot, '.tmp', 'rocketclaw', 'brainstorm', 'direct-' + process.pid);
+    }).trim() || root;
+  } catch (e) { /* outside a Jujutsu repository; use local .tmp */ }
+  return path.join(root, '.tmp', 'brainstorm');
 }
 
-const DIRECT_SESSION = !process.env.BRAINSTORM_DIR;
-const SESSION_DIR = process.env.BRAINSTORM_DIR || repositoryLocalSessionDir();
-const TEMPORARY_SESSION = DIRECT_SESSION || process.env.BRAINSTORM_TEMPORARY === 'true';
+const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
+const TEMPORARY_SESSION = !process.env.BRAINSTORM_DIR || process.env.BRAINSTORM_TEMPORARY === 'true';
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;

@@ -39,7 +39,7 @@ Error: jj git init failed in ~/project/packages/core
 ### 2. Find Immediate Cause
 **What code directly causes this?**
 ```typescript
-await execFileAsync('jj', ['git', 'init'], { cwd: projectDir });
+await execFileAsync('jj', ['git', 'init', '.'], { cwd: projectDir });
 ```
 
 ### 3. Ask: What Called This?
@@ -78,7 +78,7 @@ async function jjGitInit(directory: string) {
     stack,
   });
 
-  await execFileAsync('jj', ['git', 'init'], { cwd: directory });
+  await execFileAsync('jj', ['git', 'init', '.'], { cwd: directory });
 }
 ```
 
@@ -101,17 +101,17 @@ If something appears during tests but you don't know which test:
 Use the bisection script `find-polluter.sh` in this directory:
 
 ```bash
-./find-polluter.sh 'packages/core/.jj' 'src/**/*.test.ts'
+./find-polluter.sh '.jj' 'src/**/*.test.ts'
 ```
 
 Runs tests one-by-one, stops at first polluter. See script for usage.
 
-## Real Example Adapted to JJ: Empty projectDir
+## Real Example: Empty projectDir
 
 **Symptom:** `.jj` created in `packages/core/` (source code)
 
 **Trace chain:**
-1. `jj git init` runs in `process.cwd()` ← empty cwd parameter
+1. `jj git init .` runs in `process.cwd()` ← empty cwd parameter
 2. WorkspaceManager called with empty projectDir
 3. Session.create() passed empty string
 4. Test accessed `context.tempDir` before beforeEach
@@ -124,7 +124,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, falling back to local `.tmp` when no workspace is available
+- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, falling back to the local `.tmp` directory when no jj workspace exists
 - Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle
@@ -162,7 +162,7 @@ digraph principle {
 
 ## Real-World Impact
 
-From the debugging session (2025-10-03), before adaptation to the JJ workflow:
+From debugging session (2025-10-03):
 - Found root cause through 5-level trace
 - Fixed at source (getter validation)
 - Added 4 layers of defense

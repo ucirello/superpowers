@@ -63,7 +63,7 @@ You MUST complete each phase before proceeding to the next.
 
 3. **Check Recent Changes**
    - What changed that could cause this?
-   - `jj diff`, recent changes in `jj log`
+   - `jj diff`, recent changes from `jj log`
    - New dependencies, config changes
    - Environmental differences
 
@@ -103,7 +103,7 @@ You MUST complete each phase before proceeding to the next.
    codesign --sign "$IDENTITY" --verbose=4 "$APP"
    ```
 
-   **This reveals:** Which layer fails (secrets reach workflow; workflow variables do not reach build)
+   **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
 
 5. **Trace Data Flow**
 

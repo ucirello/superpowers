@@ -81,33 +81,40 @@ default_subagent_reasoning_effort = "medium"
 ## Environment Detection
 
 Skills that create workspaces or finish changes should inspect their
-environment with read-only Jujutsu commands before proceeding:
+environment with read-only `jj` commands before proceeding:
 
 ```bash
-jj root
+ROOT=$(jj workspace root)
 jj workspace list
-jj log -r @ --no-graph
-jj bookmark list -r @
+jj bookmark list --revisions @
 ```
 
-- A successful `jj root` means the current checkout is already a Jujutsu
-  workspace; do not create another workspace around it.
-- An unbookmarked `@` is normal in Jujutsu. A bookmark is needed only when the
-  change must be published or handed to a Git remote.
-- Repository-local commands and the installed `jj help` output take precedence
-  over examples here when syntax differs across Jujutsu versions.
+- `ROOT` is the current workspace root; use `jj workspace list` to see whether a separate workspace already exists.
+- A change does not have an active bookmark. An empty bookmark query does not prevent creating a bookmark or pushing it later.
 
-Workspace-creation and change-finishing skills should use these signals to
-decide whether to create a sibling workspace or publish the current revision.
+Workspace-creation and change-finishing skills should use these signals before
+acting. Use `$(jj workspace root)/.tmp` for temporary files, with a local
+`.tmp` fallback only when no workspace root is available.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark updates or `jj git push`, keep the work in the
-current Jujutsu revision, set its description with `jj describe`, report its
-change ID, and tell the user to continue from a local Jujutsu workspace.
-Repository-local instructions and existing message syntax always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply compatible Go guidance to clarity and structure, and use `jj describe -m "<message composed from the standards above>"` rather than a fixed message.
+When the sandbox blocks bookmark or push operations in an externally
+managed workspace, inform the user to use the App's native controls. Before
+composing or editing the change description, read repository-local
+instructions, run the repository-prescribed `git log` command (or plain
+`git log` if none is prescribed), and inspect the work with `jj status` and
+`jj diff`. Repository-local instructions and observed history take precedence
+over generic conventions.
 
-From a writable local workspace, create or move a bookmark to the revision,
-then publish it with `jj git push --bookmark <bookmark>`. Use the repository's
-normal review flow after publishing; do not prescribe a fixed bookmark,
-description, or review title.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+- Apply the composed description with `jj describe`.
+
+- **"Create branch"** — names the branch, then commit/push/PR via App UI
+- **"Hand off to local"** — transfers work to the user's local checkout
+
+Outside a restricted sandbox, use `jj describe`, create or move a bookmark
+to the finished change with `jj bookmark create` or `jj bookmark set`, and
+publish it with `jj git push --bookmark <bookmark> --remote <remote>`. The agent can still run tests,
+inspect changes with `jj status` and `jj diff`, and output suggested bookmark
+names, change descriptions, and PR descriptions for the user to copy.
