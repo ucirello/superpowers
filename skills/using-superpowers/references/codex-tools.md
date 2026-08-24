@@ -80,29 +80,41 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish changes should inspect their
+environment with read-only `jj` commands before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+ROOT=$(jj workspace root)
+jj workspace list
+jj bookmark list --revisions @
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- `ROOT` is the current workspace root; use `jj workspace list` to see whether a separate workspace already exists.
+- A change does not have an active bookmark. An empty bookmark query does not prevent creating a bookmark or pushing it later.
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+Workspace-creation and change-finishing skills should use these signals before
+acting. Use `$(jj workspace root)/.tmp` for temporary files, with a local
+`.tmp` fallback only when no workspace root is available.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
-the user to use the App's native controls:
+When the sandbox blocks bookmark or push operations in an externally
+managed workspace, inform the user to use the App's native controls. Before
+composing or editing the change description, read repository-local
+instructions, run the repository-prescribed `git log` command (or plain
+`git log` if none is prescribed), and inspect the work with `jj status` and
+`jj diff`. Repository-local instructions and observed history take precedence
+over generic conventions.
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+- Apply the composed description with `jj describe`.
 
 - **"Create branch"** — names the branch, then commit/push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+Outside a restricted sandbox, use `jj describe`, create or move a bookmark
+to the finished change with `jj bookmark create` or `jj bookmark set`, and
+publish it with `jj git push --bookmark <bookmark> --remote <remote>`. The agent can still run tests,
+inspect changes with `jj status` and `jj diff`, and output suggested bookmark
+names, change descriptions, and PR descriptions for the user to copy.

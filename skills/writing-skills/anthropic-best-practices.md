@@ -212,11 +212,13 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
+
+Read repository-local instructions and inspect `git log`; repository-local instructions and the observed syntax always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Review the actual change with `jj diff`, then apply the resulting description with `jj describe`.
 
 Avoid vague descriptions like these:
 
@@ -653,39 +655,17 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Spreadsheet summary style
 
-Generate commit messages following these examples:
+Generate summaries following these examples:
 
 **Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
-
-Add login endpoint and token validation middleware
-```
+Input: Monthly revenue table with a 12% increase and two missing regions
+Output: Revenue increased 12% month over month. Regional data is incomplete for East and West.
 
 **Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Input: Support-volume table showing 430 tickets, 86% resolved within SLA
+Output: Support handled 430 tickets; 86% met the SLA. Highlight the 14% outside SLA for follow-up.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

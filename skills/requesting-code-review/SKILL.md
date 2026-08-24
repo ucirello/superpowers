@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before integrating changes to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before integrating into trunk
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,21 +23,27 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Record the Jujutsu revision range:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REV=$(jj log -r '<revision-before-the-work>' --no-graph -T 'commit_id ++ "\n"')
+END_REV=$(jj log -r '<completed-revision>' --no-graph -T 'commit_id ++ "\n"')
 ```
+
+Capture the base before implementation and the completed revision after it.
+If `jj new` left an empty working-copy change at `@`, the completed revision is
+usually `@-`; if the completed work is still in `@`, use `@`. Confirm the range
+with `jj diff --from "$BASE_REV" --to "$END_REV"` rather than assuming a fixed
+parent/current layout.
 
 **2. Dispatch code reviewer subagent:**
 
 Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
 
 **Placeholders:**
-- `{DESCRIPTION}` - Brief summary of what you built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `[DESCRIPTION]` - Brief summary of what you built
+- `[PLAN_OR_REQUIREMENTS]` - What it should do
+- `[BASE_REV]` - Starting revision
+- `[END_REV]` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +58,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_REV=$(jj log -r '<recorded-task-base>' --no-graph -T 'commit_id ++ "\n"')
+END_REV=$(jj log -r '<completed-task-revision>' --no-graph -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  BASE_REV: a7981ec
+  END_REV: 3df7661
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

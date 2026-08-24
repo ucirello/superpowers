@@ -15,6 +15,11 @@ Subagent (general-purpose):
     **Plan to review:** [PLAN_FILE_PATH]
     **Spec for reference:** [SPEC_FILE_PATH]
 
+    When validating or recommending Jujutsu change-description steps, read
+    repository-local instructions and run the repository-prescribed `git log`
+    command, or plain `git log` when none is prescribed. Repository-local
+    instructions and the observed history always win. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Apply only compatible Go guidance for clarity and useful rationale; do not impose a fixed message, prefix, type, scope, subject, body, template, or example.
+
     ## What to Check
 
     | Category | What to Look For |
@@ -23,6 +28,7 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Change Descriptions | Description steps follow local instructions and history without fixed syntax |
 
     ## Calibration
 

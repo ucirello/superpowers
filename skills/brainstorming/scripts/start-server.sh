@@ -6,8 +6,8 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
-#                         instead of /tmp. Files persist after server stops.
+#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
+#                         instead of the workspace's .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -114,13 +114,20 @@ umask 077
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+  TEMPORARY_SESSION="false"
+  SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
   # Persist the bound port and key per project so a restart reuses them and an
   # already-open browser tab reconnects to the same URL with a valid cookie.
-  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-port"
-  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-token"
+  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
+  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
+  TEMPORARY_SESSION="true"
+  if WORKSPACE_ROOT="$(jj workspace root 2>/dev/null)"; then
+    TEMP_BASE="${WORKSPACE_ROOT}/.tmp"
+  else
+    TEMP_BASE="${PWD}/.tmp"
+  fi
+  SESSION_DIR="${TEMP_BASE}/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
@@ -168,7 +175,7 @@ fi
 
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
-  env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" &
+  env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_TEMPORARY="$TEMPORARY_SESSION" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" &
   SERVER_PID=$!
   echo "$SERVER_PID" > "$PID_FILE"
   wait "$SERVER_PID"
@@ -177,7 +184,7 @@ fi
 
 # Start server, capturing output to log file
 # Use nohup to survive shell exit; disown to remove from job table
-nohup env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" > "$LOG_FILE" 2>&1 &
+nohup env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_TEMPORARY="$TEMPORARY_SESSION" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null
 echo "$SERVER_PID" > "$PID_FILE"
