@@ -4,13 +4,13 @@ Use this template when dispatching a code reviewer subagent.
 
 **Purpose:** Review completed work against requirements and code quality standards before it cascades into more work.
 
-```
+````
 Subagent (general-purpose):
   description: "Review code changes"
   prompt: |
-    You are a Senior Code Reviewer with expertise in software architecture,
-    design patterns, and best practices. Your job is to review completed work
-    against its plan or requirements and identify issues before they cascade.
+    Review completed work against its plan or requirements. Apply expertise in
+    software architecture, design patterns, and best practices to identify
+    issues before they cascade.
 
     ## What Was Implemented
 
@@ -20,19 +20,29 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Revision Range to Review
 
-    **Base:** [BASE_SHA]
-    **Head:** [HEAD_SHA]
+    **Base:** [BASE_COMMIT_ID]
+    **Head:** [HEAD_COMMIT_ID]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj --ignore-working-copy diff --stat --from 'exactly([BASE_COMMIT_ID], 1)' --to 'exactly([HEAD_COMMIT_ID], 1)'
+    jj --ignore-working-copy diff --from 'exactly([BASE_COMMIT_ID], 1)' --to 'exactly([HEAD_COMMIT_ID], 1)'
     ```
+
+    The placeholders must contain full commit IDs. `exactly(..., 1)` rejects a
+    missing or ambiguous endpoint.
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only in this workspace. Do not mutate the working copy,
+    working-copy revision, bookmarks, or existing revisions. Inspect directly
+    with `jj --ignore-working-copy show`, `jj --ignore-working-copy diff`, and
+    `jj --ignore-working-copy log`. Do not create another workspace.
+
+    If a non-VCS inspection tool requires temporary files, use the repository's
+    `.tmp` directory. Outside a JJ repository, use the local `.tmp` directory;
+    do not use OS-global temporary storage.
 
     ## You Do Not Dispatch Subagents
 
@@ -78,7 +88,7 @@ Subagent (general-purpose):
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.
-    Acknowledge what was done well before listing issues — accurate praise
+    Acknowledge what was done well before listing issues - accurate praise
     helps the implementer trust the rest of the feedback.
 
     If you find significant deviations from the plan, flag them specifically
@@ -132,13 +142,13 @@ Subagent (general-purpose):
     - Give feedback on code you didn't actually read
     - Be vague ("improve error handling")
     - Avoid giving a clear verdict
-```
+````
 
 **Placeholders:**
-- `[DESCRIPTION]` — brief summary of what was built
-- `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit
-- `[HEAD_SHA]` — ending commit
+- `[DESCRIPTION]` - brief summary of what was built
+- `[PLAN_OR_REQUIREMENTS]` - what it should do (plan file path, task text, or requirements)
+- `[BASE_COMMIT_ID]` - starting full commit ID
+- `[HEAD_COMMIT_ID]` - ending full commit ID
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

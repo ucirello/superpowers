@@ -5,7 +5,7 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
-Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history.
+Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation - never your session's history.
 
 **Core principle:** Review early, review often.
 
@@ -23,11 +23,15 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Get full commit IDs:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_COMMIT_ID=$(jj --ignore-working-copy log --no-graph -r 'exactly(@-, 1)' -T 'commit_id ++ "\n"')  # or exactly(trunk(), 1)
+HEAD_COMMIT_ID=$(jj --ignore-working-copy log --no-graph -r 'exactly(@, 1)' -T 'commit_id ++ "\n"')
 ```
+
+`exactly(..., 1)` fails unless each revset resolves to one revision. Use the
+full `commit_id`, not a short commit ID or a change ID, so the review endpoints
+cannot move if a change is rewritten.
 
 **2. Dispatch code reviewer subagent:**
 
@@ -36,8 +40,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{BASE_COMMIT_ID}` - Starting full commit ID
+- `{HEAD_COMMIT_ID}` - Ending full commit ID
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +56,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_COMMIT_ID=$(jj --ignore-working-copy log --no-graph -r 'exactly(latest(description(substring:"Task 1")), 1)' -T 'commit_id ++ "\n"')
+HEAD_COMMIT_ID=$(jj --ignore-working-copy log --no-graph -r 'exactly(@, 1)' -T 'commit_id ++ "\n"')
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  BASE_COMMIT_ID: a7981ec8f8a32bbc1041ec5a71c3f945acd899e0
+  HEAD_COMMIT_ID: 3df7661180d12d58661b4829c5c4f72a9a8c3ef2
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests
