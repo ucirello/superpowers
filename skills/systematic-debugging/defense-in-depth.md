@@ -53,23 +53,23 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function jjGitInit(directory: string) {
-  // Prefer workspace-local scratch storage; outside a JJ workspace, use local .tmp.
+async function jjInit(directory: string) {
+  // In tests, allow initialization only under the workspace-local .tmp.
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    let scratchRoot: string;
-
+    let workspaceRoot = process.cwd();
     try {
-      const { stdout } = await execFileAsync('jj', ['workspace', 'root']);
-      scratchRoot = normalize(resolve(stdout.trim(), '.tmp'));
+      workspaceRoot = execFileSync('jj', ['workspace', 'root'], {
+        encoding: 'utf8',
+      }).trim();
     } catch {
-      scratchRoot = normalize(resolve('.tmp'));
+      // Outside a Jujutsu workspace, fall back to a local .tmp directory.
     }
+    const localTmpDir = normalize(resolve(workspaceRoot, '.tmp'));
 
-    const relativePath = relative(scratchRoot, normalized);
-    if (relativePath.startsWith('..') || isAbsolute(relativePath)) {
+    if (normalized !== localTmpDir && !normalized.startsWith(`${localTmpDir}${sep}`)) {
       throw new Error(
-        `Refusing jj git init outside ${scratchRoot} during tests: ${directory}`
+        `Refusing jj git init outside $(jj workspace root)/.tmp during tests: ${directory}`
       );
     }
   }
@@ -81,7 +81,7 @@ async function jjGitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   const stack = new Error().stack;
   logger.debug('About to run jj git init', {
     directory,
@@ -109,12 +109,12 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 1. Test setup → empty string
 2. `Project.create(name, '')`
 3. `WorkspaceManager.createWorkspace('')`
-4. `jj git init .` runs in `process.cwd()`
+4. `jj git init` runs in `process.cwd()`
 
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses `jj git init` outside `$(jj workspace root)/.tmp` in tests, with local `./.tmp` as the no-workspace fallback
+- Layer 3: `WorkspaceManager` refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` fallback, in tests
 - Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce

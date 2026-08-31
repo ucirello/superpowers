@@ -7,18 +7,16 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent changes.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated Jujutsu workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
-**Save plans to:** `docs/rocketclaw/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
-
-**Temporary files:** Use `$(jj workspace root)/.tmp` instead of a global temporary directory. If `jj workspace root` is unavailable, fall back to `.tmp` under the current repository root.
 
 ## Scope Check
 
@@ -51,13 +49,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Create a JJ commit" - step
-
-## Commit Messages
-
-Repository-local instructions and `git log` syntax always win. Apply compatible Go quality guidance: use a concise imperative subject that describes the completed change, omit a terminal period, and add a body after a blank line when the rationale or non-obvious behavior needs explanation. Derive any prefix, scope, capitalization, length, and body conventions from repository-local instructions and existing history rather than imposing a fixed format.
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+- "Describe the change and start the next one" - step
 
 ## Plan Document Header
 
@@ -128,11 +120,15 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Create a JJ commit**
+- [ ] **Step 5: Describe the change and start the next one**
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+
+Repository-local syntax from project instructions and history wins when it differs from Go guidance; apply only compatible Go guidance to quality, clarity, and structure.
 
 ```bash
-jj status
-jj commit -m "<message derived from repository conventions and the completed change>" tests/path/test.py src/path/file.py
+jj describe -m "<change description>"
+jj new
 ```
 ````
 
@@ -162,7 +158,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/rocketclaw/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 

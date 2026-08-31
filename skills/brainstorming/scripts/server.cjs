@@ -194,17 +194,24 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 // ========== Helper Functions ==========
 
 function defaultSessionDir() {
+  const cp = require('child_process');
   let root = process.cwd();
   try {
-    root = require('child_process').execFileSync('jj', ['--ignore-working-copy', 'workspace', 'root'], {
-      cwd: root,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore']
-    }).trim() || root;
+    root = cp.execFileSync('jj', ['workspace', 'root'], { encoding: 'utf-8' }).trim();
   } catch (e) {
-    // Outside a Jujutsu repository, keep temporary files local to the current directory.
+    // Outside a Jujutsu repository, keep temporary state local to the current directory.
   }
-  return path.join(root, '.tmp', 'brainstorm', process.pid + '-' + Math.floor(Date.now() / 1000));
+  const tempRoot = path.join(root, '.tmp', 'rocketclaw');
+  fs.mkdirSync(tempRoot, { recursive: true });
+  const ignoreFile = path.join(tempRoot, '.gitignore');
+  if (fs.existsSync(ignoreFile)) {
+    if (fs.readFileSync(ignoreFile, 'utf-8') !== '*\n') {
+      throw new Error('unsafe temporary namespace');
+    }
+  } else {
+    fs.writeFileSync(ignoreFile, '*\n');
+  }
+  return path.join(tempRoot, 'brainstorm');
 }
 
 function isFullDocument(html) {

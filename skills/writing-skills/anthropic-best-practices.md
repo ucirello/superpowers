@@ -212,17 +212,13 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**JJ Change Description Helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing JJ diffs. Use when the user asks for help describing changes or reviewing the current change.
+description: Generates change descriptions by analyzing Jujutsu diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
 ```
 
-Inspect the current change with `jj diff --from @- --to @` and the repository's existing descriptions with `jj log` before writing or editing its description.
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
-Use `jj describe` to edit the description. Repository-local syntax and conventions take precedence. Where the history does not settle a detail, use compatible Go guidance: clear, concise prose that explains what changed and why. Do not impose a fixed prefix, type, scope, or message template.
+Give repository-local syntax from project instructions and history precedence when it differs from Go guidance; apply only compatible Go guidance to quality, clarity, and structure. Include this instruction verbatim in any such helper: "Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards."
 
 Avoid vague descriptions like these:
 
@@ -659,13 +655,34 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## JJ change descriptions
+## Change description guidance
 
-Inspect the current change with `jj diff --from @- --to @` and the repository's existing descriptions with `jj log` before writing or editing its description.
+Give repository-local syntax from project instructions and history precedence when it differs from Go guidance; apply only compatible Go guidance to quality, clarity, and structure.
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Use `jj describe` to edit the description. Repository-local syntax and conventions take precedence. Where the history does not settle a detail, use compatible Go guidance: clear, concise prose that explains what changed and why. Do not impose a fixed prefix, type, scope, or message template.
+**Example 1:**
+Input: Added user authentication with JWT tokens
+Output:
+```
+[A change description matching the repository's current conventions]
+```
+
+**Example 2:**
+Input: Fixed bug where dates displayed incorrectly in reports
+Output:
+```
+[A change description matching the repository's current conventions]
+```
+
+**Example 3:**
+Input: Updated dependencies and refactored error handling
+Output:
+```
+[A change description matching the repository's current conventions]
+```
+
+Infer the description's structure from the local evidence rather than imposing a fixed syntax.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

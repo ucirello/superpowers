@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# Resolve and ensure the temporary directory SDD uses for one plan's
+# Resolve and ensure the Jujutsu workspace directory SDD uses for one plan's
 # short-lived artifacts: task briefs, implementer reports, review packages,
 # and the progress ledger. Print the plan directory's absolute path.
 #
-# One directory per plan (.tmp/sdd/<plan-basename>/) so a follow-up plan in
-# the same workspace can never read or overwrite another plan's
+# One directory per plan (.rocketclaw/sdd/<plan-basename>/) so a follow-up
+# plan in the same Jujutsu workspace can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The artifacts live under the workspace root. The repository's .gitignore
-# must keep .tmp out of snapshots.
+# The artifacts live in the workspace tree (not under .jj/) so implementer
+# subagents can write reports. A self-ignoring .gitignore at .rocketclaw/sdd/
+# keeps every plan's artifacts out of `jj status` and accidental changes
+# without modifying any tracked file.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -29,12 +31,9 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
-if root=$(jj --ignore-working-copy workspace root 2>/dev/null); then
-  :
-else
-  root=$(pwd -P)
-fi
-base="$root/.tmp/sdd"
+root=$(jj workspace root)
+base="$root/.rocketclaw/sdd"
 dir="$base/$slug"
 mkdir -p "$dir"
+printf '*\n' > "$base/.gitignore"
 cd "$dir" && pwd

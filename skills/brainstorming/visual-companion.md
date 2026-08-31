@@ -55,7 +55,7 @@ without repeating it.
 
 **Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.rocketclaw/brainstorm/` for the session directory.
 
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go to `$(jj workspace root)/.tmp/brainstorm/`, or the current directory's `.tmp/brainstorm/` outside a Jujutsu repository, and get cleaned up. Remind the user to add `.rocketclaw/` and `.tmp/` to the repository's ignore rules if they are not already there.
+**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go to `$(jj workspace root)/.tmp/rocketclaw`, or the current directory's `.tmp/rocketclaw` outside a Jujutsu repository, and get cleaned up. Remind the user to ignore `.rocketclaw/` according to the repository's local conventions if it is not already ignored.
 
 **Launching the server by platform:**
 
@@ -86,7 +86,7 @@ scripts/start-server.sh --project-dir /path/to/project --open --foreground
 # Start it with Copilot CLI's non-blocking/background shell mechanism so the
 # server survives across turns. Keep --foreground so the harness, not the
 # script, owns backgrounding. The launcher is a .sh, so invoke it via bash
-# (on Windows, call a Bash executable from the PowerShell tool).
+# (on Windows, call Git Bash's bash.exe from the PowerShell tool).
 bash scripts/start-server.sh --project-dir /path/to/project --open --foreground
 ```
 
@@ -291,7 +291,7 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 scripts/stop-server.sh $SESSION_DIR
 ```
 
-If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Only repo-local or fallback `.tmp/brainstorm/` sessions get deleted on stop.
+If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Sessions under a workspace-local `.tmp` get deleted on stop.
 
 ## Reference
 

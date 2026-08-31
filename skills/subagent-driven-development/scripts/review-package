@@ -1,52 +1,51 @@
 #!/usr/bin/env bash
-# Generate a review package: revision list, stat summary, and the net
+# Generate a review package: change list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task base and current commit IDs keeps
-# multi-change tasks intact.
+# call. Using recorded commit snapshots for BASE_COMMIT_ID and TIP_COMMIT_ID
+# keeps multi-change tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE_REVISION CURRENT_REVISION [OUTFILE]
-# Default OUTFILE: <workspace-root>/.tmp/sdd/<plan-basename>/review-<base7>..<current7>.diff
-# (named per revset bounds, so a re-review after fixes gets a fresh file).
+# Usage: review-package PLAN_FILE BASE_COMMIT_ID TIP_COMMIT_ID [OUTFILE]
+# Default OUTFILE: <workspace-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<tip7>.diff
+# (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE_REVISION CURRENT_REVISION [OUTFILE]" >&2
+  echo "usage: review-package PLAN_FILE BASE_COMMIT_ID TIP_COMMIT_ID [OUTFILE]" >&2
   exit 2
 fi
 
 plan=$1
 base=$2
-current=$3
+tip=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-base_id=$(jj --ignore-working-copy log --no-graph -r "exactly(($base), 1)" -T 'commit_id ++ "\n"') \
-  || { echo "bad BASE_REVISION: $base" >&2; exit 2; }
-current_id=$(jj --ignore-working-copy log --no-graph -r "exactly(($current), 1)" -T 'commit_id ++ "\n"') \
-  || { echo "bad CURRENT_REVISION: $current" >&2; exit 2; }
-revset="${base_id}..${current_id}"
+jj log -r "exactly(commit_id($base), 1)" --no-graph -T 'commit_id ++ "\n"' >/dev/null \
+  || { echo "bad BASE commit ID: $base" >&2; exit 2; }
+jj log -r "exactly(commit_id($tip), 1)" --no-graph -T 'commit_id ++ "\n"' >/dev/null \
+  || { echo "bad TIP commit ID: $tip" >&2; exit 2; }
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  base_short=$(jj --ignore-working-copy log --no-graph -r "$base_id" -T 'commit_id.short(7) ++ "\n"')
-  current_short=$(jj --ignore-working-copy log --no-graph -r "$current_id" -T 'commit_id.short(7) ++ "\n"')
-  out="$dir/review-${base_short}..${current_short}.diff"
+  base_short=$(jj log -r "commit_id($base)" --no-graph -T 'commit_id.shortest(7)')
+  tip_short=$(jj log -r "commit_id($tip)" --no-graph -T 'commit_id.shortest(7)')
+  out="$dir/review-${base_short}..${tip_short}.diff"
 fi
 
 {
-  echo "# Review package: ${base_id}..${current_id}"
+  echo "# Review package: ${base}..${tip}"
   echo
-  echo "## Revisions (change ID, commit ID, description)"
-  jj --ignore-working-copy log --no-graph -r "$revset" \
-    -T 'change_id.shortest(8) ++ " " ++ commit_id.shortest(8) ++ " " ++ description.first_line() ++ "\n"'
+  echo "## Changes"
+  jj log --no-graph -r "commit_id($base)..commit_id($tip)" \
+    -T 'change_id.shortest(7) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  jj --ignore-working-copy diff --from "$base_id" --to "$current_id" --stat
+  jj diff --stat --from "commit_id($base)" --to "commit_id($tip)"
   echo
   echo "## Diff"
-  jj --ignore-working-copy diff --from "$base_id" --to "$current_id" --git --context 10
+  jj diff --context 10 --from "commit_id($base)" --to "commit_id($tip)"
 } > "$out"
 
-revisions=$(jj --ignore-working-copy log --no-graph -r "$revset" -T '"revision\n"' | wc -l | tr -d ' ')
-echo "wrote ${out}: ${revisions} revision(s), $(wc -c < "$out" | tr -d ' ') bytes"
+changes=$(jj log --count -r "commit_id($base)..commit_id($tip)")
+echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

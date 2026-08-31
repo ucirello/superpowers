@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows Bash environments reap nohup background processes. Auto-foreground when detected.
+# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -120,11 +120,19 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  WORKSPACE_ROOT="$(jj --ignore-working-copy workspace root 2>/dev/null || true)"
-  if [[ -z "$WORKSPACE_ROOT" ]]; then
-    WORKSPACE_ROOT="$PWD"
+  if WORKSPACE_ROOT="$(jj workspace root 2>/dev/null)"; then
+    TEMP_ROOT="${WORKSPACE_ROOT}/.tmp/rocketclaw"
+  else
+    TEMP_ROOT="${PWD}/.tmp/rocketclaw"
   fi
-  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm/${SESSION_ID}"
+  mkdir -p "$TEMP_ROOT"
+  if [[ -e "$TEMP_ROOT/.gitignore" ]]; then
+    [[ "$(wc -l < "$TEMP_ROOT/.gitignore" | tr -d ' ')" == 1 ]] &&
+      grep -qxF '*' "$TEMP_ROOT/.gitignore" || { echo "unsafe temporary namespace" >&2; exit 2; }
+  else
+    printf '*\n' > "$TEMP_ROOT/.gitignore"
+  fi
+  SESSION_DIR="${TEMP_ROOT}/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
