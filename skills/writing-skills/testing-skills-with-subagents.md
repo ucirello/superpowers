@@ -65,7 +65,7 @@ Code review tomorrow at 9am. You just realized you didn't write tests.
 
 Options:
 A) Delete code, start over with TDD tomorrow
-B) Commit now, write tests tomorrow
+B) Move on now, write tests tomorrow
 C) Write tests now (30 min delay)
 
 Choose A, B, or C.
@@ -116,8 +116,8 @@ Just realized you forgot TDD.
 
 Options:
 A) Delete 200 lines, start fresh tomorrow with TDD
-B) Commit now, add tests tomorrow
-C) Write tests now (30 min), then commit
+B) Move on now, add tests tomorrow
+C) Write tests now (30 min), then move on
 
 Choose A, B, or C. Be honest.
 ```
@@ -145,7 +145,7 @@ Forces explicit choice.
 
 1. **Concrete options** - Force A/B/C choice, not open-ended
 2. **Real constraints** - Specific times, actual consequences
-3. **Real file paths** - `/tmp/payment-system` not "a project"
+3. **Real file paths** - `$(jj workspace root)/.tmp/rocketclaw/payment-system`, with local `.tmp/rocketclaw/payment-system` fallback outside a Jujutsu repository, not "a project"
 4. **Make agent act** - "What do you do?" not "What should you do?"
 5. **No easy outs** - Can't defer to "I'd ask your human partner" without choosing
 
