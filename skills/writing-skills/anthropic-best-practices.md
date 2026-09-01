@@ -212,13 +212,11 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Jujutsu Change Description Helper skill:**
+**JJ Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generates change descriptions by analyzing Jujutsu diffs. Use when the user asks for help writing change descriptions or reviewing the current change.
+description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing working-copy changes.
 ```
-
-Give repository-local syntax from project instructions and history precedence when it differs from Go guidance; apply only compatible Go guidance to quality, clarity, and structure. Include this instruction verbatim in any such helper: "Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards."
 
 Avoid vague descriptions like these:
 
@@ -655,34 +653,21 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Change description guidance
-
-Give repository-local syntax from project instructions and history precedence when it differs from Go guidance; apply only compatible Go guidance to quality, clarity, and structure.
+## Commit message format
 
 Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-[A change description matching the repository's current conventions]
+**Repository-local syntax always wins.** Project instructions, CONTRIBUTING docs, and the actual history in `jj log` (and `git log` if needed for a colocated view) define the format for this repo. Do not impose a fixed Conventional Commit template at runtime — those styles only apply when the repo's own log already uses them.
+
+Compose the message dynamically from those sources, then record it:
+
+```bash
+jj describe -m "<message composed from the standards above>"
+# or
+jj commit -m "<message composed from the standards above>"
 ```
 
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-[A change description matching the repository's current conventions]
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-[A change description matching the repository's current conventions]
-```
-
-Infer the description's structure from the local evidence rather than imposing a fixed syntax.
+Do not prescribe a universal type/scope prefix. Match whatever this repository already does.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

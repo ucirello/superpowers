@@ -99,7 +99,7 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
+const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(process.cwd(), '.tmp', 'brainstorm');
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
@@ -192,27 +192,6 @@ const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8')
 const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
-
-function defaultSessionDir() {
-  const cp = require('child_process');
-  let root = process.cwd();
-  try {
-    root = cp.execFileSync('jj', ['workspace', 'root'], { encoding: 'utf-8' }).trim();
-  } catch (e) {
-    // Outside a Jujutsu repository, keep temporary state local to the current directory.
-  }
-  const tempRoot = path.join(root, '.tmp', 'rocketclaw');
-  fs.mkdirSync(tempRoot, { recursive: true });
-  const ignoreFile = path.join(tempRoot, '.gitignore');
-  if (fs.existsSync(ignoreFile)) {
-    if (fs.readFileSync(ignoreFile, 'utf-8') !== '*\n') {
-      throw new Error('unsafe temporary namespace');
-    }
-  } else {
-    fs.writeFileSync(ignoreFile, '*\n');
-  }
-  return path.join(tempRoot, 'brainstorm');
-}
 
 function isFullDocument(html) {
   const trimmed = html.trimStart().toLowerCase();

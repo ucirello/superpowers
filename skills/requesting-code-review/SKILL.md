@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before integration to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before integration into the main bookmark
+- Before merge to main
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,15 +23,10 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get immutable Jujutsu snapshot IDs:**
+**1. Get JJ commit ids:**
 ```bash
-TIP_REVISION=@
-if [ -z "$(jj diff -r @ --summary)" ] && \
-   [ -z "$(jj log -r @ --no-graph -T 'description')" ]; then
-  TIP_REVISION=@-
-fi
-BASE_COMMIT_ID=$(jj log -r "$TIP_REVISION-" --no-graph -T 'commit_id ++ "\n"')  # or the recorded base
-TIP_COMMIT_ID=$(jj log -r "$TIP_REVISION" --no-graph -T 'commit_id ++ "\n"')
+BASE_SHA=$(jj log -r @- -T 'commit_id' --no-graph)  # or main@origin
+HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -41,8 +36,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_COMMIT_ID}` - Starting snapshot's full commit ID
-- `{TIP_COMMIT_ID}` - Ending snapshot's full commit ID
+- `{BASE_SHA}` - Starting commit
+- `{HEAD_SHA}` - Ending commit
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -57,14 +52,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_COMMIT_ID=$(jj log --no-graph -T 'commit_id ++ " " ++ description.first_line() ++ "\n"' | grep "Task 1" | head -1 | awk '{print $1}')
-TIP_COMMIT_ID=$(jj log -r '@-' --no-graph -T 'commit_id ++ "\n"')
+BASE_SHA=$(jj log --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"' | grep "Task 1" | head -1 | awk '{print $1}')
+HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
-  BASE_COMMIT_ID: 71d9c662e8f0...
-  TIP_COMMIT_ID: 5ac43be1f09d...
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  BASE_SHA: a7981ec
+  HEAD_SHA: 3df7661
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests
