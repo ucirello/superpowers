@@ -80,25 +80,27 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish branches should detect their
+environment with read-only jj commands before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+# Detect workspace isolation with jj
+WS_ROOT=$(jj workspace root 2>/dev/null)
+WS_LIST=$(jj workspace list 2>/dev/null)
+# Check if current workspace is non-default via jj workspace list
+BOOKMARK=$(jj log -r @ -T 'local_bookmarks ++ "\n"' --no-graph 2>/dev/null)
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- `WS_ROOT` set and workspace appears in `WS_LIST` as non-default → already in an isolated workspace (skip creation)
+- `BOOKMARK` empty → no local bookmark on `@` (cannot push/PR from sandbox without one)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
+When the sandbox blocks branch/push operations (detached workspace in an
+externally managed checkout), the agent commits all work and informs
 the user to use the App's native controls:
 
 - **"Create branch"** — names the branch, then commit/push/PR via App UI

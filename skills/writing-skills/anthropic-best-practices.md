@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**JJ Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing working-copy changes.
 ```
 
 Avoid vague descriptions like these:
@@ -655,37 +655,19 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Commit message format
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
+**Repository-local syntax always wins.** Project instructions, CONTRIBUTING docs, and the actual history in `jj log` (and `git log` if needed for a colocated view) define the format for this repo. Do not impose a fixed Conventional Commit template at runtime — those styles only apply when the repo's own log already uses them.
 
-Add login endpoint and token validation middleware
-```
+Compose the message dynamically from those sources, then record it:
 
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
+```bash
+jj describe -m "<message composed from the standards above>"
+# or
+jj commit -m "<message composed from the standards above>"
 ```
 
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Do not prescribe a universal type/scope prefix. Match whatever this repository already does.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

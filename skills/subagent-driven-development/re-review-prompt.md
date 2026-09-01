@@ -35,13 +35,13 @@ Subagent (general-purpose):
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. Do not re-run git commands.
+    and the fix diff with surrounding context. Do not re-run jj commands.
     If the diff file is missing, fetch the diff yourself:
-    `git diff --stat [FIX_BASE_SHA]..[HEAD_SHA]` and
-    `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
+    `jj diff --from [FIX_BASE_SHA] --to [HEAD_SHA] --stat` and
+    `jj diff --from [FIX_BASE_SHA] --to [HEAD_SHA]`.
 
     Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    copy, the index, @, or bookmark state in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -108,7 +108,7 @@ Subagent (general-purpose):
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
-- `[HEAD_SHA]` — current commit
+- `[HEAD_SHA]` — current commit (@ or the revision under review)
 - `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),

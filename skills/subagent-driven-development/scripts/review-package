@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Generate a review package: commit list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
-# tasks intact.
+# call. Using the recorded per-task BASE (not @~ or a single-parent walk)
+# keeps multi-change tasks intact.
 #
 # Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
-# Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/review-<base7>..<head7>.diff
+# Default OUTFILE: <repo-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<head7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
+# BASE and HEAD are jj revisions (bookmarks, change/commit ids, or @).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
@@ -19,28 +20,32 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+jj log -r "$base" --no-graph >/dev/null 2>&1 || { echo "bad BASE: $base" >&2; exit 2; }
+jj log -r "$head" --no-graph >/dev/null 2>&1 || { echo "bad HEAD: $head" >&2; exit 2; }
+
+short_id() {
+  jj log -r "$1" -T 'commit_id.short(7)' --no-graph
+}
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+  out="$dir/review-$(short_id "$base")..$(short_id "$head").diff"
 fi
 
 {
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Commits"
-  git log --oneline "${base}..${head}"
+  jj log -r "${base}..${head}" --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  git diff --stat "${base}..${head}"
+  jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  git diff -U10 "${base}..${head}"
+  jj diff --from "$base" --to "$head" -U10
 } > "$out"
 
-commits=$(git rev-list --count "${base}..${head}")
+commits=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | grep -c . || true)
 echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
