@@ -15,7 +15,7 @@ Subagent (general-purpose):
   prompt: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
-    not a merge review — a broad whole-branch review happens separately after
+    not a merge review — a broad whole-bookmark review happens separately after
     all tasks are complete.
 
     ## What Was Requested
@@ -39,9 +39,10 @@ Subagent (general-purpose):
     and the full diff with surrounding context, and it is your view of the
     change. The diff's context lines ARE the changed files: do not Read a
     changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not re-run git commands.
+    mid-function — and say so in your report. Do not re-run jj commands.
     If the diff file is missing, fetch the diff yourself:
-    `git diff --stat [BASE_SHA]..[HEAD_SHA]` and `git diff [BASE_SHA]..[HEAD_SHA]`.
+    `jj diff --stat --from [BASE_SHA] --to [HEAD_SHA]` and
+    `jj diff --from [BASE_SHA] --to [HEAD_SHA]`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -50,7 +51,7 @@ Subagent (general-purpose):
     checking the call sites is the right method.
 
     Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    tree, the working-copy commit (@), or bookmark state in any way.
 
     ## You Do Not Dispatch Subagents
 

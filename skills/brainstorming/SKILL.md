@@ -97,7 +97,14 @@ your path and complete them in order.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+<<<<<<< conflict 1 of 2
++++++++ ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+6. **Write design doc** — save to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md` and commit with jj
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
++6. **Write design doc** — save to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md` and commit
+>>>>>>> conflict 1 of 2 ends
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -203,10 +210,17 @@ is the whole process.
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design (spec) to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+<<<<<<< conflict 2 of 2
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+-- Commit the design document to git
++- Commit the design document with jj. Compose the change description from Go commit message standards (https://go.dev/wiki/CommitMessage) and recent messages in the repo history.
++++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+- Commit the design document with JJ. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `git log` ALWAYS wins over Go guidance when they differ. Use `jj commit -m "<message composed from the standards above>"` (or `jj describe -m "<message composed from the standards above>"` then `jj new` as appropriate). No fixed Conventional Commit template.
+>>>>>>> conflict 2 of 2 ends
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:

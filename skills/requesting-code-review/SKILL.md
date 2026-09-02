@@ -23,10 +23,10 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Get JJ commit ids:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_SHA=$(jj log -r @- -T 'commit_id' --no-graph)  # or main@origin
+HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -52,12 +52,21 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+<<<<<<< conflict 1 of 1
++++++++ ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+BASE_SHA=$(jj log --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"' | grep "Task 1" | head -1 | awk '{print $1}')
+HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
+-HEAD_SHA=$(git rev-parse HEAD)
++BASE_SHA=$(jj log -r 'description(regex:"Task 1")' -T 'commit_id.short()' --no-graph | head -1)
++HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
+>>>>>>> conflict 1 of 1 ends
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
 

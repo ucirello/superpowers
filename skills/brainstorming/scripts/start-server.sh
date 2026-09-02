@@ -6,8 +6,17 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
-#                         instead of /tmp. Files persist after server stops.
+<<<<<<< conflict 1 of 2
++++++++ ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
+#                         instead of <workspace>/.tmp/. Files persist after server stops.
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+-#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
+-#                         instead of /tmp. Files persist after server stops.
++#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
++#                         instead of repo .tmp. Files persist after server stops.
+>>>>>>> conflict 1 of 2 ends
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -99,7 +108,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
+# Windows bash (Git Bash) reaps nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -114,13 +123,28 @@ umask 077
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+  SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
   # Persist the bound port and key per project so a restart reuses them and an
   # already-open browser tab reconnects to the same URL with a valid cookie.
-  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-port"
-  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-token"
+  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
+  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
+<<<<<<< conflict 2 of 2
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+-  SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
++  # Ephemeral default: workspace .tmp (jj root when available, else cwd)
++  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
++  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm-${SESSION_ID}"
++++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+  # Ephemeral sessions under repo-local .tmp (not OS /tmp)
+  WS_ROOT="$(jj workspace root 2>/dev/null || true)"
+  if [[ -n "$WS_ROOT" ]]; then
+    SESSION_DIR="${WS_ROOT}/.tmp/rocketclaw/brainstorm-${SESSION_ID}"
+  else
+    SESSION_DIR=".tmp/rocketclaw/brainstorm-${SESSION_ID}"
+  fi
+>>>>>>> conflict 2 of 2 ends
 fi
 
 STATE_DIR="${SESSION_DIR}/state"

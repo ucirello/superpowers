@@ -47,6 +47,14 @@ Subagent (general-purpose):
     While iterating, run the focused test for what you're changing; run the
     full suite once before committing, not after every edit.
 
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages
+    that you can see in `git log`, compose commit messages adherent to the
+    present standards. Repository-local syntax from project instructions and
+    `git log` ALWAYS wins over Go guidance when they differ. Use
+    `jj commit -m "<message composed from the standards above>"` or
+    `jj describe -m "<message composed from the standards above>"` (JJ has
+    no staging area — the working copy is the change).
+
     ## You Do Not Dispatch Subagents
 
     Do all of this task's work yourself. Never spawn a subagent to

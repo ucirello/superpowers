@@ -3,8 +3,16 @@
 # Usage: stop-server.sh <session_dir>
 #
 # Kills the server process. Only deletes session directory if it's
-# under /tmp (ephemeral). Persistent directories (.superpowers/) are
-# kept so mockups can be reviewed later.
+<<<<<<< conflict 1 of 2
++++++++ ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+# ephemeral (.tmp/). Persistent directories (.rocketclaw/) are kept so
+# mockups can be reviewed later.
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+-# under /tmp (ephemeral). Persistent directories (.superpowers/) are
++# under .tmp/ (ephemeral). Persistent directories (.rocketclaw/) are
+ # kept so mockups can be reviewed later.
+>>>>>>> conflict 1 of 2 ends
 
 SESSION_DIR="$1"
 
@@ -109,10 +117,27 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Only delete ephemeral /tmp directories
-  if [[ "$SESSION_DIR" == /tmp/* ]]; then
-    rm -rf "$SESSION_DIR"
-  fi
+<<<<<<< conflict 2 of 2
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+-  # Only delete ephemeral /tmp directories
+-  if [[ "$SESSION_DIR" == /tmp/* ]]; then
+-    rm -rf "$SESSION_DIR"
+-  fi
++  # Only delete ephemeral session directories under .tmp/
++  case "$SESSION_DIR" in
++    */.tmp/*)
++      rm -rf "$SESSION_DIR"
++      ;;
++  esac
++++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+  # Only delete ephemeral .tmp session directories (not persistent .rocketclaw/)
+  case "$SESSION_DIR" in
+    */.tmp/*|.tmp/*)
+      rm -rf "$SESSION_DIR"
+      ;;
+  esac
+>>>>>>> conflict 2 of 2 ends
 
   echo '{"status": "stopped"}'
 else
