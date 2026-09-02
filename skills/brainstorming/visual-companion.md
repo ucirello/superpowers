@@ -53,23 +53,9 @@ the network can't read the screens or inject events. After the first load the
 browser remembers the key via a cookie, so reloads and `/files/*` assets work
 without repeating it.
 
-<<<<<<< conflict 1 of 3
-%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
-\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
--**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
-+**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.rocketclaw/brainstorm/` for the session directory.
-+++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
 **Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.rocketclaw/brainstorm/` for the session directory. Without `--project-dir`, sessions live under the repo's `.tmp/rocketclaw/brainstorm-…` (via `jj workspace root` when available).
->>>>>>> conflict 1 of 3 ends
 
-<<<<<<< conflict 2 of 3
-+++++++ ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go under the workspace `.tmp/brainstorm-*` and get cleaned up on stop. Remind the user to add `.rocketclaw/` and `.tmp/` to `.gitignore` if they're not already there.
-%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
-\\\\\\\        to: wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
--**Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
-+**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go under `.tmp/rocketclaw/` and get cleaned up on stop. Remind the user to add `.rocketclaw/` and `.tmp/` to `.gitignore` if they're not already there.
->>>>>>> conflict 2 of 3 ends
+**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go under `.tmp/rocketclaw/` and get cleaned up on stop. Remind the user to add `.rocketclaw/` and `.tmp/` to `.gitignore` if they're not already there.
 
 **Launching the server by platform:**
 
@@ -305,14 +291,7 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 scripts/stop-server.sh $SESSION_DIR
 ```
 
-<<<<<<< conflict 3 of 3
-%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
-\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
--If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
-+If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Only ephemeral `.tmp/brainstorm-*` sessions get deleted on stop.
-+++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
 If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Only ephemeral `.tmp/rocketclaw/brainstorm-…` sessions get deleted on stop.
->>>>>>> conflict 3 of 3 ends
 
 ## Reference
 

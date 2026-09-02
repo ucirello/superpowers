@@ -134,7 +134,7 @@ sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
 - Each plan owns a workspace: at skill start, run this skill's
-  `scripts/sdd-workspace PLAN_FILE` — it prints the plan's ignored
+  `scripts/sdd-workspace PLAN_FILE` — it prints the plan's git-ignored
   directory (`<repo-root>/.rocketclaw/sdd/<plan-basename>/`), home to
   every artifact for THIS plan: ledger, briefs, reports, review packages.
   Another plan's directory is never yours to read or write.
@@ -151,7 +151,7 @@ a ledger file, not only in todos.
   when your context no longer remembers creating them. After compaction,
   trust the ledger and `jj log` over your own recollection.
 - Destroying ignored scratch (e.g. wiping the working tree of ignored
-  paths) will destroy the workspace (it's ignored scratch); if that
+  paths) will destroy the workspace (it's git-ignored scratch); if that
   happens, recover from `jj log`.
 
 Read the plan once, note its context and Global Constraints, and create a

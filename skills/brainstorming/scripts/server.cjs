@@ -99,14 +99,7 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-<<<<<<< conflict 1 of 3
-+++++++ ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
-const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(process.cwd(), '.tmp', 'brainstorm');
-%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
-\\\\\\\        to: wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
--const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
-+const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
->>>>>>> conflict 1 of 3 ends
+const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
@@ -200,60 +193,6 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
-<<<<<<< conflict 2 of 3
-%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
-\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
--function readSuperpowersVersion() {
--  const root = path.join(__dirname, '../../..');
--  const manifests = [
--    path.join(root, 'package.json'),
--    path.join(root, '.codex-plugin/plugin.json')
--  ];
--
--  for (const manifest of manifests) {
--    try {
--      const data = JSON.parse(fs.readFileSync(manifest, 'utf-8'));
--      if (data.version) return String(data.version);
--    } catch (e) {
--      // Packaged Codex plugins omit package.json; try the next manifest.
--    }
--  }
--
--  return 'unknown';
--}
--
--function isTruthyEnv(value) {
--  if (!value) return false;
--  const normalized = String(value).trim().toLowerCase();
--  if (!normalized) return false;
--  return !['0', 'false', 'no', 'off'].includes(normalized);
--}
--
--function escapeHtmlText(value) {
--  return String(value)
--    .replace(/&/g, '&amp;')
--    .replace(/</g, '&lt;')
--    .replace(/>/g, '&gt;')
--    .replace(/"/g, '&quot;');
--}
--
--function brandMarkup() {
--  const version = escapeHtmlText(SUPERPOWERS_VERSION);
--  const text = SUPERPOWERS_TELEMETRY_DISABLED
--    ? 'Prime Radiant Superpowers v' + version
--    : 'Superpowers v' + version;
--  const logo = SUPERPOWERS_TELEMETRY_DISABLED
--    ? ''
--    : '<img class="brand-logo" src="' + SUPERPOWERS_BRAND_IMAGE_URL + '?v=' + encodeURIComponent(SUPERPOWERS_VERSION) + '" alt="Prime Radiant" referrerpolicy="no-referrer" decoding="async">';
--
--  return '<div class="brand"><a href="https://github.com/obra/superpowers">' + logo + '<span class="brand-copy">' + text + '</span></a></div>';
--}
--
--function renderBranding(html) {
--  return html.split('<!-- BRANDING -->').join(brandMarkup());
--}
--
-+++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
 function defaultSessionDir() {
   // Prefer repo-local .tmp via jj workspace root; fall back to relative .tmp
   const { execSync } = require('child_process');
@@ -265,24 +204,16 @@ function defaultSessionDir() {
   return path.join(base, 'brainstorm');
 }
 
->>>>>>> conflict 2 of 3 ends
 function isFullDocument(html) {
   const trimmed = html.trimStart().toLowerCase();
   return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
 }
 
 function wrapInFrame(content) {
-<<<<<<< conflict 3 of 3
-%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
-\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
--  return renderBranding(frameTemplate).replace('<!-- CONTENT -->', content);
-+  return frameTemplate.replace('<!-- CONTENT -->', content);
-+++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
   // Strip optional branding placeholder; branding injection removed.
   return frameTemplate
     .split('<!-- BRANDING -->').join('')
     .replace('<!-- CONTENT -->', content);
->>>>>>> conflict 3 of 3 ends
 }
 
 function getNewestScreen() {
