@@ -20,19 +20,42 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## JJ Range to Review
+<<<<<<< conflict 1 of 3
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+-    ## Git Range to Review
++    ## JJ Range to Review
++++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+    ## Change Range to Review
+>>>>>>> conflict 1 of 3 ends
 
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
 
     ```bash
-    jj diff --from [BASE_SHA] --to [HEAD_SHA] --stat
+<<<<<<< conflict 2 of 3
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
+-    git diff --stat [BASE_SHA]..[HEAD_SHA]
+-    git diff [BASE_SHA]..[HEAD_SHA]
++    jj diff --from [BASE_SHA] --to [HEAD_SHA] --stat
++    jj diff --from [BASE_SHA] --to [HEAD_SHA]
++++++++ wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+    jj diff --stat --from [BASE_SHA] --to [HEAD_SHA]
     jj diff --from [BASE_SHA] --to [HEAD_SHA]
+>>>>>>> conflict 2 of 3 ends
     ```
 
     ## Read-Only Review
 
+<<<<<<< conflict 3 of 3
++++++++ ptokpnzt 547bc7e6 "skills: merge release-based Jujutsu semantic port into main"
     Your review is read-only on this checkout. Do not mutate the working copy, @, or bookmarks in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `jj workspace add "$(jj workspace root)/.tmp/review-[SHA]" -r [SHA]`) — never move @ on this checkout.
+%%%%%%% diff from: lqlluxol b36e0829 "Release v6.3.0: Devin CLI and Hermes Agent support, brainstorming three-path router, SDD/Codex efficiency fixes (#2125)"
+\\\\\\\        to: wyvxmxxv f827924b "skills: port VCS workflows from Git to Jujutsu and rebrand namespaces to RocketClaw"
+-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
++    Your review is read-only on this checkout. Do not mutate the working copy, `@`, or bookmark state in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. Prefer `jj diff` against the range above. If you need a working copy of a different revision, use `jj workspace add $(jj workspace root)/.tmp/review-[ID] -r [ID]` — never move `@` on this checkout.
+>>>>>>> conflict 3 of 3 ends
 
     ## You Do Not Dispatch Subagents
 

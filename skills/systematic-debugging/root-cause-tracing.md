@@ -39,7 +39,7 @@ Error: jj git init failed in ~/project/packages/core
 ### 2. Find Immediate Cause
 **What code directly causes this?**
 ```typescript
-await execFileAsync('jj', ['git', 'init', '--colocate'], { cwd: projectDir });
+await execFileAsync('jj', ['git', 'init'], { cwd: projectDir });
 ```
 
 ### 3. Ask: What Called This?
@@ -78,7 +78,7 @@ async function jjGitInit(directory: string) {
     stack,
   });
 
-  await execFileAsync('jj', ['git', 'init', '--colocate'], { cwd: directory });
+  await execFileAsync('jj', ['git', 'init'], { cwd: directory });
 }
 ```
 

@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work (see Commit Messages below)
+    4. Commit your work
     5. Self-review (see below)
     6. Report back
 
@@ -47,15 +47,13 @@ Subagent (general-purpose):
     While iterating, run the focused test for what you're changing; run the
     full suite once before committing, not after every edit.
 
-    ## Commit Messages
-
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-    Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Apply compatible Go guidance to message quality, clarity, and structure without replacing repository-local syntax. Inspect history with `jj log` (and `git log` only if a colocated view is needed). Do not invent or force Conventional Commit prefixes unless the project's own history uses them. Preserve the semantic requirements of the change — what changed and why — as constraints on the message, not as fixed boilerplate text.
-
-    Create the change with:
-    `jj describe -m "<message composed from the standards above>"`
-    or `jj commit -m "<message composed from the standards above>"`
-    as appropriate for the workspace state.
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages
+    that you can see in `git log`, compose commit messages adherent to the
+    present standards. Repository-local syntax from project instructions and
+    `git log` ALWAYS wins over Go guidance when they differ. Use
+    `jj commit -m "<message composed from the standards above>"` or
+    `jj describe -m "<message composed from the standards above>"` (JJ has
+    no staging area — the working copy is the change).
 
     ## You Do Not Dispatch Subagents
 
@@ -150,7 +148,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short commit id + subject)
+    - Commits created (short SHA + subject)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

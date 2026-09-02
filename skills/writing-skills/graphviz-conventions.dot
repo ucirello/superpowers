@@ -29,7 +29,7 @@ digraph STYLE_GUIDE {
         "Write test first" [shape=box];
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
-        "NEVER blindly commit all untracked secrets; review jj status/jj diff before jj commit" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "NEVER blindly commit ignored or unrelated files" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions

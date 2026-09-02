@@ -54,14 +54,15 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 
 ```typescript
 async function jjGitInit(directory: string) {
-  // In tests, refuse jj git init outside workspace .tmp directories
+  // In tests, refuse jj git init outside workspace .tmp
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    const workspaceTmp = normalize(resolve(workspaceRoot, '.tmp'));
+    // Prefer workspace .tmp; fallback to local .tmp
+    const tmpDir = normalize(resolve('.tmp'));
 
-    if (!normalized.startsWith(workspaceTmp)) {
+    if (!normalized.startsWith(tmpDir)) {
       throw new Error(
-        `Refusing jj git init outside .tmp dir during tests: ${directory}`
+        `Refusing jj git init outside .tmp during tests: ${directory}`
       );
     }
   }
