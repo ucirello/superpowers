@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Generate a review package: commit list, stat summary, and the net
+# Generate a review package: change list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
+# call. Using the recorded per-task BASE (not @-) keeps multi-change
 # tasks intact.
 #
 # Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
-# Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/review-<base7>..<head7>.diff
+# Default OUTFILE: <repo-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<head7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
@@ -19,28 +19,30 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+jj log -r "$base" -T 'commit_id' --no-graph >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+jj log -r "$head" -T 'commit_id' --no-graph >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+  base_short=$(jj log -r "$base" -T 'commit_id.short()' --no-graph)
+  head_short=$(jj log -r "$head" -T 'commit_id.short()' --no-graph)
+  out="$dir/review-${base_short}..${head_short}.diff"
 fi
 
 {
   echo "# Review package: ${base}..${head}"
   echo
-  echo "## Commits"
-  git log --oneline "${base}..${head}"
+  echo "## Changes"
+  jj log -r "${base}..${head}" --no-graph -T 'builtin_log_oneline'
   echo
   echo "## Files changed"
-  git diff --stat "${base}..${head}"
+  jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  git diff -U10 "${base}..${head}"
+  jj diff --from "$base" --to "$head" -U10
 } > "$out"
 
-commits=$(git rev-list --count "${base}..${head}")
-echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+changes=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id' | wc -l | tr -d ' ')
+echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

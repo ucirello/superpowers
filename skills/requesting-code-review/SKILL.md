@@ -23,10 +23,10 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Get JJ change IDs:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_SHA=$(jj log -r @- -T 'commit_id' --no-graph)  # or main@origin
+HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -36,8 +36,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{BASE_SHA}` - Starting change
+- `{HEAD_SHA}` - Ending change
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,12 +52,12 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+BASE_SHA=$(jj log | grep "Task 1" | head -1 | awk '{print $1}')
+HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
 
