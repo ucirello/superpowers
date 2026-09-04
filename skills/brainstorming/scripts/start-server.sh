@@ -7,7 +7,7 @@
 #
 # Options:
 #   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         instead of workspace .tmp. Files persist after server stops.
+#                         instead of .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
+# Windows bash environments often reap nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -113,6 +113,9 @@ umask 077
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
+# Resolve project root: jj workspace when available, else cwd.
+ROOT="$(jj workspace root 2>/dev/null || pwd)"
+
 if [[ -n "$PROJECT_DIR" ]]; then
   SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
   # Persist the bound port and key per project so a restart reuses them and an
@@ -120,9 +123,7 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  # Ephemeral session under workspace .tmp
-  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
-  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm-${SESSION_ID}"
+  SESSION_DIR="${ROOT}/.tmp/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"

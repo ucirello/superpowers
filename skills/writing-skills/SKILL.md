@@ -662,7 +662,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Supporting files only for tools or heavy reference
 
 **Deployment:**
-- [ ] Create a jj change for the skill and push to your fork (if configured)
+- [ ] Commit skill with jj and push to your fork (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow

@@ -2,6 +2,7 @@
 .private-journal/
 .claude/
 .superpowers/
+.rocketclaw/
 .tmp/
 .DS_Store
 node_modules/

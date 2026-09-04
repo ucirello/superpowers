@@ -84,29 +84,26 @@ Skills that create workspaces or finish branches should detect their
 environment with read-only jj commands before proceeding:
 
 ```bash
-JJ_ROOT=$(jj workspace root 2>/dev/null) || true
-# Default workspace lives at the colocated repo root; secondary workspaces
-# are separate working copies registered with `jj workspace list`.
-JJ_WORKSPACES=$(jj workspace list 2>/dev/null) || true
-BOOKMARK=$(jj log -r @ -T 'self.bookmarks().join(" ")' --no-graph 2>/dev/null | tr -d '[:space:]')
+WS_ROOT=$(jj workspace root 2>/dev/null)
+jj workspace list
+# bookmark at @:
+jj bookmark list -r @
 ```
 
-- Current directory is already a secondary jj workspace (listed in
-  `jj workspace list`, path ≠ default) → skip workspace creation
-- No bookmark on `@` and sandbox blocks bookmark/push → cannot
-  bookmark/push/PR from sandbox without App UI
+- Multiple workspaces listed for the same repo → already in isolated workspace setup (skip creation if already isolated)
+- No bookmark at `@` → working copy has no named bookmark (cannot push/PR from unnamed state without creating one)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark/push operations (externally managed
-workspace without writable remote ops), the agent creates jj changes for
-all work and informs the user to use the App's native controls:
+When the sandbox blocks branch/push operations (detached working copy in an
+externally managed workspace), the agent commits all work and informs
+the user to use the App's native controls:
 
-- **"Create branch"** — names the branch/bookmark, then push/PR via App UI
+- **"Create branch"** — names the branch, then commit/push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, describe changes, and output suggested
-bookmark names, change descriptions, and PR descriptions for the user to copy.
+The agent can still run tests, stage files, and output suggested branch
+names, commit messages, and PR descriptions for the user to copy.

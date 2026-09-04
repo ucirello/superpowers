@@ -3,7 +3,7 @@ name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 ---
 
-# Finishing a Development Bookmark
+# Finishing a Development Branch
 
 ## Overview
 
@@ -28,34 +28,43 @@ Tests failing (<N> failures). Must fix before completing:
 ## Step 2: Detect Environment
 
 ```bash
-WS_ROOT=$(jj workspace root 2>/dev/null) || true
+WORKSPACE_ROOT=$(jj workspace root)
+WORKSPACE_PATH="$WORKSPACE_ROOT"
 # Capture now, while still inside the workspace — Step 5 changes directory
 # before cleanup (Step 6) needs this value
-WORKSPACE_PATH="$WS_ROOT"
-jj workspace list
-BOOKMARK=$(jj log -r @ -T 'self.bookmarks().map(|b| b.name()).join(" ")' --no-graph 2>/dev/null)
+#
+# Isolation: skill-managed workspaces live under .worktrees/ or worktrees/,
+# or have a jj workspace name other than "default".
+ISOLATED=false
+if echo "$WORKSPACE_PATH" | grep -qE '/\.worktrees/|/worktrees/'; then
+  ISOLATED=true
+fi
+WS_NAME=$(jj workspace list 2>/dev/null | awk -v root="$WORKSPACE_PATH" '$0 ~ root { print $1; exit }')
+if [ -n "$WS_NAME" ] && [ "$WS_NAME" != "default" ]; then
+  ISOLATED=true
+fi
+# Anonymous working-copy change (no bookmark on @) ≈ detached HEAD
+HAS_BOOKMARK=$(jj log -r '@' -T 'local_bookmarks ++ "\n"' --no-graph 2>/dev/null | tr -d '[:space:]')
 ```
-
-Determine isolation: if current `jj workspace root` is not the default workspace's path (or `WORKSPACE_PATH` is under `.worktrees/` / `worktrees/`), you are in a secondary workspace. Otherwise you are in the default (normal) workspace.
 
 This determines which menu to show and how cleanup works:
 
 | State | Menu | Cleanup |
 |-------|------|---------|
-| Default workspace only (normal repo) | Standard 3 options | No secondary workspace to clean up |
-| Secondary workspace, named bookmark on `@` | Standard 3 options | Provenance-based (see Step 6) |
-| Secondary workspace, no bookmark on `@` (unnamed working-copy change) | Reduced 2 options (no local merge) | Externally managed — leave in place |
+| Not isolated (`ISOLATED=false`, default workspace) | Standard 3 options | No workspace to clean up |
+| Isolated, named bookmark on `@` | Standard 3 options | Provenance-based (see Step 6) |
+| Isolated, no bookmark on `@` (anonymous working-copy) | Reduced 2 options (no merge) | Externally managed — leave in place |
 
 ## Step 3: Determine Base Bookmark
 
 The base bookmark is whatever this work forked from — usually named in the
 plan, the conversation, or the bookmark's upstream tracking. If it is not already
-known, ask: "This work split from <your best guess> - is that correct?"
+known, ask: "This bookmark split from <your best guess> - is that correct?"
 Confirm before merging: merging into the wrong base is expensive to undo.
 
 ## Step 4: Present Options
 
-**Default workspace and named-bookmark secondary workspace — present exactly these 3 options:**
+**Normal repo and named-bookmark workspace — present exactly these 3 options:**
 
 ```
 Implementation complete. What would you like to do?
@@ -67,10 +76,10 @@ Implementation complete. What would you like to do?
 Which option?
 ```
 
-**No bookmark on `@` (unnamed working-copy change, externally managed) — present exactly these 2 options:**
+**Anonymous working-copy (no bookmark) — present exactly these 2 options:**
 
 ```
-Implementation complete. You're on a working-copy change with no bookmark (externally managed workspace).
+Implementation complete. You're on an anonymous working-copy change (externally managed workspace).
 
 1. Push as new bookmark and create a Pull Request
 2. Keep as-is (I'll handle it later)
@@ -89,21 +98,17 @@ is theirs.
 ### Option 1: Merge Locally
 
 ```bash
-# Resolve default workspace root for CWD safety
-DEFAULT_ROOT=$(jj workspace root --name default 2>/dev/null) \
-  || DEFAULT_ROOT=$(jj workspace list -T 'if(self.name() == "default", self.root() ++ "\n", "")' 2>/dev/null | head -1)
-# Fallback: parent of .worktrees/ or worktrees/ if path heuristic applies
-cd "$DEFAULT_ROOT"
+# Get primary workspace root for CWD safety (default workspace)
+MAIN_ROOT=$(jj workspace list | awk '$1 == "default" { print $2; exit }')
+# Fallback if list format differs: walk up from current root to the repo that owns default
+if [ -z "$MAIN_ROOT" ]; then
+  MAIN_ROOT=$(jj workspace root)
+fi
+cd "$MAIN_ROOT"
 
-# Fetch latest remote bookmarks, then advance base if needed
+# Merge first — verify success before removing anything
 jj git fetch
-jj rebase -d <base-bookmark>@origin -r <base-bookmark> 2>/dev/null || true
-# Or: jj new <base-bookmark>@origin && jj bookmark set <base-bookmark> -r @
-
-# Merge feature into base — create a merge change, then move the base bookmark
-jj new <base-bookmark> <feature-bookmark>
-# Resolve conflicts if any (edit files, then jj squash into the conflicted change as needed)
-
+jj new <base-bookmark> <feature-bookmark>   # merge change with both parents
 jj bookmark set <base-bookmark> -r @
 
 # Verify tests on merged result
@@ -125,13 +130,13 @@ jj bookmark delete <feature-bookmark>
 
 ```bash
 jj git push --bookmark <feature-bookmark>
-# From a working-copy change with no bookmark, name it first:
+# From an anonymous working-copy, create a bookmark then push:
 # jj bookmark create <new-bookmark> -r @
 # jj git push --bookmark <new-bookmark>
 ```
 
 Then create the pull/merge request against <base-bookmark> with the forge's
-tooling — its CLI if one is available (e.g. `gh pr create`), or the creation URL most forges
+tooling — `gh` if available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
@@ -158,9 +163,11 @@ Type 'discard' to confirm.
 Wait for that exact confirmation. When it arrives:
 
 ```bash
-DEFAULT_ROOT=$(jj workspace root --name default 2>/dev/null) \
-  || DEFAULT_ROOT=$(jj workspace list -T 'if(self.name() == "default", self.root() ++ "\n", "")' 2>/dev/null | head -1)
-cd "$DEFAULT_ROOT"
+MAIN_ROOT=$(jj workspace list | awk '$1 == "default" { print $2; exit }')
+if [ -z "$MAIN_ROOT" ]; then
+  MAIN_ROOT=$(jj workspace root)
+fi
+cd "$MAIN_ROOT"
 ```
 
 Then clean up the workspace (Step 6) and delete the bookmark:
@@ -173,49 +180,57 @@ jj bookmark delete <feature-bookmark>
 
 **Runs for Option 1 and confirmed discards.** Options 2 and 3 always
 preserve the workspace. Both callers have already changed directory to the
-default workspace root — workspace forget must run from outside the secondary
-workspace — and use the `WORKSPACE_PATH` / workspace name values captured in
+main repo root — workspace removal must run from outside the workspace —
+and use the `WORKSPACE_PATH` / isolation values captured in
 Step 2, from before that directory change.
 
-**If default workspace only:** Normal repo, no secondary workspace to clean up. Done.
+**If not isolated (`ISOLATED=false`):** Normal default workspace, nothing extra to clean up. Done.
 
-**If `WORKSPACE_PATH` is under `.worktrees/` or `worktrees/`:** This session
-(or RocketClaw workspace setup) created this workspace — we own cleanup:
+**If `WORKSPACE_PATH` is under `.worktrees/` or `worktrees/`:** This skill
+created this workspace — we own cleanup:
 
 ```bash
-# Forget by workspace name (often the bookmark / directory basename)
+# Forget the jj workspace registration (NAME from jj workspace list)
 jj workspace forget <workspace-name>
-# Remove destination directory from disk if it still exists
 rm -rf "$WORKSPACE_PATH"
-# JJ has no separate prune; list and forget any other stale named workspaces if needed
-jj workspace list
 ```
 
-**If the destination still has unique local files** (unsaved plans, notes,
-or scratch that never became part of a change): never force-delete on your
-own initiative. Show your human partner what is at stake and ask:
+**If removal is refused** (workspace holds modified or untracked files, or
+forget/rm would lose unique content): the workspace holds files that exist
+nowhere else — undescribed plans, notes, or scratch work. Never force-delete
+on your own initiative. Show your human partner what is at stake and ask:
 
 ```bash
 jj -R "$WORKSPACE_PATH" status
-# Or from inside that path before leaving: jj st
-ls -la "$WORKSPACE_PATH"
+# or from inside that workspace:
+# jj status
 ```
 
 ```
-Workspace cleanup blocked — these paths may exist only here:
+Workspace removal refused — these files were never committed:
 
 <file list>
 
-1. Record them on <bookmark> before cleanup (jj commit / jj describe per project standards)
-2. Move them into <default workspace root>
+1. Commit them to <bookmark> before cleanup
+2. Move them into <main repo root>
 3. Delete them (unrecoverable)
 
 Which?
 ```
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `git log` ALWAYS wins. Use `jj commit -m "<message composed from the standards above>"` or `jj describe -m "<message composed from the standards above>"` when recording leftover files.
+If they choose commit: describe the working-copy change before cleanup.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that
+you can see in `git log`, compose commit messages adherent to the present
+standards. Repository-local syntax from that history wins over any fixed
+template. Then:
 
-Carry out the choice, then forget the workspace and remove the destination directory.
+```bash
+jj describe -m "<composed message>"
+# or jj commit -m "<composed message>" if snapshotting a new change is appropriate
+```
+
+Carry out the choice, then remove the workspace (`jj workspace forget` +
+`rm -rf` as above).
 
 **Otherwise:** The host environment owns this workspace — leave it in
 place. If your platform provides a workspace-exit tool, use it.
@@ -238,8 +253,8 @@ place. If your platform provides a workspace-exit tool, use it.
 | "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
 | "The PR is up, so the workspace is clutter now" | PR feedback gets fixed in that workspace. It stays until the work lands. |
-| "This other workspace looks stale — I'll clean it too" | Clean up only workspaces under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
-| "Cleanup blocked — force-delete is just finishing" | Unique files may exist only in that workspace. Force-delete destroys them permanently. Show your human partner and ask. |
+| "This other workspace looks stale — I'll clean it too" | Clean up only workspaces under `.worktrees/` or `worktrees/` that this skill created. Everything else belongs to the host. |
+| "Removal refused — force-delete is just finishing the cleanup" | The refusal means files exist only in that workspace. Force-delete destroys them permanently. Show your human partner and ask. |
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Bookmark and workspace stay put while you investigate. |
 | "The base bookmark is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
 | "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |

@@ -99,6 +99,7 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
+// Default under project .tmp/. Prefer BRAINSTORM_DIR from start-server.sh.
 const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(process.cwd(), '.tmp', 'brainstorm');
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
@@ -151,7 +152,7 @@ const MIME_TYPES = {
 // ========== Templates and Constants ==========
 
 function waitingPage() {
-  return renderBranding(`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Brainstorm Companion</title>
 <style>
@@ -159,8 +160,8 @@ body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; marg
 h1 { color: #333; } p { color: #666; }
 </style>
 </head>
-<body><!-- BRANDING --><h1>Brainstorm Companion</h1>
-<p>Waiting for the agent to push a screen...</p></body></html>`);
+<body><h1>Brainstorm Companion</h1>
+<p>Waiting for the agent to push a screen...</p></body></html>`;
 }
 
 const FORBIDDEN_PAGE = `<!DOCTYPE html>
@@ -193,22 +194,13 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
-// Branding intentionally empty — no product badge in the companion frame.
-function brandMarkup() {
-  return '';
-}
-
-function renderBranding(html) {
-  return html.split('<!-- BRANDING -->').join(brandMarkup());
-}
-
 function isFullDocument(html) {
   const trimmed = html.trimStart().toLowerCase();
   return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
 }
 
 function wrapInFrame(content) {
-  return renderBranding(frameTemplate).replace('<!-- CONTENT -->', content);
+  return frameTemplate.replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {

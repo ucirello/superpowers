@@ -7,7 +7,7 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent jj changes.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent jj commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
@@ -49,7 +49,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Record the change (jj describe / jj commit)" - step
+- "Commit" - step
 
 ## Plan Document Header
 
@@ -120,18 +120,18 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Record the change**
+- [ ] **Step 5: Commit**
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax from project instructions and `git log` ALWAYS wins when it differs from Go guidance. Apply compatible Go guidance for quality/clarity/structure.
+
+The message should describe what the task delivered (semantic content).
 
 ```bash
-# Based on https://go.dev/wiki/CommitMessage and on past commit messages
-# that you can see in `git log`, compose commit messages adherent to the
-# present standards. Repository-local syntax from project instructions and
-# `git log` ALWAYS wins when it differs from the Go guidance. jj auto-tracks
-# files (no separate staging step). Do not use a fixed Conventional Commit
-# template — compose the message at runtime from those standards.
-jj describe -m "<message composed from the standards above>"
-# or jj commit -m "<message composed from the standards above>"
+# After changes (jj auto-snapshots working-copy files)
+jj commit -m "<message composed from the standards above>"
 ```
+
+Or: `jj describe -m "..."` then `jj new`
 ````
 
 ## No Placeholders

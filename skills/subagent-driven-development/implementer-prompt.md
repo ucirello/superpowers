@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Record your work with `jj describe` / `jj commit`. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Use `jj describe -m "<message composed from the standards above>"` or `jj commit -m "<message composed from the standards above>"` — never a fixed Conventional Commit template.
+    4. Commit your work (see Commit Messages below)
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,19 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before recording the change, not after every edit.
+    full suite once before committing, not after every edit.
+
+    ## Commit Messages
+
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that
+    you can see in `git log`, compose commit messages adherent to the present
+    standards. Repo-local syntax from project instructions and `git log` wins
+    over Go when they differ. Describe what the change does and why it matters;
+    do not use fixed Conventional Commit / `feat:` templates unless the repo's
+    own history uses them.
+
+    Record the change with:
+    `jj commit -m "<message composed from the standards above>"`
 
     ## You Do Not Dispatch Subagents
 
@@ -140,7 +152,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Changes created (short change/commit id + subject)
+    - Changes recorded (short id + subject)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

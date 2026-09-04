@@ -53,16 +53,16 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function jjInit(directory: string) {
-  // In tests, refuse jj init outside repo-local .tmp
+async function gitInit(directory: string) {
+  // In tests, refuse git init outside the project's .tmp directory
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    // Prefer $(jj workspace root)/.tmp; fall back to cwd/.tmp when not in a jj repo
-    const tmpDir = normalize(resolve(process.env.JJ_WORKSPACE_ROOT || process.cwd(), '.tmp'));
+    // Prefer repo-local .tmp over OS temp when the skill instructs agents
+    const projectTmp = normalize(resolve(process.cwd(), '.tmp'));
 
-    if (!normalized.startsWith(tmpDir)) {
+    if (!normalized.startsWith(projectTmp)) {
       throw new Error(
-        `Refusing jj init outside .tmp during tests: ${directory}`
+        `Refusing git init outside .tmp during tests: ${directory}`
       );
     }
   }
@@ -74,9 +74,9 @@ async function jjInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjInit(directory: string) {
+async function gitInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to jj init', {
+  logger.debug('About to git init', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -96,19 +96,19 @@ When you find a bug:
 
 ## Example from Session
 
-Bug: Empty `projectDir` caused `jj init` in source code
+Bug: Empty `projectDir` caused `git init` in source code
 
 **Data flow:**
 1. Test setup → empty string
 2. `Project.create(name, '')`
 3. `WorkspaceManager.createWorkspace('')`
-4. `jj git init` runs in `process.cwd()`
+4. `git init` runs in `process.cwd()`
 
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorkspaceManager` refuses jj init outside repo-local `.tmp` in tests
-- Layer 4: Stack trace logging before jj init
+- Layer 3: `WorktreeManager` refuses git init outside project `.tmp` in tests
+- Layer 4: Stack trace logging before git init
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
 
