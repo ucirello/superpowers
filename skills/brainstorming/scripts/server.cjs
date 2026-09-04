@@ -99,7 +99,7 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
+const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(process.cwd(), '.tmp', 'brainstorm');
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
@@ -151,7 +151,7 @@ const MIME_TYPES = {
 // ========== Templates and Constants ==========
 
 function waitingPage() {
-  return `<!DOCTYPE html>
+  return renderBranding(`<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Brainstorm Companion</title>
 <style>
@@ -159,8 +159,8 @@ body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; marg
 h1 { color: #333; } p { color: #666; }
 </style>
 </head>
-<body><h1>Brainstorm Companion</h1>
-<p>Waiting for the agent to push a screen...</p></body></html>`;
+<body><!-- BRANDING --><h1>Brainstorm Companion</h1>
+<p>Waiting for the agent to push a screen...</p></body></html>`);
 }
 
 const FORBIDDEN_PAGE = `<!DOCTYPE html>
@@ -193,15 +193,13 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
-function defaultSessionDir() {
-  // Prefer repo-local .tmp via jj workspace root; fall back to relative .tmp
-  const { execSync } = require('child_process');
-  let root = null;
-  try {
-    root = execSync('jj workspace root', { encoding: 'utf-8' }).trim();
-  } catch (e) { /* not a jj workspace */ }
-  const base = root ? path.join(root, '.tmp', 'rocketclaw') : path.join('.tmp', 'rocketclaw');
-  return path.join(base, 'brainstorm');
+// Branding intentionally empty — no product badge in the companion frame.
+function brandMarkup() {
+  return '';
+}
+
+function renderBranding(html) {
+  return html.split('<!-- BRANDING -->').join(brandMarkup());
 }
 
 function isFullDocument(html) {
@@ -210,10 +208,7 @@ function isFullDocument(html) {
 }
 
 function wrapInFrame(content) {
-  // Strip optional branding placeholder; branding injection removed.
-  return frameTemplate
-    .split('<!-- BRANDING -->').join('')
-    .replace('<!-- CONTENT -->', content);
+  return renderBranding(frameTemplate).replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {

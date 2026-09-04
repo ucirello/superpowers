@@ -29,7 +29,7 @@ digraph STYLE_GUIDE {
         "Write test first" [shape=box];
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
-        "NEVER blindly commit ignored or unrelated files" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "NEVER jj abandon without checking" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions
@@ -71,7 +71,7 @@ digraph STYLE_GUIDE {
         // Actions start with verb
         "Write the test";
         "Search for patterns";
-        "Commit changes";
+        "Create a jj change";
         "Ask for help";
 
         // Commands are literal

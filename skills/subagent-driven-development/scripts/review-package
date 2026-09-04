@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Generate a review package: commit list, stat summary, and the net
+# Generate a review package: change list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not @-) keeps multi-commit
+# call. Using the recorded per-task BASE (not @-) keeps multi-change
 # tasks intact.
 #
 # Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
@@ -19,8 +19,8 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-jj log -r "$base" -T 'commit_id' --no-graph >/dev/null 2>&1 || { echo "bad BASE: $base" >&2; exit 2; }
-jj log -r "$head" -T 'commit_id' --no-graph >/dev/null 2>&1 || { echo "bad HEAD: $head" >&2; exit 2; }
+jj log -r "$base" -T 'commit_id' --no-graph >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+jj log -r "$head" -T 'commit_id' --no-graph >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
 
 if [ $# -eq 4 ]; then
   out=$4
@@ -34,15 +34,15 @@ fi
 {
   echo "# Review package: ${base}..${head}"
   echo
-  echo "## Commits"
-  jj log -r "${base}..${head}" --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
+  echo "## Changes"
+  jj log -r "${base}..${head}" --no-graph -T 'builtin_log_oneline'
   echo
   echo "## Files changed"
-  jj diff --stat --from "$base" --to "$head"
+  jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  jj diff --from "$base" --to "$head" --context 10
+  jj diff --from "$base" --to "$head" -U10
 } > "$out"
 
-commits=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')
-echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+changes=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id' | wc -l | tr -d ' ')
+echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

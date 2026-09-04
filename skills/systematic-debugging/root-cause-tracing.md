@@ -2,7 +2,7 @@
 
 ## Overview
 
-Bugs often manifest deep in the call stack (jj git init in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
+Bugs often manifest deep in the call stack (jj init in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
 
 **Core principle:** Trace backward through the call chain until you find the original trigger, then fix at the source.
 
@@ -33,7 +33,7 @@ digraph when_to_use {
 
 ### 1. Observe the Symptom
 ```
-Error: jj git init failed in ~/project/packages/core
+Error: jj init failed in ~/project/packages/core
 ```
 
 ### 2. Find Immediate Cause
@@ -69,9 +69,9 @@ When you can't trace manually, add instrumentation:
 
 ```typescript
 // Before the problematic operation
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   const stack = new Error().stack;
-  console.error('DEBUG jj git init:', {
+  console.error('DEBUG jj init:', {
     directory,
     cwd: process.cwd(),
     nodeEnv: process.env.NODE_ENV,
@@ -86,7 +86,7 @@ async function jjGitInit(directory: string) {
 
 **Run and capture:**
 ```bash
-npm test 2>&1 | grep 'DEBUG jj git init'
+npm test 2>&1 | grep 'DEBUG jj init'
 ```
 
 **Analyze stack traces:**
@@ -124,8 +124,8 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses jj git init outside `.tmp`
-- Layer 4: Stack trace logging before jj git init
+- Layer 3: NODE_ENV guard refuses jj init outside repo-local `.tmp`
+- Layer 4: Stack trace logging before jj init
 
 ## Key Principle
 

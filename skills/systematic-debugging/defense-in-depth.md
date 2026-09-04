@@ -53,16 +53,16 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function jjGitInit(directory: string) {
-  // In tests, refuse jj git init outside workspace .tmp
+async function jjInit(directory: string) {
+  // In tests, refuse jj init outside repo-local .tmp
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    // Prefer workspace .tmp; fallback to local .tmp
-    const tmpDir = normalize(resolve('.tmp'));
+    // Prefer $(jj workspace root)/.tmp; fall back to cwd/.tmp when not in a jj repo
+    const tmpDir = normalize(resolve(process.env.JJ_WORKSPACE_ROOT || process.cwd(), '.tmp'));
 
     if (!normalized.startsWith(tmpDir)) {
       throw new Error(
-        `Refusing jj git init outside .tmp during tests: ${directory}`
+        `Refusing jj init outside .tmp during tests: ${directory}`
       );
     }
   }
@@ -74,9 +74,9 @@ async function jjGitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   const stack = new Error().stack;
-  logger.debug('About to jj git init', {
+  logger.debug('About to jj init', {
     directory,
     cwd: process.cwd(),
     stack,
@@ -96,7 +96,7 @@ When you find a bug:
 
 ## Example from Session
 
-Bug: Empty `projectDir` caused `jj git init` in source code
+Bug: Empty `projectDir` caused `jj init` in source code
 
 **Data flow:**
 1. Test setup → empty string
@@ -107,8 +107,8 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorkspaceManager` refuses jj git init outside `.tmp` in tests
-- Layer 4: Stack trace logging before jj git init
+- Layer 3: `WorkspaceManager` refuses jj init outside repo-local `.tmp` in tests
+- Layer 4: Stack trace logging before jj init
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
 

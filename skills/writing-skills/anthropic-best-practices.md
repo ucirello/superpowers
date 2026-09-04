@@ -212,7 +212,7 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**JJ change description helper skill:**
+**JJ Change Description Helper skill:**
 
 ```yaml  theme={null}
 description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing change descriptions or reviewing working-copy changes.
@@ -655,32 +655,9 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Change description format
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `git log` ALWAYS wins over Go guidance when they differ.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Apply compatible Go guidance to message quality, clarity, and structure without replacing repository-local syntax. Do not impose a fixed Conventional Commit template (`feat:`, `fix:`, type(scope), etc.) — determine syntax at runtime from the repo.
 
-Generate change descriptions from those standards (not fixed Conventional Commit templates). Use `jj commit -m "<message composed from the standards above>"` or `jj describe -m "<message composed from the standards above>"`.
-
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-<message composed from the standards above>
-```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-<message composed from the standards above>
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-<message composed from the standards above>
-```
-
-Describe what changed and why at the level of detail the project's history uses; do not prescribe a fixed `type(scope):` template.
+Generate jj change descriptions with `jj describe -m "<message composed from the standards above>"` or `jj commit -m "<message composed from the standards above>"` after analyzing the jj diff. Preserve semantic content requirements (what changed, why, related issues) as constraints on the dynamically composed message.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

@@ -7,7 +7,7 @@
 #
 # Options:
 #   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         instead of repo .tmp. Files persist after server stops.
+#                         instead of workspace .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows bash (Git Bash) reaps nohup background processes. Auto-foreground when detected.
+# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -120,13 +120,9 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  # Ephemeral sessions under repo-local .tmp (not OS /tmp)
-  WS_ROOT="$(jj workspace root 2>/dev/null || true)"
-  if [[ -n "$WS_ROOT" ]]; then
-    SESSION_DIR="${WS_ROOT}/.tmp/rocketclaw/brainstorm-${SESSION_ID}"
-  else
-    SESSION_DIR=".tmp/rocketclaw/brainstorm-${SESSION_ID}"
-  fi
+  # Ephemeral session under workspace .tmp
+  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
+  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"

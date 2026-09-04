@@ -80,32 +80,33 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create workspaces or finish bookmarks should detect their
-environment with read-only JJ commands before proceeding:
+Skills that create workspaces or finish branches should detect their
+environment with read-only jj commands before proceeding:
 
 ```bash
-WS_ROOT=$(jj workspace root)
-WS_NAME=$(jj workspace list -T 'if(self.working_copy(), self.name() ++ "\n", "")' 2>/dev/null | head -1)
-BOOKMARKS=$(jj log -r @ -T 'local_bookmarks.map(|b| b.name()).join(" ")' --no-graph)
+JJ_ROOT=$(jj workspace root 2>/dev/null) || true
+# Default workspace lives at the colocated repo root; secondary workspaces
+# are separate working copies registered with `jj workspace list`.
+JJ_WORKSPACES=$(jj workspace list 2>/dev/null) || true
+BOOKMARK=$(jj log -r @ -T 'self.bookmarks().join(" ")' --no-graph 2>/dev/null | tr -d '[:space:]')
 ```
 
-- Path under `.worktrees/` or `worktrees/` (or multi-workspace isolation you own) → already in an isolated workspace (skip creation)
-- Default single workspace at repo root = "normal"
-- `BOOKMARKS` empty → working-copy commit with no bookmark (cannot bookmark/push/PR from sandbox; externally managed workspace)
+- Current directory is already a secondary jj workspace (listed in
+  `jj workspace list`, path ≠ default) → skip workspace creation
+- No bookmark on `@` and sandbox blocks bookmark/push → cannot
+  bookmark/push/PR from sandbox without App UI
 
-See `using-jj-workspaces` Step 0 and `finishing-a-development-branch`
+See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark/push operations (working-copy commit with no bookmark in an
-externally managed workspace), the agent finishes all work (JJ auto-snapshots; no staging) and informs
-the user to use the App's native controls:
+When the sandbox blocks bookmark/push operations (externally managed
+workspace without writable remote ops), the agent creates jj changes for
+all work and informs the user to use the App's native controls:
 
-- **"Create branch"** — names the bookmark, then describe/push/PR via App UI
+- **"Create branch"** — names the branch/bookmark, then push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, ensure files exist, and output suggested bookmark
-names, change descriptions, and PR descriptions for the user to copy.
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `git log` ALWAYS wins over Go guidance when they differ. Use `jj describe -m "<message composed from the standards above>"` or `jj commit -m "<message composed from the standards above>"` when composing change descriptions.
+The agent can still run tests, describe changes, and output suggested
+bookmark names, change descriptions, and PR descriptions for the user to copy.
