@@ -54,14 +54,15 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 
 ```typescript
 async function gitInit(directory: string) {
-  // In tests, refuse git init outside temp directories
+  // In tests, refuse git init outside the project's .tmp directory
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    const tmpDir = normalize(resolve(tmpdir()));
+    // Prefer repo-local .tmp over OS temp when the skill instructs agents
+    const projectTmp = normalize(resolve(process.cwd(), '.tmp'));
 
-    if (!normalized.startsWith(tmpDir)) {
+    if (!normalized.startsWith(projectTmp)) {
       throw new Error(
-        `Refusing git init outside temp dir during tests: ${directory}`
+        `Refusing git init outside .tmp during tests: ${directory}`
       );
     }
   }
@@ -106,7 +107,7 @@ Bug: Empty `projectDir` caused `git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses git init outside tmpdir in tests
+- Layer 3: `WorktreeManager` refuses git init outside project `.tmp` in tests
 - Layer 4: Stack trace logging before git init
 
 **Result:** All 1847 tests passed, bug impossible to reproduce

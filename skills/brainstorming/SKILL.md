@@ -97,7 +97,7 @@ your path and complete them in order.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+6. **Write design doc** — save to `docs/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -203,10 +203,22 @@ is the whole process.
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design (spec) to `docs/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+- Commit the design document with jj
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that
+you can see in `git log`, compose commit messages adherent to the present
+standards. (You may also inspect style via `jj log`.) Do not use a fixed
+Conventional Commit template — match this repo's history. Repository-local
+syntax from that history wins over any fixed template. The message should
+describe the design doc being added (what it covers), not a generic
+"add design doc" placeholder.
+
+```bash
+jj commit -m "<message composed from the standards above>"
+```
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:

@@ -20,19 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Git Range to Review
+    ## Revision Range to Review
 
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
 
     ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
+    jj diff --from [BASE_SHA] --to [HEAD_SHA] --stat
+    jj diff --from [BASE_SHA] --to [HEAD_SHA]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only on this checkout. Do not mutate the working copy, `@`, or bookmarks in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `jj workspace add $(jj workspace root)/.tmp/review-[SHA] -r [SHA]`) — never move `@` on this checkout.
 
     ## You Do Not Dispatch Subagents
 

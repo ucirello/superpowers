@@ -124,7 +124,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses git init outside tmpdir
+- Layer 3: NODE_ENV guard refuses git init outside project `.tmp`
 - Layer 4: Stack trace logging before git init
 
 ## Key Principle

@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**JJ Commit Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive commit messages by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing working-copy changes.
 ```
 
 Avoid vague descriptions like these:
@@ -655,40 +655,17 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Commit message format
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Do not use a fixed Conventional Commit template — match this repo's history.
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
+For each change set, inspect recent history (`git log` / `jj log`), apply the standards above, and compose a fresh message that names what changed and why. Do not copy a canned subject/body — repository-local syntax always wins when it differs from Go guidance.
+
+Then commit with:
 ```
-feat(auth): implement JWT-based authentication
-
-Add login endpoint and token validation middleware
+jj commit -m "<message composed from the standards above>"
 ```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Describing the composition process (standards + history) teaches style more reliably than fixed sample subjects.
 
 ### Conditional workflow pattern
 

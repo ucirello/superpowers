@@ -28,48 +28,60 @@ Tests failing (<N> failures). Must fix before completing:
 ## Step 2: Detect Environment
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+WORKSPACE_ROOT=$(jj workspace root)
+WORKSPACE_PATH="$WORKSPACE_ROOT"
 # Capture now, while still inside the workspace — Step 5 changes directory
 # before cleanup (Step 6) needs this value
-WORKTREE_PATH=$(git rev-parse --show-toplevel)
+#
+# Isolation: skill-managed workspaces live under .worktrees/ or worktrees/,
+# or have a jj workspace name other than "default".
+ISOLATED=false
+if echo "$WORKSPACE_PATH" | grep -qE '/\.worktrees/|/worktrees/'; then
+  ISOLATED=true
+fi
+WS_NAME=$(jj workspace list 2>/dev/null | awk -v root="$WORKSPACE_PATH" '$0 ~ root { print $1; exit }')
+if [ -n "$WS_NAME" ] && [ "$WS_NAME" != "default" ]; then
+  ISOLATED=true
+fi
+# Anonymous working-copy change (no bookmark on @) ≈ detached HEAD
+HAS_BOOKMARK=$(jj log -r '@' -T 'local_bookmarks ++ "\n"' --no-graph 2>/dev/null | tr -d '[:space:]')
 ```
 
 This determines which menu to show and how cleanup works:
 
 | State | Menu | Cleanup |
 |-------|------|---------|
-| `GIT_DIR == GIT_COMMON` (normal repo) | Standard 3 options | No worktree to clean up |
-| `GIT_DIR != GIT_COMMON`, named branch | Standard 3 options | Provenance-based (see Step 6) |
-| `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 2 options (no merge) | Externally managed — leave in place |
+| Not isolated (`ISOLATED=false`, default workspace) | Standard 3 options | No workspace to clean up |
+| Isolated, named bookmark on `@` | Standard 3 options | Provenance-based (see Step 6) |
+| Isolated, no bookmark on `@` (anonymous working-copy) | Reduced 2 options (no merge) | Externally managed — leave in place |
 
-## Step 3: Determine Base Branch
+## Step 3: Determine Base Bookmark
 
-The base branch is whatever this work forked from — usually named in the
-plan, the conversation, or the branch's upstream. If it is not already
-known, ask: "This branch split from <your best guess> - is that correct?"
+The base bookmark is whatever this work forked from — usually named in the
+plan, the conversation, or the bookmark's upstream tracking. If it is not already
+known, ask: "This bookmark split from <your best guess> - is that correct?"
 Confirm before merging: merging into the wrong base is expensive to undo.
 
 ## Step 4: Present Options
 
-**Normal repo and named-branch worktree — present exactly these 3 options:**
+**Normal repo and named-bookmark workspace — present exactly these 3 options:**
 
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
+1. Merge back to <base-bookmark> locally
 2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
+3. Keep the bookmark as-is (I'll handle it later)
 
 Which option?
 ```
 
-**Detached HEAD — present exactly these 2 options:**
+**Anonymous working-copy (no bookmark) — present exactly these 2 options:**
 
 ```
-Implementation complete. You're on a detached HEAD (externally managed workspace).
+Implementation complete. You're on an anonymous working-copy change (externally managed workspace).
 
-1. Push as new branch and create a Pull Request
+1. Push as new bookmark and create a Pull Request
 2. Keep as-is (I'll handle it later)
 
 Which option?
@@ -86,48 +98,53 @@ is theirs.
 ### Option 1: Merge Locally
 
 ```bash
-# Get main repo root for CWD safety
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
+# Get primary workspace root for CWD safety (default workspace)
+MAIN_ROOT=$(jj workspace list | awk '$1 == "default" { print $2; exit }')
+# Fallback if list format differs: walk up from current root to the repo that owns default
+if [ -z "$MAIN_ROOT" ]; then
+  MAIN_ROOT=$(jj workspace root)
+fi
 cd "$MAIN_ROOT"
 
 # Merge first — verify success before removing anything
-git checkout <base-branch>
-git pull
-git merge <feature-branch>
+jj git fetch
+jj new <base-bookmark> <feature-bookmark>   # merge change with both parents
+jj bookmark set <base-bookmark> -r @
 
 # Verify tests on merged result
 <test command>
 ```
 
-If tests fail on the merged result: stop, leave the worktree and branch in
+If tests fail on the merged result: stop, leave the workspace and bookmark in
 place, and investigate — nothing has been pushed, so the merge is local
 and recoverable.
 
-Once the merged result is green: clean up the worktree (Step 6), then
-delete the branch:
+Once the merged result is green: clean up the workspace (Step 6), then
+delete the feature bookmark:
 
 ```bash
-git branch -d <feature-branch>
+jj bookmark delete <feature-bookmark>
 ```
 
 ### Option 2: Push and Create PR
 
 ```bash
-git push -u origin <feature-branch>
-# From a detached HEAD, name the new branch on the remote:
-# git push origin HEAD:refs/heads/<new-branch>
+jj git push --bookmark <feature-bookmark>
+# From an anonymous working-copy, create a bookmark then push:
+# jj bookmark create <new-bookmark> -r @
+# jj git push --bookmark <new-bookmark>
 ```
 
-Then create the pull/merge request against <base-branch> with the forge's
-tooling — its CLI if one is available, or the creation URL most forges
+Then create the pull/merge request against <base-bookmark> with the forge's
+tooling — `gh` if available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
-Keep the worktree — your human partner iterates on PR feedback there.
+Keep the workspace — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+Report: "Keeping bookmark <name>. Workspace preserved at <path>."
 
 ### If your human partner asks to discard the work
 
@@ -136,9 +153,9 @@ work away. Confirm first:
 
 ```
 This will permanently delete:
-- Branch <name>
-- All commits: <commit-list>
-- Worktree at <path>
+- Bookmark <name>
+- All changes: <change-list>
+- Workspace at <path>
 
 Type 'discard' to confirm.
 ```
@@ -146,68 +163,86 @@ Type 'discard' to confirm.
 Wait for that exact confirmation. When it arrives:
 
 ```bash
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
+MAIN_ROOT=$(jj workspace list | awk '$1 == "default" { print $2; exit }')
+if [ -z "$MAIN_ROOT" ]; then
+  MAIN_ROOT=$(jj workspace root)
+fi
 cd "$MAIN_ROOT"
 ```
 
-Then clean up the worktree (Step 6) and force-delete the branch:
+Then clean up the workspace (Step 6) and delete the bookmark:
 
 ```bash
-git branch -D <feature-branch>
+jj bookmark delete <feature-bookmark>
 ```
 
 ## Step 6: Cleanup Workspace
 
 **Runs for Option 1 and confirmed discards.** Options 2 and 3 always
-preserve the worktree. Both callers have already changed directory to the
-main repo root — worktree removal must run from outside the worktree —
-and use the `GIT_DIR`/`GIT_COMMON`/`WORKTREE_PATH` values captured in
+preserve the workspace. Both callers have already changed directory to the
+main repo root — workspace removal must run from outside the workspace —
+and use the `WORKSPACE_PATH` / isolation values captured in
 Step 2, from before that directory change.
 
-**If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
+**If not isolated (`ISOLATED=false`):** Normal default workspace, nothing extra to clean up. Done.
 
-**If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`:** Superpowers
-created this worktree — we own cleanup:
-
-```bash
-git worktree remove "$WORKTREE_PATH"
-git worktree prune  # Self-healing: clean up any stale registrations
-```
-
-**If removal is refused** (`contains modified or untracked files`): the
-worktree holds files that exist nowhere else — uncommitted plans, notes,
-or scratch work. Never `--force` on your own initiative. Show your human
-partner what is at stake and ask:
+**If `WORKSPACE_PATH` is under `.worktrees/` or `worktrees/`:** This skill
+created this workspace — we own cleanup:
 
 ```bash
-git -C "$WORKTREE_PATH" status --porcelain -uall
+# Forget the jj workspace registration (NAME from jj workspace list)
+jj workspace forget <workspace-name>
+rm -rf "$WORKSPACE_PATH"
+```
+
+**If removal is refused** (workspace holds modified or untracked files, or
+forget/rm would lose unique content): the workspace holds files that exist
+nowhere else — undescribed plans, notes, or scratch work. Never force-delete
+on your own initiative. Show your human partner what is at stake and ask:
+
+```bash
+jj -R "$WORKSPACE_PATH" status
+# or from inside that workspace:
+# jj status
 ```
 
 ```
-Worktree removal refused — these files were never committed:
+Workspace removal refused — these files were never committed:
 
 <file list>
 
-1. Commit them to <branch> before cleanup
+1. Commit them to <bookmark> before cleanup
 2. Move them into <main repo root>
 3. Delete them (unrecoverable)
 
 Which?
 ```
 
-Carry out the choice, then remove the worktree.
+If they choose commit: describe the working-copy change before cleanup.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that
+you can see in `git log`, compose commit messages adherent to the present
+standards. Repository-local syntax from that history wins over any fixed
+template. Then:
+
+```bash
+jj describe -m "<composed message>"
+# or jj commit -m "<composed message>" if snapshotting a new change is appropriate
+```
+
+Carry out the choice, then remove the workspace (`jj workspace forget` +
+`rm -rf` as above).
 
 **Otherwise:** The host environment owns this workspace — leave it in
 place. If your platform provides a workspace-exit tool, use it.
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
+| Option | Merge | Push | Keep Workspace | Cleanup Bookmark |
+|--------|-------|------|----------------|------------------|
 | 1. Merge locally | yes | - | - | yes |
 | 2. Create PR | - | yes | yes | - |
 | 3. Keep as-is | - | - | yes | - |
-| Discard (explicit request only) | - | - | - | yes (force) |
+| Discard (explicit request only) | - | - | - | yes |
 
 ## Common Rationalizations
 
@@ -217,9 +252,9 @@ place. If your platform provides a workspace-exit tool, use it.
 | "They obviously want it merged" | Integration is your human partner's decision. Present the menu and wait. |
 | "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
-| "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
-| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
-| "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show your human partner and ask. |
-| "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
-| "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
+| "The PR is up, so the workspace is clutter now" | PR feedback gets fixed in that workspace. It stays until the work lands. |
+| "This other workspace looks stale — I'll clean it too" | Clean up only workspaces under `.worktrees/` or `worktrees/` that this skill created. Everything else belongs to the host. |
+| "Removal refused — force-delete is just finishing the cleanup" | The refusal means files exist only in that workspace. Force-delete destroys them permanently. Show your human partner and ask. |
+| "The merged-result failure is probably flaky" | A failing merged result stops everything. Bookmark and workspace stay put while you investigate. |
+| "The base bookmark is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
 | "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
