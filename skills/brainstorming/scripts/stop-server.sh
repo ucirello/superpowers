@@ -3,8 +3,8 @@
 # Usage: stop-server.sh <session_dir>
 #
 # Kills the server process. Only deletes session directory if it's
-# under /tmp (ephemeral). Persistent directories (.superpowers/) are
-# kept so mockups can be reviewed later.
+# ephemeral under .tmp (or legacy /tmp). Persistent directories
+# (.rocketclaw/) are kept so mockups can be reviewed later.
 
 SESSION_DIR="$1"
 
@@ -70,6 +70,13 @@ is_brainstorm_server() {
   return 0
 }
 
+# Ephemeral sessions live under project .tmp (or legacy /tmp). Persistent
+# .rocketclaw/ sessions are kept for later review.
+is_ephemeral_session_dir() {
+  local dir="$1"
+  [[ "$dir" == */.tmp/* || "$dir" == /.tmp/* || "$dir" == /tmp/* ]]
+}
+
 if [[ -f "$PID_FILE" ]]; then
   pid=$(cat "$PID_FILE")
 
@@ -109,8 +116,8 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Only delete ephemeral /tmp directories
-  if [[ "$SESSION_DIR" == /tmp/* ]]; then
+  # Only delete ephemeral .tmp (and legacy /tmp) directories
+  if is_ephemeral_session_dir "$SESSION_DIR"; then
     rm -rf "$SESSION_DIR"
   fi
 
