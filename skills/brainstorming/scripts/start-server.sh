@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows bash environments often reap nohup background processes. Auto-foreground when detected.
+# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -113,8 +113,15 @@ umask 077
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
-# Resolve project root: jj workspace when available, else cwd.
-ROOT="$(jj workspace root 2>/dev/null || pwd)"
+# Resolve project-local .tmp (prefer jj workspace root when available).
+resolve_tmp_root() {
+  local root
+  root="$(jj workspace root 2>/dev/null || true)"
+  if [[ -z "$root" ]]; then
+    root="$(pwd)"
+  fi
+  printf '%s\n' "${root}/.tmp"
+}
 
 if [[ -n "$PROJECT_DIR" ]]; then
   SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
@@ -123,7 +130,8 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  SESSION_DIR="${ROOT}/.tmp/brainstorm-${SESSION_ID}"
+  TMP_ROOT="$(resolve_tmp_root)"
+  SESSION_DIR="${TMP_ROOT}/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"

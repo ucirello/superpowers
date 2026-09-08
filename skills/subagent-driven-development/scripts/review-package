@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Generate a review package: change list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not the parent of @ alone) keeps
-# multi-change tasks intact.
+# call. Using the recorded per-task BASE (not @-) keeps multi-change
+# tasks intact.
 #
 # Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
 # Default OUTFILE: <repo-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<head7>.diff
@@ -19,15 +19,11 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-jj log -r "$base" -T 'commit_id' --no-graph >/dev/null \
-  || { echo "bad BASE: $base" >&2; exit 2; }
-jj log -r "$head" -T 'commit_id' --no-graph >/dev/null \
-  || { echo "bad HEAD: $head" >&2; exit 2; }
+jj log -r "$base" -n 1 --no-graph >/dev/null 2>&1 || { echo "bad BASE: $base" >&2; exit 2; }
+jj log -r "$head" -n 1 --no-graph >/dev/null 2>&1 || { echo "bad HEAD: $head" >&2; exit 2; }
 
 short_id() {
-  local id
-  id=$(jj log -r "$1" -T 'commit_id' --no-graph)
-  printf '%s' "${id:0:7}"
+  jj log -r "$1" --no-graph -T 'commit_id.short()' 2>/dev/null | head -1
 }
 
 if [ $# -eq 4 ]; then
@@ -41,21 +37,14 @@ fi
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Changes"
-  jj log -r "${base}..${head}"
+  jj log -r "${base}..${head}" --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
-  # Prefer --summary when the installed jj supports it; otherwise fall back
-  # to the full diff's path headers only for this section.
-  if jj diff --from "$base" --to "$head" --summary >/dev/null 2>&1; then
-    jj diff --from "$base" --to "$head" --summary
-  else
-    jj diff --from "$base" --to "$head" | grep -E '^(diff |Modified |Added |Removed |A |M |D )' || true
-  fi
+  jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  jj diff --from "$base" --to "$head"
+  jj diff --from "$base" --to "$head" --context 10
 } > "$out"
 
-# Count changes in the range (one line per change from jj log).
-commits=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | grep -c . || true)
-echo "wrote ${out}: ${commits} change(s), $(wc -c < "$out" | tr -d ' ') bytes"
+changes=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | grep -c . || true)
+echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

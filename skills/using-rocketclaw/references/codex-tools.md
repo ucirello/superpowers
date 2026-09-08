@@ -84,26 +84,25 @@ Skills that create workspaces or finish branches should detect their
 environment with read-only jj commands before proceeding:
 
 ```bash
-WS_ROOT=$(jj workspace root 2>/dev/null)
-jj workspace list
-# bookmark at @:
-jj bookmark list -r @
+WORKSPACE_PATH=$(jj workspace root)
+DEFAULT_PATH=$(jj workspace root -w default 2>/dev/null || echo "$WORKSPACE_PATH")
+BOOKMARKS_AT_WC=$(jj log -r @ --no-graph -T 'bookmarks.map(|b| b.name()).join(" ")' 2>/dev/null | xargs)
 ```
 
-- Multiple workspaces listed for the same repo → already in isolated workspace setup (skip creation if already isolated)
-- No bookmark at `@` → working copy has no named bookmark (cannot push/PR from unnamed state without creating one)
+- `WORKSPACE_PATH != DEFAULT_PATH` → already in a secondary workspace (skip creation)
+- `BOOKMARKS_AT_WC` empty → no named bookmark at working copy (cannot push/PR from sandbox without creating one)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+Step 2 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached working copy in an
-externally managed workspace), the agent commits all work and informs
+When the sandbox blocks bookmark/push operations (no bookmark at working
+copy in an externally managed workspace), the agent commits all work and informs
 the user to use the App's native controls:
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
+- **"Create branch"** — names the branch/bookmark, then commit/push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+The agent can still run tests and output suggested bookmark
+names, change descriptions, and PR descriptions for the user to copy. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and log ALWAYS wins over Go guidance when they differ.

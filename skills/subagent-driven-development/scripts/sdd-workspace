@@ -8,12 +8,12 @@
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The workspace lives in the working tree (not under .jj/) because agents
-# often treat VCS metadata as a protected path and deny writes there — which
-# blocks an implementer subagent from writing its report file. A self-ignoring
-# .gitignore at .rocketclaw/sdd/ keeps every plan's workspace out of
-# `jj status` and out of accidental commits without modifying any tracked file.
-# (jj honors .gitignore the same way.)
+# The workspace lives in the working tree (not under .jj/ or .git/) because
+# agent harnesses often treat VCS metadata dirs as protected paths and deny
+# writes there — which blocks an implementer subagent from writing its report
+# file. A self-ignoring .gitignore at .rocketclaw/sdd/ keeps every plan's
+# workspace out of `jj st` / status and out of accidental commits without
+# modifying any tracked file.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -33,7 +33,7 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
-root=$(jj workspace root)
+root=$(jj workspace root 2>/dev/null || pwd)
 base="$root/.rocketclaw/sdd"
 dir="$base/$slug"
 mkdir -p "$dir"

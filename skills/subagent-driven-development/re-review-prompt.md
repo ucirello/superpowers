@@ -34,13 +34,14 @@ Subagent (general-purpose):
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix changes, a stat summary,
+    Read the diff file once — it contains the fix commits, a stat summary,
     and the fix diff with surrounding context. Do not re-run jj commands.
     If the diff file is missing, fetch the diff yourself:
+    `jj diff --from [FIX_BASE_SHA] --to [HEAD_SHA] --stat` and
     `jj diff --from [FIX_BASE_SHA] --to [HEAD_SHA]`.
 
     Your review is read-only on this checkout. Do not mutate the working
-    copy, @, or bookmark state in any way.
+    copy, bookmarks, or `@` in any way.
 
     ## You Do Not Dispatch Subagents
 

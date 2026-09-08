@@ -215,7 +215,7 @@ description: Analyze Excel spreadsheets, create pivot tables, generate charts. U
 **JJ Commit Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing working-copy changes.
+description: Generate descriptive commit messages by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing changes.
 ```
 
 Avoid vague descriptions like these:
@@ -655,17 +655,10 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Commit message format
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Do not use a fixed Conventional Commit template — match this repo's history.
-
-For each change set, inspect recent history (`git log` / `jj log`), apply the standards above, and compose a fresh message that names what changed and why. Do not copy a canned subject/body — repository-local syntax always wins when it differs from Go guidance.
-
-Then commit with:
-```
-jj commit -m "<message composed from the standards above>"
-```
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and log ALWAYS wins over Go guidance when they differ. Use `jj commit -m "<message composed from the standards above>"` (or `jj describe -m "<message composed from the standards above>"` then `jj new`). There is no staging area — files are auto-tracked.
 ````
 
-Describing the composition process (standards + history) teaches style more reliably than fixed sample subjects.
+Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
 
 ### Conditional workflow pattern
 
