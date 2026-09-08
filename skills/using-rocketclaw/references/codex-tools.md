@@ -80,29 +80,29 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish bookmarks should detect their
+environment with read-only jj commands before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+WS_ROOT=$(jj workspace root 2>/dev/null)
+CURRENT_WS=$(jj workspace list -T 'if(current, name ++ "\n")' 2>/dev/null | tr -d '[:space:]')
+BOOKMARKS=$(jj log -r @ -T 'local_bookmarks.join(" ")' --no-graph 2>/dev/null)
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- `CURRENT_WS` is set and not `default` → already in a secondary workspace (skip creation)
+- `BOOKMARKS` empty → working copy has no local bookmark (cannot push/PR from sandbox without naming one)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+Step 2 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
+When the sandbox blocks bookmark/push operations (no local bookmark in an
+externally managed workspace), the agent describes all work and informs
 the user to use the App's native controls:
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
+- **"Create bookmark"** — names the bookmark, then describe/push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+The agent can still run tests, stage files, and output suggested bookmark
+names, change descriptions, and PR descriptions for the user to copy.
