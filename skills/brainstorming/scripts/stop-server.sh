@@ -3,7 +3,7 @@
 # Usage: stop-server.sh <session_dir>
 #
 # Kills the server process. Only deletes session directory if it's
-# under /tmp (ephemeral). Persistent directories (.superpowers/) are
+# under .tmp/ (ephemeral). Persistent directories (.rocketclaw/) are
 # kept so mockups can be reviewed later.
 
 SESSION_DIR="$1"
@@ -109,8 +109,8 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Only delete ephemeral /tmp directories
-  if [[ "$SESSION_DIR" == /tmp/* ]]; then
+  # Only delete ephemeral .tmp/ directories (not persistent .rocketclaw/)
+  if [[ "$SESSION_DIR" == */.tmp/* ]] || [[ "$SESSION_DIR" == .tmp/* ]]; then
     rm -rf "$SESSION_DIR"
   fi
 

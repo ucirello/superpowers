@@ -35,7 +35,10 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Commit your work with `jj describe` / `jj commit` (placeholder message
+       first is fine). Based on https://go.dev/wiki/CommitMessage and on past
+       commit messages that you can see in `jj log`, compose commit messages
+       adherent to the present standards.
     5. Self-review (see below)
     6. Report back
 
@@ -140,7 +143,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Changes created (short SHA + subject)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
