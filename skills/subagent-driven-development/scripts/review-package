@@ -19,13 +19,13 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-jj log -r "$base" -T 'commit_id' --no-graph >/dev/null 2>&1 \
-  || { echo "bad BASE: $base" >&2; exit 2; }
-jj log -r "$head" -T 'commit_id' --no-graph >/dev/null 2>&1 \
-  || { echo "bad HEAD: $head" >&2; exit 2; }
+jj log -r "$base" -T commit_id --no-graph >/dev/null 2>&1 || { echo "bad BASE: $base" >&2; exit 2; }
+jj log -r "$head" -T commit_id --no-graph >/dev/null 2>&1 || { echo "bad HEAD: $head" >&2; exit 2; }
 
 short_id() {
-  jj log -r "$1" -T 'commit_id.short(7)' --no-graph
+  local id
+  id=$(jj log -r "$1" -T 'commit_id' --no-graph)
+  printf '%s' "${id:0:7}"
 }
 
 if [ $# -eq 4 ]; then
@@ -39,14 +39,14 @@ fi
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Changes"
-  jj log -r "${base}..${head}" --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"'
+  jj log -r "${base}..${head}" --no-graph -T 'builtin_log_oneline'
   echo
   echo "## Files changed"
-  jj diff --from "$base" --to "$head" --stat
+  jj diff --stat --from "$base" --to "$head"
   echo
   echo "## Diff"
-  jj diff --from "$base" --to "$head" --git
+  jj diff --from "$base" --to "$head" --context 10
 } > "$out"
 
-changes=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | grep -c . || true)
-echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"
+commits=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | grep -c . || true)
+echo "wrote ${out}: ${commits} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

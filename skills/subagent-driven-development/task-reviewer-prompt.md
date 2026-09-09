@@ -15,7 +15,7 @@ Subagent (general-purpose):
   prompt: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
-    not a merge review — a broad whole-branch review happens separately after
+    not a merge review — a broad whole-change review happens separately after
     all tasks are complete.
 
     ## What Was Requested
@@ -31,8 +31,8 @@ Subagent (general-purpose):
 
     ## Diff Under Review
 
-    **Base:** [BASE_REV]
-    **Head:** [HEAD_REV]
+    **Base:** [BASE_SHA]
+    **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the change list, a stat summary,
@@ -41,8 +41,7 @@ Subagent (general-purpose):
     changed file separately unless a hunk you must judge is cut off
     mid-function — and say so in your report. Do not re-run jj commands.
     If the diff file is missing, fetch the diff yourself:
-    `jj diff --from [BASE_REV] --to [HEAD_REV] --stat` and
-    `jj diff --from [BASE_REV] --to [HEAD_REV]`.
+    `jj diff --stat --from [BASE_SHA] --to [HEAD_SHA]` and `jj diff --from [BASE_SHA] --to [HEAD_SHA]`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -51,7 +50,7 @@ Subagent (general-purpose):
     checking the call sites is the right method.
 
     Your review is read-only on this checkout. Do not mutate the working
-    tree, the working-copy change (@), bookmarks, or repo state in any way.
+    tree, the index, @, or bookmark state in any way.
 
     ## You Do Not Dispatch Subagents
 
@@ -198,8 +197,8 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
-- `[BASE_REV]` — change/commit before this task
-- `[HEAD_REV]` — current change/commit
+- `[BASE_SHA]` — commit before this task
+- `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`scripts/review-package PLAN_FILE BASE HEAD` prints the unique
   path it wrote; the package never enters the controller's context)

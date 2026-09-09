@@ -84,25 +84,26 @@ Skills that create workspaces or finish bookmarks should detect their
 environment with read-only jj commands before proceeding:
 
 ```bash
-WS_ROOT=$(jj workspace root 2>/dev/null)
-CURRENT_WS=$(jj workspace list -T 'if(current, name ++ "\n")' 2>/dev/null | tr -d '[:space:]')
-BOOKMARKS=$(jj log -r @ -T 'local_bookmarks.join(" ")' --no-graph 2>/dev/null)
+WS_ROOT=$(cd "$(jj workspace root)" 2>/dev/null && pwd -P)
+DEFAULT_ROOT=$(jj workspace list 2>/dev/null | awk '/^default:/{print $2; exit}')
+DEFAULT_ROOT=$(cd "$DEFAULT_ROOT" 2>/dev/null && pwd -P)
+BOOKMARKS=$(jj log -r @ --no-graph -T 'bookmarks.map(|b| b.name()).join(" ")' 2>/dev/null)
 ```
 
-- `CURRENT_WS` is set and not `default` → already in a secondary workspace (skip creation)
-- `BOOKMARKS` empty → working copy has no local bookmark (cannot push/PR from sandbox without naming one)
+- `WS_ROOT != DEFAULT_ROOT` → already in an additional workspace (skip creation)
+- `BOOKMARKS` empty → no bookmark on @ (cannot bookmark/push/PR from sandbox)
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 2 for how each skill uses these signals.
+See `using-jj-workspaces` Step 0 and `finishing-a-development-branch`
+Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark/push operations (no local bookmark in an
+When the sandbox blocks bookmark/push operations (no bookmark on @ in an
 externally managed workspace), the agent describes all work and informs
 the user to use the App's native controls:
 
-- **"Create bookmark"** — names the bookmark, then describe/push/PR via App UI
+- **"Create branch"** — App UI control (harness label); names the bookmark, then describe/push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested bookmark
+The agent can still run tests and output suggested bookmark
 names, change descriptions, and PR descriptions for the user to copy.

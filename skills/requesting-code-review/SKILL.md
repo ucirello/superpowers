@@ -23,9 +23,9 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get revision IDs:**
+**1. Get revision SHAs:**
 ```bash
-BASE_SHA=$(jj log -r @- -T 'commit_id' --no-graph)  # or main@origin
+BASE_SHA=$(jj log -r @- -T 'commit_id' --no-graph)  # or main
 HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 ```
 
@@ -36,8 +36,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting revision
-- `{HEAD_SHA}` - Ending revision
+- `{BASE_SHA}` - Starting commit
+- `{HEAD_SHA}` - Ending commit
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,7 +52,7 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(jj log -r 'description("Task 1")' -T 'commit_id' --no-graph | head -1)
+BASE_SHA=$(jj log -r 'description(glob:"*Task 1*")' -T 'commit_id' --no-graph -n 1)
 HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 
 [Dispatch code reviewer subagent]

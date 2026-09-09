@@ -99,7 +99,7 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
-# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
+# Windows/bash (MSYS) reaps nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   if is_windows_like_shell; then
     FOREGROUND="true"
@@ -109,10 +109,6 @@ fi
 # Session files (server.log, server-info, .last-token) embed the session key —
 # keep everything this script and the server create owner-only.
 umask 077
-
-# Capture workspace before any cd — used for ephemeral .tmp sessions when
-# --project-dir is omitted (never OS /tmp).
-WORKSPACE_DIR="$(pwd)"
 
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
@@ -124,7 +120,8 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  SESSION_DIR="${WORKSPACE_DIR}/.tmp/rocketclaw/brainstorm/${SESSION_ID}"
+  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
+  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"

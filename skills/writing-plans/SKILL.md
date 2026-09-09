@@ -7,13 +7,13 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent changes.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated workspace, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated jj workspace, it should have been created via the `superpowers:using-jj-workspaces` skill at execution time.
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -49,7 +49,7 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Record the change" - step
+- "Commit" - step
 
 ## Plan Document Header
 
@@ -120,14 +120,16 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Record the change**
+- [ ] **Step 5: Commit**
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `git log` / `jj log` ALWAYS wins when it differs from the Go guidance. Apply compatible Go guidance to message quality, clarity, and structure without replacing repository-local syntax. Determine the message at runtime from those sources — do not use fixed Conventional Commit templates (`feat:`, `fix:`, type/scope prefixes, or canned subjects). The message must describe this task's deliverable (what changed and why).
+Save the relevant files for this task (jj auto-tracks; do not add
+unrelated files to the change).
+
+Based on https://go.dev/wiki/CommitMessage and on past commit messages
+that you can see in `jj log`, compose commit messages adherent to the
+present standards.
 
 ```bash
-# Files are tracked automatically by jj; review then finish the change
-jj status
-jj diff
 jj commit -m "<message composed from the standards above>"
 ```
 ````

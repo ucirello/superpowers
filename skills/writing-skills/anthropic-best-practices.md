@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Change description helper skill:**
+**Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change messages by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing pending changes.
+description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing working-copy changes.
 ```
 
 Avoid vague descriptions like these:
@@ -653,18 +653,27 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Change description format
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Also check `jj log` for local history. Repository-local syntax from project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Apply compatible Go guidance to message quality, clarity, and structure without replacing repository-local syntax. Determine the message at runtime — do not prescribe fixed Conventional Commit prefixes, subjects, or bodies.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `jj log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `jj log` ALWAYS wins over Go guidance when they differ.
 
-**Semantic constraints (not fixed wording):**
-- Describe what changed and why (the task deliverable)
-- Prefer a short subject; optional body for detail when needed
-- Match the repository's established history style
+Analyze the jj diff / working-copy changes, then compose a description that:
+- States what changed and why (subject + body as needed)
+- Matches repository-local message syntax observed in `jj log`
+- Applies compatible Go guidance for clarity and structure without forcing a fixed prefix, type, or scope template
 
-```bash
-jj commit -m "<message composed from the standards above>"
-```
+Do not use a fixed Conventional Commit (or any other) template. Determine syntax at runtime from the repository.
+
+**Example shape (illustrative constraints only — not a prescribed message):**
+Input: Added user authentication with JWT tokens
+Output: A message composed from the standards above that covers JWT auth login and token validation middleware.
+
+Input: Fixed bug where dates displayed incorrectly in reports
+Output: A message composed from the standards above that covers timezone-correct date formatting in reports.
+
+Then record with:
+jj describe -m "<message composed from the standards above>"
+# or: jj commit -m "<message composed from the standards above>"
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
