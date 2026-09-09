@@ -23,10 +23,10 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get change IDs:**
+**1. Get revision IDs:**
 ```bash
-BASE=$(jj log -r @- -T 'commit_id' --no-graph)  # or main@origin
-HEAD=$(jj log -r @ -T 'commit_id' --no-graph)
+BASE_SHA=$(jj log -r @- -T 'commit_id' --no-graph)  # or main@origin
+HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -36,8 +36,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE}` - Starting change
-- `{HEAD}` - Ending change
+- `{BASE_SHA}` - Starting revision
+- `{HEAD_SHA}` - Ending revision
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +52,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE=$(jj log -r 'description(regex:"Task 1")' -n 1 -T 'commit_id' --no-graph)
-HEAD=$(jj log -r @ -T 'commit_id' --no-graph)
+BASE_SHA=$(jj log -r 'description("Task 1")' -T 'commit_id' --no-graph | head -1)
+HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
   PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
-  BASE: a7981ec
-  HEAD: 3df7661
+  BASE_SHA: a7981ec
+  HEAD_SHA: 3df7661
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

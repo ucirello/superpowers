@@ -7,7 +7,7 @@
 #
 # Options:
 #   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         instead of .tmp. Files persist after server stops.
+#                         instead of workspace .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -110,18 +110,12 @@ fi
 # keep everything this script and the server create owner-only.
 umask 077
 
+# Capture workspace before any cd — used for ephemeral .tmp sessions when
+# --project-dir is omitted (never OS /tmp).
+WORKSPACE_DIR="$(pwd)"
+
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
-
-# Resolve project-local .tmp (prefer jj workspace root when available).
-resolve_tmp_root() {
-  local root
-  root="$(jj workspace root 2>/dev/null || true)"
-  if [[ -z "$root" ]]; then
-    root="$(pwd)"
-  fi
-  printf '%s\n' "${root}/.tmp"
-}
 
 if [[ -n "$PROJECT_DIR" ]]; then
   SESSION_DIR="${PROJECT_DIR}/.rocketclaw/brainstorm/${SESSION_ID}"
@@ -130,8 +124,7 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  TMP_ROOT="$(resolve_tmp_root)"
-  SESSION_DIR="${TMP_ROOT}/brainstorm-${SESSION_ID}"
+  SESSION_DIR="${WORKSPACE_DIR}/.tmp/rocketclaw/brainstorm/${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"

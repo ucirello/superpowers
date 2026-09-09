@@ -53,9 +53,9 @@ the network can't read the screens or inject events. After the first load the
 browser remembers the key via a cookie, so reloads and `/files/*` assets work
 without repeating it.
 
-**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.rocketclaw/brainstorm/` for the session directory.
+**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.rocketclaw/brainstorm/` for the session directory. Without `--project-dir`, sessions live under the workspace `.tmp/rocketclaw/brainstorm/`.
 
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go under the project `.tmp/` (or `$(jj workspace root)/.tmp` when in a JJ workspace) and get cleaned up. Remind the user to add `.rocketclaw/` and `.tmp/` to ignore files if they're not already there.
+**Note:** Pass the project root as `--project-dir` so mockups persist in `.rocketclaw/brainstorm/` and survive server restarts. Without it, files go under the workspace `.tmp/rocketclaw/brainstorm/` and get cleaned up on stop. Remind the user to add `.rocketclaw/` and `.tmp/` to `.gitignore` if they are not already there.
 
 **Launching the server by platform:**
 
@@ -291,7 +291,7 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 scripts/stop-server.sh $SESSION_DIR
 ```
 
-If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Only ephemeral `.tmp` sessions get deleted on stop.
+If the session used `--project-dir`, mockup files persist in `.rocketclaw/brainstorm/` for later reference. Only workspace `.tmp/rocketclaw/brainstorm/` sessions get deleted on stop.
 
 ## Reference
 

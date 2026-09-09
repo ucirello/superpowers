@@ -19,11 +19,13 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-jj log -r "$base" -n 1 --no-graph >/dev/null 2>&1 || { echo "bad BASE: $base" >&2; exit 2; }
-jj log -r "$head" -n 1 --no-graph >/dev/null 2>&1 || { echo "bad HEAD: $head" >&2; exit 2; }
+jj log -r "$base" -T 'commit_id' --no-graph >/dev/null 2>&1 \
+  || { echo "bad BASE: $base" >&2; exit 2; }
+jj log -r "$head" -T 'commit_id' --no-graph >/dev/null 2>&1 \
+  || { echo "bad HEAD: $head" >&2; exit 2; }
 
 short_id() {
-  jj log -r "$1" --no-graph -T 'commit_id.short()' 2>/dev/null | head -1
+  jj log -r "$1" -T 'commit_id.short(7)' --no-graph
 }
 
 if [ $# -eq 4 ]; then
@@ -37,13 +39,13 @@ fi
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Changes"
-  jj log -r "${base}..${head}" --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
+  jj log -r "${base}..${head}" --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
   jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  jj diff --from "$base" --to "$head" --context 10
+  jj diff --from "$base" --to "$head" --git
 } > "$out"
 
 changes=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | grep -c . || true)

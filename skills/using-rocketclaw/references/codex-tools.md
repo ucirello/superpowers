@@ -80,29 +80,29 @@ default_subagent_reasoning_effort = "medium"
 
 ## Environment Detection
 
-Skills that create workspaces or finish branches should detect their
+Skills that create workspaces or finish bookmarks should detect their
 environment with read-only jj commands before proceeding:
 
 ```bash
-WORKSPACE_PATH=$(jj workspace root)
-DEFAULT_PATH=$(jj workspace root -w default 2>/dev/null || echo "$WORKSPACE_PATH")
-BOOKMARKS_AT_WC=$(jj log -r @ --no-graph -T 'bookmarks.map(|b| b.name()).join(" ")' 2>/dev/null | xargs)
+WS_ROOT=$(jj workspace root 2>/dev/null)
+CURRENT_WS=$(jj workspace list -T 'if(current, name ++ "\n")' 2>/dev/null | tr -d '[:space:]')
+BOOKMARKS=$(jj log -r @ -T 'local_bookmarks.join(" ")' --no-graph 2>/dev/null)
 ```
 
-- `WORKSPACE_PATH != DEFAULT_PATH` → already in a secondary workspace (skip creation)
-- `BOOKMARKS_AT_WC` empty → no named bookmark at working copy (cannot push/PR from sandbox without creating one)
+- `CURRENT_WS` is set and not `default` → already in a secondary workspace (skip creation)
+- `BOOKMARKS` empty → working copy has no local bookmark (cannot push/PR from sandbox without naming one)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 2 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark/push operations (no bookmark at working
-copy in an externally managed workspace), the agent commits all work and informs
+When the sandbox blocks bookmark/push operations (no local bookmark in an
+externally managed workspace), the agent describes all work and informs
 the user to use the App's native controls:
 
-- **"Create branch"** — names the branch/bookmark, then commit/push/PR via App UI
+- **"Create bookmark"** — names the bookmark, then describe/push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests and output suggested bookmark
-names, change descriptions, and PR descriptions for the user to copy. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and log ALWAYS wins over Go guidance when they differ.
+The agent can still run tests, stage files, and output suggested bookmark
+names, change descriptions, and PR descriptions for the user to copy.

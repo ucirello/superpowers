@@ -20,19 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## Change Range to Review
+    ## Revision Range to Review
 
-    **Base:** [BASE]
-    **Head:** [HEAD]
+    **Base:** [BASE_SHA]
+    **Head:** [HEAD_SHA]
 
     ```bash
-    jj diff --from [BASE] --to [HEAD] --stat
-    jj diff --from [BASE] --to [HEAD]
+    jj diff --from [BASE_SHA] --to [HEAD_SHA] --stat
+    jj diff --from [BASE_SHA] --to [HEAD_SHA]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working copy, the operation log tip, or bookmark state in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary workspace (e.g. `jj workspace add $(jj workspace root)/.tmp/review-[SHA] -r [SHA]`) — never move @ on this checkout.
+    Your review is read-only on this checkout. Do not mutate the working copy, the operation log, `@`, bookmarks, or revision state in any way. Prefer `jj show`, `jj diff`, and `jj log` to inspect history without checking out. If you need a working copy of a different revision, add a separate workspace under the repo root (e.g. `jj workspace add $(jj workspace root)/.tmp/review-[SHA] -r [SHA]`) — never move `@` on this checkout.
 
     ## You Do Not Dispatch Subagents
 
@@ -137,8 +137,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE]` — starting change
-- `[HEAD]` — ending change
+- `[BASE_SHA]` — starting revision
+- `[HEAD_SHA]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

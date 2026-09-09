@@ -99,7 +99,9 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(process.cwd(), '.tmp', 'brainstorm');
+// Default under workspace .tmp — never OS /tmp. start-server.sh always sets
+// BRAINSTORM_DIR; this fallback is for direct node invocation only.
+const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(process.cwd(), '.tmp', 'rocketclaw', 'brainstorm');
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
@@ -153,10 +155,12 @@ const MIME_TYPES = {
 function waitingPage() {
   return renderBranding(`<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Brainstorm Companion</title>
+<head><meta charset="utf-8"><title>Visual Brainstorming</title>
 <style>
 body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
 h1 { color: #333; } p { color: #666; }
+.brand { display: flex; align-items: center; min-width: 0; overflow: hidden; margin-bottom: 1.5rem; color: #666; font-size: 0.9rem; line-height: 1; }
+.brand-copy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; }
 </style>
 </head>
 <body><!-- BRANDING --><h1>Brainstorm Companion</h1>
@@ -193,9 +197,13 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
-// Branding removed; strip placeholder so frame/waiting templates still render.
+// Neutral header label only — no external brand image, version badge, or repo link.
+function brandMarkup() {
+  return '<div class="brand"><span class="brand-copy">Visual Brainstorming</span></div>';
+}
+
 function renderBranding(html) {
-  return html.split('<!-- BRANDING -->').join('');
+  return html.split('<!-- BRANDING -->').join(brandMarkup());
 }
 
 function isFullDocument(html) {

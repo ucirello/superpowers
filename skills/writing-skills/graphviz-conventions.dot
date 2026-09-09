@@ -12,7 +12,7 @@ digraph STYLE_GUIDE {
         "Take an action" [shape=box];
 
         // Commands are plaintext
-        "jj commit -m 'msg'" [shape=plaintext];
+        "jj commit -m \"<message>\"" [shape=plaintext];
 
         // States are ellipses
         "Current state" [shape=ellipse];
@@ -29,7 +29,7 @@ digraph STYLE_GUIDE {
         "Write test first" [shape=box];
         "npm test" [shape=plaintext];
         "I am stuck" [shape=ellipse];
-        "NEVER edit .jj/ by hand" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "NEVER skip reviewing jj diff" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
     // Edge naming conventions

@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**JJ Commit Helper skill:**
+**Change description helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing changes.
+description: Generate descriptive change messages by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing pending changes.
 ```
 
 Avoid vague descriptions like these:
@@ -655,7 +655,16 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Commit message format
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and log ALWAYS wins over Go guidance when they differ. Use `jj commit -m "<message composed from the standards above>"` (or `jj describe -m "<message composed from the standards above>"` then `jj new`). There is no staging area — files are auto-tracked.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Also check `jj log` for local history. Repository-local syntax from project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Apply compatible Go guidance to message quality, clarity, and structure without replacing repository-local syntax. Determine the message at runtime — do not prescribe fixed Conventional Commit prefixes, subjects, or bodies.
+
+**Semantic constraints (not fixed wording):**
+- Describe what changed and why (the task deliverable)
+- Prefer a short subject; optional body for detail when needed
+- Match the repository's established history style
+
+```bash
+jj commit -m "<message composed from the standards above>"
+```
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
