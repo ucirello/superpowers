@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before landing changes to verify work meets requirements
 ---
 
 # Requesting Code Review
@@ -14,7 +14,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before landing changes on the trunk bookmark
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -23,10 +23,11 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get revision SHAs:**
+**1. Choose Jujutsu revisions:**
 ```bash
-BASE_SHA=$(jj log -r @- -T 'commit_id' --no-graph)  # or main
-HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
+jj status >/dev/null  # Snapshot current files before resolving stable IDs.
+FROM_REV=$(jj log -r '@-' --no-graph -T 'commit_id ++ "\n"')  # or resolve 'trunk()'
+TO_REV=$(jj log -r '@' --no-graph -T 'commit_id ++ "\n"')
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -36,8 +37,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{FROM_REV}` - Starting revision, excluded from the review
+- `{TO_REV}` - Ending revision, included in the review
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,14 +53,14 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(jj log -r 'description(glob:"*Task 1*")' -T 'commit_id' --no-graph -n 1)
-HEAD_SHA=$(jj log -r @ -T 'commit_id' --no-graph)
+FROM_REV=[starting revision ID]
+TO_REV=[ending revision ID]
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/rocketclaw/plans/deployment-plan.md
+  FROM_REV: [starting revision]
+  TO_REV: [ending revision]
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests

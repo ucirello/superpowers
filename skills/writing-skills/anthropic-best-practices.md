@@ -215,7 +215,7 @@ description: Analyze Excel spreadsheets, create pivot tables, generate charts. U
 **Jujutsu Change Description Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing working-copy changes.
+description: Generate descriptive change descriptions by analyzing `jj diff`. Use when the user asks for help writing change descriptions or reviewing the current change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local conventions take precedence; apply only compatible Go guidance where local history does not decide wording or structure. Use `jj describe` without imposing a fixed syntax, prefix, scope, or template.
 ```
 
 Avoid vague descriptions like these:
@@ -655,25 +655,13 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Change description format
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `jj log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `jj log` ALWAYS wins over Go guidance when they differ.
+Inspect the current change with `jj diff` and past commit messages with `git log` before composing its description.
 
-Analyze the jj diff / working-copy changes, then compose a description that:
-- States what changed and why (subject + body as needed)
-- Matches repository-local message syntax observed in `jj log`
-- Applies compatible Go guidance for clarity and structure without forcing a fixed prefix, type, or scope template
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-Do not use a fixed Conventional Commit (or any other) template. Determine syntax at runtime from the repository.
+Repository-local conventions take precedence. Apply only compatible Go guidance where local history does not decide wording or structure. Use `jj describe` to edit the current change description without imposing a fixed syntax, prefix, scope, template, or example.
 
-**Example shape (illustrative constraints only — not a prescribed message):**
-Input: Added user authentication with JWT tokens
-Output: A message composed from the standards above that covers JWT auth login and token validation middleware.
-
-Input: Fixed bug where dates displayed incorrectly in reports
-Output: A message composed from the standards above that covers timezone-correct date formatting in reports.
-
-Then record with:
-jj describe -m "<message composed from the standards above>"
-# or: jj commit -m "<message composed from the standards above>"
+Input: the current `jj diff` and relevant repository history. Output: a repository-conformant summary and, when useful, a body explaining motivation and behavior.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

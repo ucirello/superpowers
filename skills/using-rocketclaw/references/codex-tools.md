@@ -81,29 +81,29 @@ default_subagent_reasoning_effort = "medium"
 ## Environment Detection
 
 Skills that create workspaces or finish bookmarks should detect their
-environment with read-only jj commands before proceeding:
+environment with read-only Jujutsu commands before proceeding:
 
 ```bash
-WS_ROOT=$(cd "$(jj workspace root)" 2>/dev/null && pwd -P)
-DEFAULT_ROOT=$(jj workspace list 2>/dev/null | awk '/^default:/{print $2; exit}')
-DEFAULT_ROOT=$(cd "$DEFAULT_ROOT" 2>/dev/null && pwd -P)
-BOOKMARKS=$(jj log -r @ --no-graph -T 'bookmarks.map(|b| b.name()).join(" ")' 2>/dev/null)
+WORKSPACE_ROOT=$(jj --ignore-working-copy workspace root)
+WORKSPACES=$(jj --ignore-working-copy workspace list -T 'name ++ "\t" ++ root ++ "\n"')
+BOOKMARKS=$(jj --ignore-working-copy bookmark list -r @ -T 'name ++ "\n"')
 ```
 
-- `WS_ROOT != DEFAULT_ROOT` → already in an additional workspace (skip creation)
-- `BOOKMARKS` empty → no bookmark on @ (cannot bookmark/push/PR from sandbox)
+- If `WORKSPACE_ROOT` matches the root of an existing task workspace in `WORKSPACES`, reuse it rather than creating another workspace.
+- If `jj bookmark list -r @` is empty, the current change has no local bookmark; create or move one before a named-bookmark push or PR.
 
-See `using-jj-workspaces` Step 0 and `finishing-a-development-branch`
+See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark/push operations (no bookmark on @ in an
-externally managed workspace), the agent describes all work and informs
-the user to use the App's native controls:
+When the sandbox blocks bookmark or push operations in an externally
+managed workspace, finish the current Jujutsu change and inform the user
+to use the App's native controls:
 
-- **"Create branch"** — App UI control (harness label); names the bookmark, then describe/push/PR via App UI
+- **"Create branch"** — names the remote branch, then push/open the PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests and output suggested bookmark
-names, change descriptions, and PR descriptions for the user to copy.
+The agent can still run tests, inspect `jj status` and `jj diff`, describe
+the change with `jj describe`, and suggest bookmark names and PR descriptions.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local instructions and history always win; apply Go guidance only where compatible, and do not impose fixed message syntax or examples.
