@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Change message helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive change messages by analyzing diffs. Use when the user asks for help writing commit/change messages or reviewing pending changes.
 ```
 
 Avoid vague descriptions like these:
@@ -650,45 +650,47 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
+For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting. Prefer real repository history over invented templates.
 
 ````markdown  theme={null}
 ## Commit message format
 
-Generate commit messages following these examples:
+**Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.**
 
-**Example 1:**
-Input: Added user authentication with JWT tokens
+This is a composition task, not a fixed template. Do not invent or prescribe Conventional Commit type prefixes, scope syntax, or canned message shapes unless the repository's own history already uses them.
+
+**How to compose:**
+1. Inspect recent history (`git log` / `jj log`) and match the project's established voice, length, and structure.
+2. Follow the Go commit-message guidance linked above: short summary line that says why the change exists; optional body that explains context and consequences.
+3. Derive the message from the actual diff — what changed and why — not from a generic formula.
+
+**Semantic requirements (prose constraints, not syntax rules):**
+- Summary line states the purpose of the change (why), not a file list (what).
+- Body (when needed) gives context a future reader cannot get from the diff alone.
+- Tone, capitalization, wrapping, and any issue/ticket references match prior messages in this repo.
+- One logical change per message; do not bundle unrelated work.
+
+**Neutral placeholder shape only** (fill from the diff and repo norms — not a required syntax):
+
+```
+[summary line stating purpose]
+
+[optional body with context and consequences]
+```
+
+**Input/output practice pairs** should use the repo's real `git log` style. Example framing (placeholders only):
+
+**Example:**
+Input: [description of the diff under review]
 Output:
 ```
-feat(auth): implement JWT-based authentication
+[summary line in this repo's style]
 
-Add login endpoint and token validation middleware
+[optional body in this repo's style]
 ```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Examples help agents understand the desired style and level of detail more clearly than descriptions alone. Always prefer the repository's own history over generic formulas.
 
 ### Conditional workflow pattern
 
