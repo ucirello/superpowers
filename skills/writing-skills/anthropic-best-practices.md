@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Jujutsu Change Description Helper skill:**
+**Change message helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing `jj diff`. Use when the user asks for help writing change descriptions or reviewing the current change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local conventions take precedence; apply only compatible Go guidance where local history does not decide wording or structure. Use `jj describe` without imposing a fixed syntax, prefix, scope, or template.
+description: Generate descriptive change messages by analyzing diffs. Use when the user asks for help writing commit/change messages or reviewing pending changes.
 ```
 
 Avoid vague descriptions like these:
@@ -650,21 +650,47 @@ Adjust sections as needed for the specific analysis type.
 
 ### Examples pattern
 
-For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
+For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting. Prefer real repository history over invented templates.
 
 ````markdown  theme={null}
-## Change description format
+## Commit message format
 
-Inspect the current change with `jj diff` and past commit messages with `git log` before composing its description.
+**Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.**
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
+This is a composition task, not a fixed template. Do not invent or prescribe Conventional Commit type prefixes, scope syntax, or canned message shapes unless the repository's own history already uses them.
 
-Repository-local conventions take precedence. Apply only compatible Go guidance where local history does not decide wording or structure. Use `jj describe` to edit the current change description without imposing a fixed syntax, prefix, scope, template, or example.
+**How to compose:**
+1. Inspect recent history (`git log` / `jj log`) and match the project's established voice, length, and structure.
+2. Follow the Go commit-message guidance linked above: short summary line that says why the change exists; optional body that explains context and consequences.
+3. Derive the message from the actual diff — what changed and why — not from a generic formula.
 
-Input: the current `jj diff` and relevant repository history. Output: a repository-conformant summary and, when useful, a body explaining motivation and behavior.
+**Semantic requirements (prose constraints, not syntax rules):**
+- Summary line states the purpose of the change (why), not a file list (what).
+- Body (when needed) gives context a future reader cannot get from the diff alone.
+- Tone, capitalization, wrapping, and any issue/ticket references match prior messages in this repo.
+- One logical change per message; do not bundle unrelated work.
+
+**Neutral placeholder shape only** (fill from the diff and repo norms — not a required syntax):
+
+```
+[summary line stating purpose]
+
+[optional body with context and consequences]
+```
+
+**Input/output practice pairs** should use the repo's real `git log` style. Example framing (placeholders only):
+
+**Example:**
+Input: [description of the diff under review]
+Output:
+```
+[summary line in this repo's style]
+
+[optional body in this repo's style]
+```
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Examples help agents understand the desired style and level of detail more clearly than descriptions alone. Always prefer the repository's own history over generic formulas.
 
 ### Conditional workflow pattern
 

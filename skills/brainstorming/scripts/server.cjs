@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const childProcess = require('child_process');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -100,9 +99,12 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-const SESSION_DIR = process.env.BRAINSTORM_DIR || defaultSessionDir();
+// Default under workspace .tmp — never OS /tmp. start-server.sh normally sets BRAINSTORM_DIR.
+const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(process.cwd(), '.tmp', 'rocketclaw', 'brainstorm');
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
+// Opt-out env vars reserved for any future nonessential outbound traffic:
+// ROCKETCLAW_DISABLE_TELEMETRY, DISABLE_TELEMETRY, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 // Per-session secret key. The companion is reachable by any local browser tab
@@ -193,19 +195,6 @@ const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8')
 const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
-
-function defaultSessionDir() {
-  try {
-    const root = childProcess.execFileSync('jj', ['--ignore-working-copy', 'workspace', 'root'], {
-      encoding: 'utf-8',
-      stdio: ['ignore', 'pipe', 'ignore']
-    }).trim();
-    if (root) return path.join(root, '.tmp', 'brainstorm-' + process.pid);
-  } catch (e) {
-    // Use a local workspace when the process is not inside a Jujutsu repository.
-  }
-  return path.resolve('.tmp', 'brainstorm-' + process.pid);
-}
 
 function isFullDocument(html) {
   const trimmed = html.trimStart().toLowerCase();

@@ -69,7 +69,7 @@ When you can't trace manually, add instrumentation:
 
 ```typescript
 // Before the problematic operation
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   const stack = new Error().stack;
   console.error('DEBUG jj git init:', {
     directory,
@@ -124,7 +124,7 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 **Also added defense-in-depth:**
 - Layer 1: Project.create() validates directory
 - Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses `jj git init` outside `$(jj workspace root)/.tmp`, with local `.tmp` as a fallback
+- Layer 3: NODE_ENV guard refuses `jj git init` outside workspace `.tmp`
 - Layer 4: Stack trace logging before `jj git init`
 
 ## Key Principle

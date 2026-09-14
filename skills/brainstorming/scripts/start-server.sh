@@ -6,9 +6,8 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/.
-#                         Otherwise use $(jj workspace root)/.tmp, or local .tmp
-#                         outside a Jujutsu repository.
+#   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
+#                         instead of workspace .tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -121,12 +120,9 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  if WORKSPACE_ROOT="$(jj --ignore-working-copy workspace root 2>/dev/null)" && [[ -n "$WORKSPACE_ROOT" ]]; then
-    TEMP_ROOT="${WORKSPACE_ROOT}/.tmp"
-  else
-    TEMP_ROOT="${PWD}/.tmp"
-  fi
-  SESSION_DIR="${TEMP_ROOT}/brainstorm-${SESSION_ID}"
+  # Ephemeral sessions live under the workspace .tmp tree — never OS /tmp.
+  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
+  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/rocketclaw/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
@@ -136,9 +132,6 @@ SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
 
 # Create fresh session directory with content and state peers
 mkdir -p "${SESSION_DIR}/content" "$STATE_DIR"
-if [[ -z "$PROJECT_DIR" ]]; then
-  : > "${STATE_DIR}/ephemeral"
-fi
 
 SERVER_ID=""
 if [[ -r /dev/urandom ]]; then
