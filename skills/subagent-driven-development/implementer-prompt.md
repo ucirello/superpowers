@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Record your work with jj (see Change messages below)
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,29 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before recording the change, not after every edit.
+
+    ## Change messages
+
+    When you finish the work, describe and record the change with jj.
+    Compose the description from what the change actually does — not a
+    fixed template, not Conventional Commit prefixes, not a type tag.
+
+    Strongest guidance (Go project wiki style): write the first line as a
+    short summary of the *why* and the *what*, in the imperative mood, as
+    if completing the sentence "This change …". Prefer the full sentence
+    that a future reader needs over a label. Multi-line bodies are fine
+    when the why is non-obvious.
+
+    Examples of the shape (not copy-paste templates):
+    - "Make install-hook refuse a missing target path"
+    - "Report recovery progress every PROGRESS_INTERVAL items"
+
+    Then either:
+    - `jj describe -m "<message composed from the standards above>"` on the
+      working-copy change, or
+    - `jj commit -m "<message composed from the standards above>"` to
+      finish the working-copy change and start a new one.
 
     ## You Do Not Dispatch Subagents
 
@@ -140,7 +162,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Changes created (short change/commit id + subject)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
