@@ -3,11 +3,11 @@ name: using-git-worktrees
 description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or jj workspace fallback
 ---
 
-# Using JJ Workspaces
+# Using Jujutsu Workspaces
 
 ## Overview
 
-Ensure work happens in an isolated workspace. Prefer your platform's native workspace/worktree tools. Fall back to manual jj workspaces only when no native tool is available.
+Ensure work happens in an isolated workspace. Prefer your platform's native workspace tools. Fall back to manual jj workspaces only when no native tool is available.
 
 **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to jj. Never fight the harness.
 
@@ -18,26 +18,24 @@ Ensure work happens in an isolated workspace. Prefer your platform's native work
 **Before creating anything, check if you are already in an isolated workspace.**
 
 ```bash
-CURRENT_ROOT=$(jj workspace root)
-jj workspace list
-# Bookmarks on the working-copy commit (may be empty)
-jj log -r @ --no-graph -T 'bookmarks' 2>/dev/null
+WS_ROOT=$(jj workspace root)
+# Working-copy bookmarks (empty if none point at @)
+BOOKMARKS=$(jj log -r @ -T 'local_bookmarks.map(|b| b.name()).join(" ")' --no-graph 2>/dev/null)
+# Current workspace name: the workspace whose working-copy commit is @
+WS_NAME=$(jj log -r @ -T 'working_copies.map(|w| w.name()).join("\n")' --no-graph 2>/dev/null | head -1)
+# How many workspaces are attached to this repo
+WS_COUNT=$(jj workspace list -T 'name ++ "\n"' 2>/dev/null | grep -c . || echo 0)
 ```
 
-**Already isolated when any of these hold:**
+**Already-isolated signal:** You are in a linked (non-default) workspace when the current workspace name is set and is not `default`. A harness or prior `jj workspace add` created it — do not create another.
 
-- `jj workspace list` shows more than the default workspace, and `CURRENT_ROOT` is a secondary workspace root (not the main checkout path)
-- `CURRENT_ROOT` lies under a project-local `.worktrees/` or `worktrees/` directory
-- The harness already placed you in an isolated checkout (externally managed workspace)
-
-**If already isolated:** Skip to Step 2 (Project Setup). Do NOT create another workspace.
+**If already in a non-default workspace:** Skip to Step 2 (Project Setup). Do NOT create another workspace.
 
 Report with bookmark state:
-
 - On a bookmark: "Already in isolated workspace at `<path>` on bookmark `<name>`."
-- No feature bookmark / externally managed: "Already in isolated workspace at `<path>` (externally managed). Bookmark creation needed at finish time."
+- No bookmark on `@`: "Already in isolated workspace at `<path>` (no bookmark on working copy, externally managed). Bookmark creation needed at finish time."
 
-**If on the default workspace only** (single workspace at the main checkout): You are in a normal repo working copy.
+**If current workspace is `default` (or the only workspace):** You are in the primary repo checkout.
 
 Has the user already indicated their workspace preference in your instructions? If not, ask for consent before creating a workspace:
 
@@ -51,13 +49,13 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Workspace Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a workspace or worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a workspace? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, a `--worktree` flag, or a jj-aware workspace helper. If you do, use it and skip to Step 2.
 
 Native tools handle directory placement, bookmark creation, and cleanup automatically. Using `jj workspace add` when you have a native tool creates phantom state your harness can't see or manage.
 
 Only proceed to Step 1b if you have no native workspace tool available.
 
-### 1b. JJ Workspace Fallback
+### 1b. Jujutsu Workspace Fallback
 
 **Only use this if Step 1a does not apply** — you have no native workspace tool available. Create a workspace manually using jj.
 
@@ -74,50 +72,40 @@ Follow this priority order. Explicit user preference always beats observed files
    ```
    If found, use it. If both exist, `.worktrees` wins.
 
-3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
+3. **If there is no other guidance available**, default to `.worktrees/` at the project root (`$(jj workspace root)/.worktrees`).
 
 #### Safety Verification (project-local directories only)
 
-**MUST verify directory is ignored before creating workspace.** jj respects `.gitignore`; ignored paths are never auto-tracked.
+**MUST verify directory is ignored before creating workspace:**
 
 ```bash
-# .gitignore must ignore the chosen directory (jj has no check-ignore; inspect ignore files)
-grep -E '^\.worktrees/?$|^/\.worktrees/?$|\.worktrees' .gitignore 2>/dev/null
-grep -E '^worktrees/?$|^/worktrees/?$|worktrees' .gitignore 2>/dev/null
-# Also accept a broader pattern that covers the path (e.g. `*` ignore rules, or nested .gitignore)
+# jj has no check-ignore; verify the path is listed in .gitignore
+ROOT=$(jj workspace root)
+if [ -f "$ROOT/.gitignore" ] && grep -qE '^\.worktrees/?$|^worktrees/?$|^\.worktrees/|^/\.worktrees' "$ROOT/.gitignore"; then
+  : # ignored
+else
+  echo "NOT_IGNORED"
+fi
 ```
 
-**If NOT ignored:** Add the directory to `.gitignore`, then record the change with jj (files are auto-tracked when not ignored):
-
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
-
-```bash
-# e.g. append ".worktrees/" or "worktrees/" to .gitignore
-jj commit -m "<message composed from the standards above>"
-# equivalently: jj describe -m "<message composed from the standards above>" && jj new
-```
+**If NOT ignored:** Add `.worktrees/` (or `worktrees/`) to `.gitignore`, commit the change with a clear value-communicating description (why the ignore exists — e.g. keep local workspace directories out of the repo), then proceed.
 
 **Why critical:** Prevents accidentally committing workspace contents to the repository.
 
 #### Create the Workspace
 
 ```bash
-# Determine path based on chosen location and feature bookmark name
+# Determine path based on chosen location
+ROOT=$(jj workspace root)
 path="$LOCATION/$BOOKMARK_NAME"
 
-# New workspace with its own working-copy commit; name matches the directory by default
+# Create a new workspace. Default: WC shares parents with current @'s parents.
+# Use -r <revset> to pin parents explicitly (e.g. trunk()).
+# --name overrides the default (basename of destination).
 jj workspace add --name "$BOOKMARK_NAME" "$path"
 cd "$path"
 
-# Point a bookmark at this workspace's working-copy commit
-jj bookmark create "$BOOKMARK_NAME" -r @
-```
-
-Optional: start the new workspace from a specific base revision (parents of the new working-copy commit):
-
-```bash
-jj workspace add --name "$BOOKMARK_NAME" -r "<base-revset>" "$path"
-cd "$path"
+# Name the working-copy commit with a bookmark (jj equivalent of a feature branch)
 jj bookmark create "$BOOKMARK_NAME" -r @
 ```
 
@@ -167,15 +155,15 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
-| Already in secondary jj workspace | Skip creation (Step 0) |
-| Externally managed / harness isolation | Skip creation; bookmark at finish if needed |
+| Already in non-default workspace | Skip creation (Step 0) |
+| Current workspace is `default` | Treat as primary checkout (Step 0) |
 | Native workspace tool available | Use it (Step 1a) |
-| No native tool | JJ workspace fallback (Step 1b) |
+| No native tool | Jujutsu workspace fallback (Step 1b) |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Check instruction file, then default to `.worktrees/` at the project root |
-| Directory not ignored | Add to .gitignore + jj commit |
+| Neither exists | Check instruction file, then default `.worktrees/` |
+| Directory not ignored | Add to .gitignore + commit |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -184,8 +172,8 @@ Ready to implement <feature-name>
 
 | Excuse | Reality |
 |--------|---------|
-| "I'm obviously not in a workspace — no need to check" | Run Step 0. Harness-created isolation fools eyeballing; `jj workspace root` and `jj workspace list` settle it. |
+| "I'm obviously not in a workspace — no need to check" | Run Step 0. Harness-created isolation fools eyeballing; the detection commands settle it. |
 | "`jj workspace add` is quicker than hunting for a native tool" | A native tool (e.g. `EnterWorktree`) owns placement, bookmarks, and cleanup. Bypassing it is the #1 mistake — it creates phantom state your harness can't see or manage. |
-| "The workspace directory is surely ignored already" | Inspect `.gitignore`. An unignored workspace directory commits the whole tree into the repo. |
+| "The workspace directory is surely ignored already" | Check `.gitignore`. An unignored workspace directory commits the whole tree into the repo. |
 | "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
 | "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |

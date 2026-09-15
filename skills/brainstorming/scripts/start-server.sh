@@ -7,7 +7,8 @@
 #
 # Options:
 #   --project-dir <path>  Store session files under <path>/.rocketclaw/brainstorm/
-#                         instead of workspace .tmp. Files persist after server stops.
+#                         instead of .tmp/. Files persist after server stops.
+#                         Add .tmp/ and .rocketclaw/ to .gitignore as needed.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -120,9 +121,8 @@ if [[ -n "$PROJECT_DIR" ]]; then
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-port"
   export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.rocketclaw/brainstorm/.last-token"
 else
-  # Ephemeral sessions live under the workspace .tmp tree — never OS /tmp.
-  WORKSPACE_ROOT="$(jj workspace root 2>/dev/null || pwd)"
-  SESSION_DIR="${WORKSPACE_ROOT}/.tmp/rocketclaw/brainstorm-${SESSION_ID}"
+  # Ephemeral session under project/cwd .tmp (not /tmp). Add .tmp/ to gitignore.
+  SESSION_DIR="$(pwd)/.tmp/brainstorm-${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"

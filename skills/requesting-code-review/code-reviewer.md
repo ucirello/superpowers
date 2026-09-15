@@ -20,19 +20,19 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
-    ## JJ Range to Review
+    ## Revision Range to Review
 
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
 
     ```bash
-    jj diff --stat --from [BASE_SHA] --to [HEAD_SHA]
+    jj diff --from [BASE_SHA] --to [HEAD_SHA] --stat
     jj diff --from [BASE_SHA] --to [HEAD_SHA]
     ```
 
     ## Read-Only Review
 
-    Your review is read-only on this working copy. Do not mutate the working-copy commit (`@`), bookmarks, or other repo state in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. If you need a working copy of a different revision, add a separate temporary workspace under the repo (e.g. `jj workspace add --name review-[SHA] "$(jj workspace root)/.tmp/review-[SHA]" -r [SHA]`) — never edit or replace `@` on this working copy.
+    Your review is read-only on this checkout. Do not mutate the working copy, the operation log, or bookmark state in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary workspace (e.g. `jj workspace add "$(jj workspace root)/.tmp/review-[SHA]"` then `jj new [SHA]` in that workspace) — never move `@` on this checkout.
 
     ## You Do Not Dispatch Subagents
 
@@ -137,8 +137,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting change/commit
-- `[HEAD_SHA]` — ending change/commit
+- `[BASE_SHA]` — starting commit ID
+- `[HEAD_SHA]` — ending commit ID
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

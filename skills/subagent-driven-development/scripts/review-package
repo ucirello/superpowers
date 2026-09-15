@@ -7,8 +7,6 @@
 # Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
 # Default OUTFILE: <repo-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<head7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
-#
-# BASE and HEAD are jj revsets (commit ids, change ids, bookmarks, @, etc.).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
@@ -21,33 +19,37 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-jj log -r "$base" -n 1 --no-graph -T 'commit_id' >/dev/null 2>&1 \
+# Validate revisions exist (jj log exits non-zero for unknown revs)
+jj log -r "$base" --no-graph -T 'commit_id' >/dev/null 2>&1 \
   || { echo "bad BASE: $base" >&2; exit 2; }
-jj log -r "$head" -n 1 --no-graph -T 'commit_id' >/dev/null 2>&1 \
+jj log -r "$head" --no-graph -T 'commit_id' >/dev/null 2>&1 \
   || { echo "bad HEAD: $head" >&2; exit 2; }
 
-base7=$(jj log -r "$base" -n 1 --no-graph -T 'commit_id.short(7)')
-head7=$(jj log -r "$head" -n 1 --no-graph -T 'commit_id.short(7)')
+short_id() {
+  jj log -r "$1" --no-graph -T 'commit_id.short()'
+}
 
 if [ $# -eq 4 ]; then
   out=$4
 else
   dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-${base7}..${head7}.diff"
+  out="$dir/review-$(short_id "$base")..$(short_id "$head").diff"
 fi
 
 {
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Changes"
-  jj log -r "${base}..${head}" --no-graph -T 'builtin_log_oneline'
+  jj log -r "${base}..${head}" --no-graph \
+    -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
   jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  jj diff --from "$base" --to "$head" --context 10
+  # --git emits a unified diff; -U is not a jj flag — use context via git format
+  jj diff --from "$base" --to "$head" --git
 } > "$out"
 
-changes=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id++"\n"' | grep -c . || true)
+changes=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')
 echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

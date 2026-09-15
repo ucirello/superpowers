@@ -23,10 +23,10 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
-**1. Get JJ change/commit IDs:**
+**1. Get jj revision IDs:**
 ```bash
-BASE_SHA=$(jj log -r '@-' -T 'commit_id' --no-graph)  # or main
-HEAD_SHA=$(jj log -r '@' -T 'commit_id' --no-graph)
+BASE_SHA=$(jj log -r @- -T commit_id --no-graph)  # or main@origin
+HEAD_SHA=$(jj log -r @ -T commit_id --no-graph)
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -36,8 +36,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting change/commit
-- `{HEAD_SHA}` - Ending change/commit
+- `{BASE_SHA}` - Starting commit ID
+- `{HEAD_SHA}` - Ending commit ID
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -52,8 +52,8 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(jj log -r 'description(glob:"*Task 1*")' -T 'commit_id.short()' --no-graph -n 1)
-HEAD_SHA=$(jj log -r '@' -T 'commit_id.short()' --no-graph)
+BASE_SHA=$(jj log -r 'description(regex:"Task 1")' -T commit_id --no-graph | head -1)
+HEAD_SHA=$(jj log -r @ -T commit_id --no-graph)
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
