@@ -99,10 +99,12 @@ jj git fetch
 # Create a merge commit with both parents, then advance the base bookmark
 jj new <base-bookmark> <feature-bookmark>
 # Based on https://go.dev/wiki/CommitMessage and on past commit messages
-# that you can see in `jj log`, compose the merge description adherent to
-# the present standards. Describe what the merge integrates — do not use a
-# fixed Conventional Commit template. JJ auto-tracks files — no staging step.
-jj describe -m "<merge description>"
+# that you can see in `git log`, compose commit messages adherent to the
+# present standards. Repository-local commit-message syntax as established
+# by project instructions and `git log` ALWAYS wins when it differs from the
+# Go guidance. Describe what the merge integrates — do not use a fixed
+# Conventional Commit template. JJ auto-tracks files — no staging step.
+jj describe -m "<message composed from the standards above>"
 jj bookmark move <base-bookmark> --to @
 # Optional: start a fresh empty commit on top of the updated base
 jj new <base-bookmark>
@@ -212,8 +214,10 @@ Workspace removal blocked — these files may exist only in that workspace:
 1. Describe/commit them onto <bookmark> before cleanup
    (`jj describe` / `jj commit`; JJ auto-tracks — no staging step.
    Based on https://go.dev/wiki/CommitMessage and on past commit messages
-   in `jj log`, compose messages adherent to the present standards —
-   do not use a fixed Conventional Commit template.)
+   that you can see in `git log`, compose commit messages adherent to the
+   present standards. Repository-local commit-message syntax as established
+   by project instructions and `git log` ALWAYS wins when it differs from
+   the Go guidance — do not use a fixed Conventional Commit template.)
 2. Move them into <default workspace root>
 3. Delete them (unrecoverable)
 

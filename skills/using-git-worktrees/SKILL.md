@@ -88,7 +88,7 @@ else
 fi
 ```
 
-**If NOT ignored:** Add `.worktrees/` (or `worktrees/`) to `.gitignore`, commit the change with a clear value-communicating description (why the ignore exists — e.g. keep local workspace directories out of the repo), then proceed.
+**If NOT ignored:** Add `.worktrees/` (or `worktrees/`) to `.gitignore`, then record the change with jj. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance. The message should explain why the ignore exists (keep local workspace directories out of the repo) — do not use a fixed Conventional Commit template. Example: `jj commit -m "<message composed from the standards above>"`. Then proceed.
 
 **Why critical:** Prevents accidentally committing workspace contents to the repository.
 

@@ -47,7 +47,7 @@ fi
   jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  # --git emits a unified diff; -U is not a jj flag — use context via git format
+  # --git is jj's unified-diff output flag (not a VCS invocation)
   jj diff --from "$base" --to "$head" --git
 } > "$out"
 

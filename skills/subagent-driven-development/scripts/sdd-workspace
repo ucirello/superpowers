@@ -13,7 +13,7 @@
 # there — which blocks an implementer subagent from writing its report file.
 # A self-ignoring .gitignore at .rocketclaw/sdd/ keeps every plan's workspace
 # out of `jj status` and out of accidental commits without modifying any
-# tracked file. (jj honors the same ignore rules as git for untracked paths.)
+# tracked file. (jj honors .gitignore for untracked paths.)
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.

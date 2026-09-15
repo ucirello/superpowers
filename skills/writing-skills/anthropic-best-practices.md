@@ -655,7 +655,7 @@ For Skills where output quality depends on seeing examples, provide input/output
 ````markdown  theme={null}
 ## Change description format
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log` (or `jj log`), compose commit messages adherent to the present standards. Analyze the jj diff and match the repository's existing voice — do not force a fixed Conventional Commit template.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Analyze the jj diff and match the repository's existing voice — do not force a fixed Conventional Commit template.
 
 **Example 1:**
 Input: Added user authentication with JWT tokens
