@@ -53,16 +53,15 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   // In tests, refuse jj git init outside workspace .tmp
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
-    // Prefer workspace-local temp: $(jj workspace root)/.tmp
-    const tmpDir = normalize(resolve(process.env.WORKSPACE_TMP || '.tmp'));
+    const workspaceTmp = normalize(resolve(workspaceRoot, '.tmp'));
 
-    if (!normalized.startsWith(tmpDir)) {
+    if (!normalized.startsWith(workspaceTmp)) {
       throw new Error(
-        `Refusing jj git init outside .tmp during tests: ${directory}`
+        `Refusing jj git init outside workspace .tmp during tests: ${directory}`
       );
     }
   }
@@ -74,7 +73,7 @@ async function jjGitInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   const stack = new Error().stack;
   logger.debug('About to jj git init', {
     directory,

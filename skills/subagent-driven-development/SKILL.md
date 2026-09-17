@@ -147,14 +147,14 @@ a ledger file, not only in todos.
   plan's progress: leave it in place and start your own, fresh.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`.
-- The ledger is your recovery map: the changes it names exist in jj history even
-  when your context no longer remembers creating them. After compaction,
+- The ledger is your recovery map: the changes it names exist in the jj repo
+  even when your context no longer remembers creating them. After compaction,
   trust the ledger and `jj log` over your own recollection.
-- Wiping ignored scratch (e.g. a broad clean that removes untracked files) will
-  destroy the workspace; if that happens, recover from `jj log`. Do not use
-  OS-global temporary storage for SDD artifacts; keep scratch under the plan
-  workspace or `<repo-root>/.tmp/` if you need a short-lived file outside the
-  plan directory.
+- Deleting ignored scratch (including bulk clean of untracked/ignored files)
+  will destroy the workspace; if that happens, recover from `jj log`. There
+  is no exact jj equivalent of a full ignored-tree wipe — remove ignored
+  scratch carefully and never assume a clean command preserved the SDD
+  workspace.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
@@ -248,8 +248,8 @@ child is noticed within minutes, not at the end of the session.
 
 ### 1. Dispatch the implementer
 
-Record BASE (`jj log -r @ -T 'commit_id' --no-graph`) before dispatching — the review package
-and fix-round diffs need it.
+Record BASE (`jj log -r @ -T 'commit_id' --no-graph`) before dispatching —
+the review package and fix-round diffs need it.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
@@ -290,7 +290,7 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the revision you recorded before dispatching the implementer — never `@-` alone as a stand-in for “previous,” which silently drops all but the last change of a multi-change task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the revision you recorded before dispatching the implementer — never `@-`, which silently drops all but the last change of a multi-change task), then dispatch the task reviewer with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -318,14 +318,13 @@ needed.
 
 - Hand the reviewer its diff as a file: run this skill's
   `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file path
-  it prints (or, without bash: `jj log -r BASE..HEAD --no-graph -T 'builtin_log_oneline'`,
-  `jj diff --stat --from BASE --to HEAD`,
-  and `jj diff --from BASE --to HEAD --context 10` for the range, redirected to one
-  uniquely named file under the plan workspace or `<repo-root>/.tmp/`). The output never
-  enters your own context, and the reviewer sees
+  it prints (or, without bash: `jj log -r 'BASE..HEAD' --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'`,
+  `jj diff --from BASE --to HEAD --stat`,
+  and `jj diff --from BASE --to HEAD` for the range, redirected to one uniquely named
+  file). The output never enters your own context, and the reviewer sees
   the change list, stat summary, and full diff with context in one Read
   call. Use the BASE you recorded before dispatching the implementer —
-  never a single-parent shorthand that silently truncates multi-change tasks. Never
+  never `@-`, which silently truncates multi-change tasks. Never
   dispatch a task reviewer without a diff file.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
@@ -451,12 +450,10 @@ parked-with-ruling at the cap.
 
 The final whole-branch review gets a package too: run
 `scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the revision the
-bookmark started from — merge-base equivalent:
-`jj log -r 'fork_point(main | @)' -T 'commit_id' --no-graph`, or
-`jj log -r 'latest(ancestors(main) & ancestors(@))' -T 'commit_id' --no-graph`)
-and include the
+branch started from, e.g. `jj log -r 'latest(ancestors(main) & ancestors(@))' -T 'commit_id' --no-graph`
+or `jj log -r 'heads(::main & ::@)' -T 'commit_id' --no-graph`) and include the
 printed path in the final review dispatch, so the final reviewer reads
-one file instead of re-deriving the stack diff with jj commands. Dispatch
+one file instead of re-deriving the branch diff with jj commands. Dispatch
 on the most capable available model (see Model Selection), using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
@@ -514,8 +511,8 @@ Use superpowers:finishing-a-development-branch.
 You: I'm using Subagent-Driven Development to execute this plan.
 
 [Setup: workspace verified]
-[Read plan file once: docs/plans/feature-plan.md]
-[Resolve workspace: scripts/sdd-workspace docs/plans/feature-plan.md — no ledger inside, fresh start]
+[Read plan file once: docs/rocketclaw/plans/feature-plan.md]
+[Resolve workspace: scripts/sdd-workspace docs/rocketclaw/plans/feature-plan.md — no ledger inside, fresh start]
 [Create todos for all tasks]
 
 Task 1: Hook installation script
@@ -530,7 +527,7 @@ Implementer: [Later]
   - Implemented install-hook command
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
-  - Committed
+  - Committed (message composed from go.dev CommitMessage + jj log standards)
 
 [Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
 Task reviewer: Spec ✅ - all requirements met, nothing extra.

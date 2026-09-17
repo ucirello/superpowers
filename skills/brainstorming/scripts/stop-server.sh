@@ -3,9 +3,8 @@
 # Usage: stop-server.sh <session_dir>
 #
 # Kills the server process. Only deletes session directory if it's
-# under .tmp (ephemeral). Persistent directories (.rocketclaw/) are
-# kept so mockups can be reviewed later. Add .tmp/ and .rocketclaw/
-# to gitignore as needed.
+# ephemeral (/tmp or .tmp/brainstorm-*). Persistent directories
+# (.rocketclaw/) are kept so mockups can be reviewed later.
 
 SESSION_DIR="$1"
 
@@ -110,12 +109,10 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Only delete ephemeral .tmp directories (not persistent .rocketclaw/)
-  case "$SESSION_DIR" in
-    */.tmp/*|.tmp/*)
-      rm -rf "$SESSION_DIR"
-      ;;
-  esac
+  # Only delete ephemeral directories (/tmp or workspace .tmp brainstorm sessions)
+  if [[ "$SESSION_DIR" == /tmp/* ]] || [[ "$SESSION_DIR" == */.tmp/brainstorm-* ]]; then
+    rm -rf "$SESSION_DIR"
+  fi
 
   echo '{"status": "stopped"}'
 else

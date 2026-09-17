@@ -32,7 +32,7 @@ Subagent (general-purpose):
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working copy, the operation log, or bookmark state in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary workspace (e.g. `jj workspace add "$(jj workspace root)/.tmp/review-[SHA]"` then `jj new [SHA]` in that workspace) — never move `@` on this checkout.
+    Your review is read-only on this checkout. Do not mutate the working-copy commit, @, or bookmark state in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary workspace (e.g. `jj workspace add "$(jj workspace root)/.tmp/review-[SHA]"` then `jj new [SHA]` in that workspace) — never move @ on this checkout.
 
     ## You Do Not Dispatch Subagents
 
@@ -137,8 +137,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting commit ID
-- `[HEAD_SHA]` — ending commit ID
+- `[BASE_SHA]` — starting revision
+- `[HEAD_SHA]` — ending revision
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**JJ Change Description Helper skill:**
+**Commit Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive change descriptions by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing working-copy changes.
+description: Generate descriptive commit messages by analyzing jj diffs. Use when the user asks for help writing commit messages or reviewing uncommitted changes.
 ```
 
 Avoid vague descriptions like these:
@@ -653,15 +653,19 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Change description format
+## Commit message format
 
-Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Analyze the jj diff and match the repository's existing voice — do not force a fixed Conventional Commit template.
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax from project instructions and `git log` ALWAYS wins when it differs from Go guidance. Files are auto-tracked — no staging step. No fixed Conventional Commit prefixes (`feat:`, `fix:`).
+
+```bash
+jj commit -m "<message composed from the standards above>"
+```
 
 **Example 1:**
 Input: Added user authentication with JWT tokens
 Output:
 ```
-implement JWT-based authentication
+auth: implement JWT-based authentication
 
 Add login endpoint and token validation middleware.
 ```
@@ -670,7 +674,7 @@ Add login endpoint and token validation middleware.
 Input: Fixed bug where dates displayed incorrectly in reports
 Output:
 ```
-correct date formatting in timezone conversion
+reports: correct date formatting in timezone conversion
 
 Use UTC timestamps consistently across report generation.
 ```
@@ -679,13 +683,11 @@ Use UTC timestamps consistently across report generation.
 Input: Updated dependencies and refactored error handling
 Output:
 ```
-update dependencies and refactor error handling
+deps: update dependencies and refactor error handling
 
 Upgrade lodash to 4.17.21. Standardize error response
 format across endpoints.
 ```
-
-Match the repo's existing log style; prefer complete sentences in the body.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

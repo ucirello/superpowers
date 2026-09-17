@@ -7,7 +7,7 @@ description: Use when starting feature work that needs isolation from current wo
 
 ## Overview
 
-Ensure work happens in an isolated workspace. Prefer your platform's native workspace tools. Fall back to manual jj workspaces only when no native tool is available.
+Ensure work happens in an isolated workspace. Prefer your platform's native workspace tools. Fall back to manual `jj workspace add` only when no native tool is available.
 
 **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to jj. Never fight the harness.
 
@@ -18,24 +18,22 @@ Ensure work happens in an isolated workspace. Prefer your platform's native work
 **Before creating anything, check if you are already in an isolated workspace.**
 
 ```bash
-WS_ROOT=$(jj workspace root)
-# Working-copy bookmarks (empty if none point at @)
-BOOKMARKS=$(jj log -r @ -T 'local_bookmarks.map(|b| b.name()).join(" ")' --no-graph 2>/dev/null)
-# Current workspace name: the workspace whose working-copy commit is @
-WS_NAME=$(jj log -r @ -T 'working_copies.map(|w| w.name()).join("\n")' --no-graph 2>/dev/null | head -1)
-# How many workspaces are attached to this repo
-WS_COUNT=$(jj workspace list -T 'name ++ "\n"' 2>/dev/null | grep -c . || echo 0)
+CURRENT_ROOT=$(jj workspace root 2>/dev/null)
+# List all workspaces and their roots (name + path per line from jj workspace list)
+jj workspace list
+# Bookmarks pointing at the working-copy commit
+jj bookmark list -r @
 ```
 
-**Already-isolated signal:** You are in a linked (non-default) workspace when the current workspace name is set and is not `default`. A harness or prior `jj workspace add` created it — do not create another.
+**Multi-workspace detection:** Compare the current workspace root to other workspace roots from `jj workspace list`. If this checkout is not the default/main workspace (its root differs from the primary workspace root, or `jj workspace list` shows multiple workspaces and you are inside a non-default one), you are already in a linked workspace.
 
-**If already in a non-default workspace:** Skip to Step 2 (Project Setup). Do NOT create another workspace.
+**If already in a non-default workspace:** You are already in a linked workspace. Skip to Step 2 (Project Setup). Do NOT create another workspace.
 
 Report with bookmark state:
-- On a bookmark: "Already in isolated workspace at `<path>` on bookmark `<name>`."
-- No bookmark on `@`: "Already in isolated workspace at `<path>` (no bookmark on working copy, externally managed). Bookmark creation needed at finish time."
+- Local bookmark on `@`: "Already in isolated workspace at `<path>` on bookmark `<name>`."
+- No local bookmark on `@` (externally managed workspace): "Already in isolated workspace at `<path>` (working copy without a local bookmark on `@`, externally managed). Bookmark creation needed at finish time."
 
-**If current workspace is `default` (or the only workspace):** You are in the primary repo checkout.
+**If only the default workspace exists (or you are in the primary workspace root):** You are in a normal repo checkout.
 
 Has the user already indicated their workspace preference in your instructions? If not, ask for consent before creating a workspace:
 
@@ -49,7 +47,7 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Workspace Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a workspace? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, a `--worktree` flag, or a jj-aware workspace helper. If you do, use it and skip to Step 2.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a workspace? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
 
 Native tools handle directory placement, bookmark creation, and cleanup automatically. Using `jj workspace add` when you have a native tool creates phantom state your harness can't see or manage.
 
@@ -72,23 +70,29 @@ Follow this priority order. Explicit user preference always beats observed files
    ```
    If found, use it. If both exist, `.worktrees` wins.
 
-3. **If there is no other guidance available**, default to `.worktrees/` at the project root (`$(jj workspace root)/.worktrees`).
+3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
 
 #### Safety Verification (project-local directories only)
 
 **MUST verify directory is ignored before creating workspace:**
 
+jj honors `.gitignore` (and related ignore files). There is no `jj check-ignore`; verify manually:
+
 ```bash
-# jj has no check-ignore; verify the path is listed in .gitignore
-ROOT=$(jj workspace root)
-if [ -f "$ROOT/.gitignore" ] && grep -qE '^\.worktrees/?$|^worktrees/?$|^\.worktrees/|^/\.worktrees' "$ROOT/.gitignore"; then
-  : # ignored
-else
-  echo "NOT_IGNORED"
-fi
+# Directory is ignored if a matching ignore rule exists
+grep -E '^\.worktrees/?$|^worktrees/?$|^\.worktrees/|^/\.worktrees' .gitignore 2>/dev/null
+# Also check ignore files under ignored path patterns if present
 ```
 
-**If NOT ignored:** Add `.worktrees/` (or `worktrees/`) to `.gitignore`, then record the change with jj. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance. The message should explain why the ignore exists (keep local workspace directories out of the repo) — do not use a fixed Conventional Commit template. Example: `jj commit -m "<message composed from the standards above>"`. Then proceed.
+Or confirm the path would not be auto-tracked: ignored paths are never auto-tracked by jj. If the directory name is not covered by `.gitignore`, treat it as not ignored.
+
+**If NOT ignored:** Add to `.gitignore`, then record the change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. (Inspect history with `jj log` as well; repo-local syntax wins at runtime.) Apply with:
+
+```bash
+jj commit -m "<message composed from the standards above>"
+```
+
+or `jj describe -m "<message composed from the standards above>"` then `jj new` when that better matches the local workflow. No fixed Conventional Commit prefixes (`feat:`, `fix:`). No staging step — jj auto-snapshots; just edit files.
 
 **Why critical:** Prevents accidentally committing workspace contents to the repository.
 
@@ -96,20 +100,19 @@ fi
 
 ```bash
 # Determine path based on chosen location
-ROOT=$(jj workspace root)
 path="$LOCATION/$BOOKMARK_NAME"
 
-# Create a new workspace. Default: WC shares parents with current @'s parents.
-# Use -r <revset> to pin parents explicitly (e.g. trunk()).
-# --name overrides the default (basename of destination).
-jj workspace add --name "$BOOKMARK_NAME" "$path"
+jj workspace add "$path" --name "$BOOKMARK_NAME"
+# Optionally pin a revision: jj workspace add "$path" -r <rev>
 cd "$path"
 
-# Name the working-copy commit with a bookmark (jj equivalent of a feature branch)
+# Create or set a bookmark for this work when you want a named tip
 jj bookmark create "$BOOKMARK_NAME" -r @
 ```
 
 **Sandbox fallback:** If `jj workspace add` fails with a permission error (sandbox denial), tell the user the sandbox blocked workspace creation and you're working in the current directory instead. Then run setup and baseline tests in place.
+
+**Cleanup later (when done):** `jj workspace forget <name>` and remove the directory from disk.
 
 ## Step 2: Project Setup
 
@@ -156,24 +159,25 @@ Ready to implement <feature-name>
 | Situation | Action |
 |-----------|--------|
 | Already in non-default workspace | Skip creation (Step 0) |
-| Current workspace is `default` | Treat as primary checkout (Step 0) |
+| Only default/primary workspace | Treat as normal checkout (Step 0) |
 | Native workspace tool available | Use it (Step 1a) |
-| No native tool | Jujutsu workspace fallback (Step 1b) |
+| No native tool | jj workspace fallback (Step 1b) |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
-| Directory not ignored | Add to .gitignore + commit |
+| Directory not ignored | Add to .gitignore + jj commit/describe |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
+| Forget a workspace | `jj workspace forget` + remove directory |
 
 ## Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|
-| "I'm obviously not in a workspace — no need to check" | Run Step 0. Harness-created isolation fools eyeballing; the detection commands settle it. |
+| "I'm obviously not in a workspace — no need to check" | Run Step 0. Harness-created isolation fools eyeballing; `jj workspace list` and comparing workspace roots settle it. |
 | "`jj workspace add` is quicker than hunting for a native tool" | A native tool (e.g. `EnterWorktree`) owns placement, bookmarks, and cleanup. Bypassing it is the #1 mistake — it creates phantom state your harness can't see or manage. |
-| "The workspace directory is surely ignored already" | Check `.gitignore`. An unignored workspace directory commits the whole tree into the repo. |
+| "The workspace directory is surely ignored already" | Check `.gitignore` (and related ignore files). An unignored workspace directory commits the whole tree into the repo. |
 | "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
 | "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |

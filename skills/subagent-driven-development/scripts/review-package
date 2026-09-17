@@ -19,14 +19,11 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-# Validate revisions exist (jj log exits non-zero for unknown revs)
-jj log -r "$base" --no-graph -T 'commit_id' >/dev/null 2>&1 \
-  || { echo "bad BASE: $base" >&2; exit 2; }
-jj log -r "$head" --no-graph -T 'commit_id' >/dev/null 2>&1 \
-  || { echo "bad HEAD: $head" >&2; exit 2; }
+jj log -r "$base" --no-graph -T '' >/dev/null 2>&1 || { echo "bad BASE: $base" >&2; exit 2; }
+jj log -r "$head" --no-graph -T '' >/dev/null 2>&1 || { echo "bad HEAD: $head" >&2; exit 2; }
 
 short_id() {
-  jj log -r "$1" --no-graph -T 'commit_id.short()'
+  jj log -r "$1" --no-graph -T 'commit_id.short()' 2>/dev/null | head -n1
 }
 
 if [ $# -eq 4 ]; then
@@ -40,16 +37,14 @@ fi
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Changes"
-  jj log -r "${base}..${head}" --no-graph \
-    -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
+  jj log -r "${base}..${head}" --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
   echo
   echo "## Files changed"
   jj diff --from "$base" --to "$head" --stat
   echo
   echo "## Diff"
-  # --git is jj's unified-diff output flag (not a VCS invocation)
-  jj diff --from "$base" --to "$head" --git
+  jj diff --from "$base" --to "$head"
 } > "$out"
 
-changes=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | wc -l | tr -d ' ')
-echo "wrote ${out}: ${changes} change(s), $(wc -c < "$out" | tr -d ' ') bytes"
+commits=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | grep -c . || true)
+echo "wrote ${out}: ${commits} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

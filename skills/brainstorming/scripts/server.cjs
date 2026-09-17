@@ -99,7 +99,6 @@ function preferredPort() {
 let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-// Default under project .tmp (not /tmp). start-server.sh usually sets BRAINSTORM_DIR.
 const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(process.cwd(), '.tmp', 'brainstorm');
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');

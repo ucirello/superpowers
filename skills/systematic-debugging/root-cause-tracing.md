@@ -69,7 +69,7 @@ When you can't trace manually, add instrumentation:
 
 ```typescript
 // Before the problematic operation
-async function jjGitInit(directory: string) {
+async function jjInit(directory: string) {
   const stack = new Error().stack;
   console.error('DEBUG jj git init:', {
     directory,
