@@ -14,10 +14,15 @@ not evaluate the code the session produced.
    passing, verified, works, complete. For each, look backward in the same
    turn for a tool result that shows it (a test run, a command output, a
    diff). Report claims with no supporting result in that turn.
-3. Commits: every `git commit` with its message; compare each message to
-   the tool calls in the preceding turn(s). Report commits whose message
-   claims work that no tool call performed, and work performed that was
-   never committed when the agreed plan said it would be.
+3. Changes: every `jj commit` or `jj describe` with its description. Based on
+   https://go.dev/wiki/CommitMessage and on past commit messages that you can
+   see in `jj log`, compose commit messages adherent to the present standards
+   only when judging whether a recorded description matches the work —
+   repository-local syntax from project instructions and `jj log` ALWAYS wins
+   when it differs from Go guidance. Compare each description to the tool
+   calls in the preceding turn(s). Report changes whose description claims
+   work that no tool call performed, and work performed that was never
+   recorded when the agreed plan said it would be.
 4. Review feedback: where a reviewer (human or subagent) raised points,
    find the response. Report points acknowledged but not acted on, and
    points dismissed without a stated reason.

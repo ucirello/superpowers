@@ -1,6 +1,6 @@
 # Session diagnosis: <session-id>
 
-Report path: ~/.superpowers/diagnosing-superpowers/<session-id>/report.md
+Report path: ~/.rocketclaw/diagnosing-rocketclaw/<session-id>/report.md
 Written: <ISO timestamp>
 
 ## 1. Problem statement (REQUIRED)
@@ -11,14 +11,14 @@ Written: <ISO timestamp>
 
 <What the evidence shows happened around the reported problem. Prose, with
 `path:line` after every claim. State confidence: high / medium / low, and
-what would raise it. No statement about what superpowers should do.>
+what would raise it. No statement about what RocketClaw should do.>
 
 ## 3. Environment (REQUIRED)
 
 - OS:
 - Harness and version:
 - Models seen:
-- Superpowers install root / version / git sha:
+- RocketClaw install root / version / change id:
 - Skill files read or injected (sha1 table from the case file):
 - Other plugins, extensions, MCP servers:
 - Instruction files present (paths only):
@@ -62,7 +62,7 @@ A dimension with nothing to report says `none found — checked: <what was check
 ### 6.7 Cost and time
 ### 6.8 Other plugins and skills used
 
-## 7. Superpowers involvement (REQUIRED)
+## 7. RocketClaw involvement (REQUIRED)
 
 not indicated | possible | likely
 
