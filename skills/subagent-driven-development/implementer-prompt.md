@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work (see Commit Messages below)
+    4. Record a jj change for your work
     5. Self-review (see below)
     6. Report back
 
@@ -45,33 +45,19 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before recording the change, not after every edit.
 
-    ## Commit Messages
+    ## Change messages
 
-    Based on https://go.dev/wiki/CommitMessage and on past commit messages
-    that you can see in `git log`, compose commit messages adherent to the
-    present standards. That sentence is the strongest rule for every
-    description you write — stronger than any habit, template, or
-    conventional-commit prefix. Repository-local commit-message syntax as
-    established by project instructions and `git log` ALWAYS wins when it
-    differs from the Go guidance. (Inspect history with `jj log` as well.)
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that
+    you can see in `jj log`, compose commit messages adherent to the present
+    standards. Repository-local syntax from project instructions and `jj log`
+    ALWAYS wins when it differs from Go guidance. Do not use fixed templates
+    such as `feat:` or `fix:` prefixes. Describe what the change does and why.
 
-    Do not default to feat:/fix:/chore: (or any other fixed prefix scheme)
-    unless past messages in this repository already use that scheme. Read
-    recent descriptions with `jj log` / `git log` (and any CONTRIBUTING or
-    similar notes), then write a message that matches this repo's voice,
-    subject length, body style, and rationale depth.
-
-    When the working copy is ready:
-    - Prefer `jj commit -m "<message composed from the standards above>"`
-      for a finished change, or `jj describe -m "<message composed from
-      the standards above>"` when updating the current change's
-      description before or instead of a new change, following how this
-      repo records work.
-    - Never invent a conventional-commit prefix the history does not use.
-    - Never paste a generic template subject; every message is composed
-      for this change against this repo's standards.
+    Record with `jj commit -m "<message composed from the standards above>"`
+    or `jj describe -m "<message composed from the standards above>"` as
+    appropriate for the workspace state.
 
     ## You Do Not Dispatch Subagents
 
@@ -166,7 +152,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Changes created (short change/commit id + subject)
+    - Changes created (short ID + subject from `jj log`)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

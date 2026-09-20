@@ -7,6 +7,7 @@
 # Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
 # Default OUTFILE: <repo-root>/.rocketclaw/sdd/<plan-basename>/review-<base7>..<head7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
+# BASE and HEAD are jj revset expressions (change IDs, commit IDs, @, etc.).
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
@@ -19,32 +20,47 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-jj log -r "$base" --no-graph -T '' >/dev/null 2>&1 || { echo "bad BASE: $base" >&2; exit 2; }
-jj log -r "$head" --no-graph -T '' >/dev/null 2>&1 || { echo "bad HEAD: $head" >&2; exit 2; }
+# Resolve BASE/HEAD to commit IDs; fail clearly on bad revsets.
+base_id=$(jj log -r "$base" -T 'commit_id' --no-graph 2>/dev/null) \
+  || { echo "bad BASE: $base" >&2; exit 2; }
+head_id=$(jj log -r "$head" -T 'commit_id' --no-graph 2>/dev/null) \
+  || { echo "bad HEAD: $head" >&2; exit 2; }
+[ -n "$base_id" ] || { echo "bad BASE: $base" >&2; exit 2; }
+[ -n "$head_id" ] || { echo "bad HEAD: $head" >&2; exit 2; }
+
+# Range guards (exit 3): a wrong-bookmark HEAD yields a range that is empty or
+# not rooted at BASE; either would silently produce a bogus review package.
+# BASE must be an ancestor of HEAD (jj: heads(::BASE & ::HEAD) is BASE when
+# BASE is ancestor of HEAD).
+ancestor=$(jj log -r "heads(::$base_id & ::$head_id)" -T 'commit_id' --no-graph 2>/dev/null || true)
+[ "$ancestor" = "$base_id" ] || { echo "HEAD is not a descendant of BASE: ${base}..${head}" >&2; exit 3; }
+change_count=$(jj log -r "${base_id}..${head_id}" -T 'commit_id ++ "\n"' --no-graph 2>/dev/null | grep -c . || true)
+[ "$change_count" -gt 0 ] || { echo "empty change range: ${base}..${head}" >&2; exit 3; }
 
 short_id() {
-  jj log -r "$1" --no-graph -T 'commit_id.short()' 2>/dev/null | head -n1
+  jj log -r "$1" -T 'commit_id.short()' --no-graph
 }
 
 if [ $# -eq 4 ]; then
   out=$4
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
-  out="$dir/review-$(short_id "$base")..$(short_id "$head").diff"
+  # Invoke via bash rather than direct exec: some extractors (Python zipfile)
+  # strip Unix exec bits when unpacking marketplace packages (#2040).
+  dir=$("${BASH:-bash}" "$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  out="$dir/review-$(short_id "$base_id")..$(short_id "$head_id").diff"
 fi
 
 {
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Changes"
-  jj log -r "${base}..${head}" --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
+  jj log -r "${base_id}..${head_id}" -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"' --no-graph
   echo
   echo "## Files changed"
-  jj diff --from "$base" --to "$head" --stat
+  jj diff --from "$base_id" --to "$head_id" --stat
   echo
   echo "## Diff"
-  jj diff --from "$base" --to "$head"
+  jj diff --from "$base_id" --to "$head_id" --git -U10
 } > "$out"
 
-commits=$(jj log -r "${base}..${head}" --no-graph -T 'commit_id ++ "\n"' | grep -c . || true)
-echo "wrote ${out}: ${commits} change(s), $(wc -c < "$out" | tr -d ' ') bytes"
+echo "wrote ${out}: ${change_count} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

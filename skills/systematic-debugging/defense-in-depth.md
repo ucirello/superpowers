@@ -53,7 +53,7 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
-async function jjInit(directory: string) {
+async function jjGitInit(directory: string) {
   // In tests, refuse jj git init outside workspace .tmp
   if (process.env.NODE_ENV === 'test') {
     const normalized = normalize(resolve(directory));
@@ -61,7 +61,7 @@ async function jjInit(directory: string) {
 
     if (!normalized.startsWith(workspaceTmp)) {
       throw new Error(
-        `Refusing jj git init outside workspace .tmp during tests: ${directory}`
+        `Refusing jj git init outside .tmp during tests: ${directory}`
       );
     }
   }
@@ -73,7 +73,7 @@ async function jjInit(directory: string) {
 **Purpose:** Capture context for forensics
 
 ```typescript
-async function jjInit(directory: string) {
+async function jjGitInit(directory: string) {
   const stack = new Error().stack;
   logger.debug('About to jj git init', {
     directory,
@@ -106,8 +106,8 @@ Bug: Empty `projectDir` caused `jj git init` in source code
 **Four layers added:**
 - Layer 1: `Project.create()` validates not empty/exists/writable
 - Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses jj git init outside workspace `.tmp` in tests
-- Layer 4: Stack trace logging before jj git init
+- Layer 3: `WorkspaceManager` refuses `jj git init` outside `.tmp` in tests
+- Layer 4: Stack trace logging before `jj git init`
 
 **Result:** All 1847 tests passed, bug impossible to reproduce
 

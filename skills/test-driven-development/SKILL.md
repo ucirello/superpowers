@@ -182,6 +182,16 @@ Confirm:
 
 **Other tests fail?** Fix now.
 
+**"Other tests" means the project's suite, not just your file.** A
+green run of the test you wrote is not a green suite. Before you call
+the change done, run the project's test command (bare `pytest`,
+`npm test`, `cargo test` — whatever the repo uses) even when your task
+named only one test file. A scope statement in your task bounds the
+deliverable, not your verification. Any failure that run shows —
+including one you didn't cause — goes in your report by name; a red
+test you watched scroll past and didn't mention is a report falsified
+by omission.
+
 ### REFACTOR - Clean Up
 
 After green only:
@@ -221,7 +231,7 @@ When writing or changing any test, read [writing-good-tests.md](writing-good-tes
 | "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
 | "Need to explore first" | Fine. Throw away exploration, start with TDD. |
 | "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD IS the pragmatic path: catches bugs before jj commit, prevents regressions, lets you refactor without fear. "Pragmatic" shortcuts mean debugging in production — slower, not faster. |
+| "TDD will slow me down" | TDD IS the pragmatic path: catches bugs before you record a change, prevents regressions, lets you refactor without fear. "Pragmatic" shortcuts mean debugging in production — slower, not faster. |
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
 

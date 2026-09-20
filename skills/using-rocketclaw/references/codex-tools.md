@@ -85,32 +85,24 @@ environment with read-only jj commands before proceeding:
 
 ```bash
 WS_ROOT=$(jj workspace root 2>/dev/null)
-DEFAULT_ROOT=$(jj workspace root --name default 2>/dev/null)
-BOOKMARKS=$(jj bookmark list -r '@' 2>/dev/null)
+DEFAULT_ROOT=$(jj workspace root -r default 2>/dev/null || true)
+BOOKMARK=$(jj log -r @ -T 'self.bookmarks()' --no-graph 2>/dev/null | tr -d ' ' | head -1)
 ```
 
-- `WS_ROOT` differs from `DEFAULT_ROOT` (or `jj workspace list` shows a non-default workspace) → already in an isolated workspace (skip creation)
-- `BOOKMARKS` empty → anonymous working copy with no local bookmark on `@` (cannot push/PR a named bookmark from sandbox without creating one first)
+- `WS_ROOT` differs from the default workspace root → already in a secondary workspace (skip creation)
+- `BOOKMARK` empty / only `@` → no bookmark at working copy (cannot bookmark/push/PR from sandbox without one)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks bookmark/push operations (anonymous working copy
-in an externally managed workspace), the agent finishes all work (via
-`jj describe` / `jj commit`) and informs the user to use the App's native
-controls:
+When the sandbox blocks bookmark/push operations (working copy in an
+externally managed workspace without a bookmark), the agent records all
+work and informs the user to use the App's native controls:
 
-- **"Create branch"** — names the bookmark, then describe/push/PR via App UI
+- **"Create branch"** — names the bookmark, then record/push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests and output suggested bookmark names, change
-descriptions, and PR descriptions for the user to copy. Based on
-https://go.dev/wiki/CommitMessage and on past commit messages that you can
-see in `git log`, compose commit messages adherent to the present standards.
-Repository-local commit-message syntax as established by project instructions
-and `git log` ALWAYS wins when it differs from the Go guidance. Use
-`jj commit -m "<message composed from the standards above>"` or
-`jj describe -m "<message composed from the standards above>"` — do not use
-fixed Conventional Commit templates.
+The agent can still run tests, edit files, and output suggested bookmark
+names, change messages, and PR descriptions for the user to copy.

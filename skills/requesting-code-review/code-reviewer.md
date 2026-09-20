@@ -30,9 +30,32 @@ Subagent (general-purpose):
     jj diff --from [BASE_SHA] --to [HEAD_SHA]
     ```
 
+    ## The spec is a vision document
+
+    The spec says what the software must do. It does not enumerate every
+    input, environment, or condition the software will meet. For behavior
+    the spec is silent on, judge by what a reasonable person using this
+    software would expect: a reasonable person's expectation is a
+    requirement, and a spec's silence is not permission. Grade such
+    findings by their effect on that person, not by whether the spec
+    mentions the trigger.
+
+    ## Declined to judge
+
+    Before your verdict, list every behavior you considered and set aside
+    as outside the plan or spec, one line each, with the reason. The
+    executor rules on each line; nothing you set aside is dropped
+    silently. An empty list means you set nothing aside.
+
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working-copy commit, @, or bookmark state in any way. Use tools like `jj show`, `jj diff`, and `jj log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary workspace (e.g. `jj workspace add "$(jj workspace root)/.tmp/review-[SHA]"` then `jj new [SHA]` in that workspace) — never move @ on this checkout.
+    Your review is read-only on this checkout. Do not mutate the working
+    copy, create or edit changes, move bookmarks, or alter @ in any way.
+    Use tools like `jj show`, `jj diff`, and `jj log` to inspect history.
+    If you need a working copy of a different revision, add a separate
+    workspace under the repo (e.g. `jj workspace add $(jj workspace root)/.tmp/review-[SHA]`
+    then check out that revision in the new workspace) — never move @ on
+    this checkout.
 
     ## You Do Not Dispatch Subagents
 
@@ -137,8 +160,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[BASE_SHA]` — starting revision
-- `[HEAD_SHA]` — ending revision
+- `[BASE_SHA]` — starting revision (commit id or change id)
+- `[HEAD_SHA]` — ending revision (commit id or change id)
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

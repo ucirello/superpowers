@@ -5,7 +5,7 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
+Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-bookmark review at the end.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
@@ -36,25 +36,25 @@ stop and ask.
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
+    "Partner chose inline, or no subagent tool?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
+    "Tasks mostly independent?" -> "Partner chose inline, or no subagent tool?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "Partner chose inline, or no subagent tool?" -> "executing-plans" [label="yes"];
+    "Partner chose inline, or no subagent tool?" -> "subagent-driven-development" [label="no"];
 }
 ```
 
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
-- Fresh subagent per task (no context pollution)
-- Review after each task (spec compliance + code quality), broad review at the end
-- Faster iteration (no human-in-loop between tasks)
+**vs. Executing Plans (inline):**
+- Fresh subagent per task (no context pollution) instead of one context doing every task
+- Review after each task (spec compliance + code quality) instead of only at the end
+- Costs a fresh context per task and per review; inline costs one context plus one final reviewer
+- Both run in this session, share the same plan workspace and ledger, and never pause between tasks
 
 ## The Process
 
@@ -67,7 +67,7 @@ digraph process {
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
-        "Implementer implements, tests, commits, self-reviews" [shape=box];
+        "Implementer implements, tests, records change, self-reviews" [shape=box];
         "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [shape=box];
         "Spec ✅ and quality approved?" [shape=diamond];
         "Finding conflicts with plan text?" [shape=diamond];
@@ -93,9 +93,9 @@ digraph process {
     "Setup: workspace, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
-    "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
-    "Implementer implements, tests, commits, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
+    "Answer questions, provide context" -> "Implementer implements, tests, records change, self-reviews";
+    "Implementer asks questions?" -> "Implementer implements, tests, records change, self-reviews" [label="no"];
+    "Implementer implements, tests, records change, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
     "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" -> "Spec ✅ and quality approved?";
     "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "Spec ✅ and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
@@ -134,8 +134,8 @@ sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
 - Each plan owns a workspace: at skill start, run this skill's
-  `scripts/sdd-workspace PLAN_FILE` — it prints the plan's ignored
-  directory (`<repo-root>/.rocketclaw/sdd/<plan-basename>/`), home to
+  `bash scripts/sdd-workspace PLAN_FILE` — it prints the plan's ignored
+  directory (under `<repo-root>/.rocketclaw/sdd/`), home to
   every artifact for THIS plan: ledger, briefs, reports, review packages.
   Another plan's directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
@@ -147,14 +147,12 @@ a ledger file, not only in todos.
   plan's progress: leave it in place and start your own, fresh.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`.
-- The ledger is your recovery map: the changes it names exist in the jj repo
-  even when your context no longer remembers creating them. After compaction,
+- The ledger is your recovery map: the changes it names exist in jj even
+  when your context no longer remembers creating them. After compaction,
   trust the ledger and `jj log` over your own recollection.
-- Deleting ignored scratch (including bulk clean of untracked/ignored files)
-  will destroy the workspace; if that happens, recover from `jj log`. There
-  is no exact jj equivalent of a full ignored-tree wipe — remove ignored
-  scratch carefully and never assume a clean command preserved the SDD
-  workspace.
+- Cleaning ignored scratch (e.g. wiping untracked files under the repo) will
+  destroy the workspace (it's ignored scratch); if that happens, recover from
+  `jj log`.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
@@ -193,7 +191,7 @@ Use the least powerful model that can handle each role to conserve cost and incr
 **Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
 
 **Architecture and design tasks**: use the most capable available model.
-The final whole-branch review is one of these — dispatch it on the most
+The final whole-bookmark review is one of these — dispatch it on the most
 capable available model, not the session default.
 
 **Review tasks**: choose the model with the same judgment, scaled to the
@@ -252,7 +250,7 @@ Record BASE (`jj log -r @ -T 'commit_id' --no-graph`) before dispatching —
 the review package and fix-round diffs need it.
 
 - **Task brief:** before dispatching an implementer, run this skill's
-  `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
+  `bash scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
   uniquely named file and prints the path. Compose the dispatch so the
   brief stays the single source of
   requirements. Your dispatch should contain: (1) one line on where this
@@ -290,7 +288,7 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the revision you recorded before dispatching the implementer — never `@-`, which silently drops all but the last change of a multi-change task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the change you recorded before dispatching the implementer — never `@-`, which silently drops all but the last change of a multi-change task), then dispatch the task reviewer with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -311,16 +309,16 @@ rush it into implementation.
 ### 3. Review the task
 
 Per-task reviews are task-scoped gates. The broad review happens once, at the
-final whole-branch review. Never skip the task review, and never accept a
+final whole-bookmark review. Never skip the task review, and never accept a
 report missing either verdict — spec compliance AND task quality are both
 required. Implementer self-review never replaces the task review; both are
 needed.
 
 - Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file path
-  it prints (or, without bash: `jj log -r 'BASE..HEAD' --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'`,
+  `bash scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file path
+  it prints (or, without bash: `jj log -r BASE..HEAD --no-graph`,
   `jj diff --from BASE --to HEAD --stat`,
-  and `jj diff --from BASE --to HEAD` for the range, redirected to one uniquely named
+  and `jj diff --from BASE --to HEAD --git -U10` for the range, redirected to one uniquely named
   file). The output never enters your own context, and the reviewer sees
   the change list, stat summary, and full diff with context in one Read
   call. Use the BASE you recorded before dispatching the implementer —
@@ -364,7 +362,7 @@ Before the loop starts, two routes leave it immediately:
 
 - Record Minor findings in the progress ledger as you go
   (`Task <N>: minor (deferred): <one-liner>`), and point the final
-  whole-branch review at that list so it can triage which must be fixed
+  whole-bookmark review at that list so it can triage which must be fixed
   before merge. A roll-up nobody reads is a silent discard. Minor findings
   never enter the loop.
 - A finding labeled plan-mandated — or any finding that conflicts with
@@ -397,7 +395,7 @@ output; dispatch the re-review once all three are present. Name the
 covering test files in the fix message — a one-line fix does not need the
 whole suite.
 
-**The re-review is scoped.** Run `scripts/review-package PLAN_FILE FIX_BASE HEAD`
+**The re-review is scoped.** Run `bash scripts/review-package PLAN_FILE FIX_BASE HEAD`
 where FIX_BASE is the head the previous review saw, and dispatch
 [re-review-prompt.md](re-review-prompt.md) with the findings list, the
 brief, the report file, and the printed diff path. The re-reviewer verdicts
@@ -448,24 +446,23 @@ parked-with-ruling at the cap.
 
 ## Final Review
 
-The final whole-branch review gets a package too: run
-`scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the revision the
-branch started from, e.g. `jj log -r 'latest(ancestors(main) & ancestors(@))' -T 'commit_id' --no-graph`
-or `jj log -r 'heads(::main & ::@)' -T 'commit_id' --no-graph`) and include the
+The final whole-bookmark review gets a package too: run
+`bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the change the
+bookmark started from, e.g. `jj log -r 'heads(::main & ::@)' -T 'commit_id' --no-graph`) and include the
 printed path in the final review dispatch, so the final reviewer reads
-one file instead of re-deriving the branch diff with jj commands. Dispatch
+one file instead of re-deriving the bookmark diff with jj commands. Dispatch
 on the most capable available model (see Model Selection), using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
 
-If the final whole-branch review returns findings, dispatch ONE fix subagent
+If the final whole-bookmark review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
-(`scripts/review-package PLAN_FILE FIX_BASE HEAD` over the fix range,
+(`bash scripts/review-package PLAN_FILE FIX_BASE HEAD` over the fix range,
 [re-review-prompt.md](re-review-prompt.md)).
 Adjudicate any residual findings as in the task loop's breaker: park with
 rulings, or rule on the load-bearing ones and ledger what you decided. Only
@@ -484,7 +481,7 @@ took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
-When the final whole-branch review is clean and its fixes are merged,
+When the final whole-bookmark review is clean and its fixes are merged,
 delete this plan's workspace (`rm -rf <workspace>`) — the jj history is
 the record now. Sibling directories belong to other plans; leave them
 alone.
@@ -512,7 +509,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Setup: workspace verified]
 [Read plan file once: docs/rocketclaw/plans/feature-plan.md]
-[Resolve workspace: scripts/sdd-workspace docs/rocketclaw/plans/feature-plan.md — no ledger inside, fresh start]
+[Resolve workspace: bash scripts/sdd-workspace docs/rocketclaw/plans/feature-plan.md — no ledger inside, fresh start]
 [Create todos for all tasks]
 
 Task 1: Hook installation script
@@ -527,7 +524,7 @@ Implementer: [Later]
   - Implemented install-hook command
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
-  - Committed (message composed from go.dev CommitMessage + jj log standards)
+  - Recorded change
 
 [Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
 Task reviewer: Spec ✅ - all requirements met, nothing extra.
@@ -542,7 +539,7 @@ Task 2: Recovery modes
 Implementer: [No questions]
   - Added verify/repair modes
   - 8/8 tests passing
-  - Committed
+  - Recorded change
 
 [Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
 Task reviewer: Spec ❌:
@@ -567,7 +564,7 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 
-[Delete this plan's workspace — the record now lives in jj history]
+[Delete this plan's workspace — the record now lives in jj]
 
 Done! Using superpowers:finishing-a-development-branch.
 ```

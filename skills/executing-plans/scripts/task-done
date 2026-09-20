@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Close one task of an inline plan execution in a single call: run the task's
+# test command, keep its full output in the workspace, print the tail, and —
+# only if the command succeeded — append the completion line to the ledger.
+# A failing command records nothing: the task is not complete.
+#
+# Usage: task-done PLAN_FILE TASK_NUMBER BASE -- TEST_COMMAND [ARGS...]
+#   BASE is the commit_id task-start printed; the completion line records BASE..@.
+# Exit: the test command's exit status.
+set -euo pipefail
+
+if [ $# -lt 5 ] || [ "$4" != "--" ]; then
+  echo "usage: task-done PLAN_FILE TASK_NUMBER BASE -- TEST_COMMAND [ARGS...]" >&2
+  exit 2
+fi
+
+plan=$1
+n=$2
+base=$3
+shift 4
+sdd="$(cd "$(dirname "$0")/../../subagent-driven-development/scripts" && pwd)"
+
+jj log -r "$base" -T 'commit_id' --no-graph >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+
+dir=$("$sdd/sdd-workspace" "$plan")
+log="$dir/task-${n}-tests.log"
+ledger="$dir/progress.md"
+
+# Render the command the way a person would type it, for the ledger line.
+cmd=""
+for a in "$@"; do
+  case "$a" in
+    *[[:space:]\"\;\|\&]*) cmd="$cmd '$a'" ;;
+    *) cmd="$cmd $a" ;;
+  esac
+done
+cmd=${cmd# }
+
+rc=0
+"$@" > "$log" 2>&1 || rc=$?
+
+tail -n 5 "$log"
+if [ "$rc" -ne 0 ]; then
+  echo "task-done: test command exited $rc; Task $n NOT recorded (full output: $log)" >&2
+  exit "$rc"
+fi
+
+last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1)
+[ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
+base7=$(jj log -r "$base" -T 'commit_id.short()' --no-graph)
+head7=$(jj log -r @ -T 'commit_id.short()' --no-graph)
+line="Task $n: complete (commits ${base7}..${head7}, tests: $cmd → $last)"
+printf '%s\n' "$line" >> "$ledger"
+echo "ledger: $line"

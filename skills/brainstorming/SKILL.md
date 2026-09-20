@@ -11,12 +11,48 @@ Start by classifying how much process the request needs, then work
 through your path: understand the context, refine the idea, present a
 design, and get your human partner's approval.
 
+## Establish Shared Understanding
+
+The outcome of brainstorming is an understanding your human partner can
+recognize and correct, grounded in what they want to accomplish.
+
+1. **Discover intent.** Use the request and available context to identify
+   the intended outcome, who it is for, and what success looks like. When
+   that information is missing, ask one focused question about purpose or
+   intended use before proposing features or an approach. Knowing the app
+   genre does not tell you why your partner wants it. Gathering missing
+   requirements does not ask them to authorize the task again.
+2. **Write back your understanding.** Summarize the intended outcome,
+   relevant constraints, and success criteria in a short note your partner
+   can assess. Separate what they said from assumptions. Invite correction
+   and incorporate their answer before treating this as the design brief.
+3. **Carry intent into the design.** Preserve the agreed understanding in
+   the selected path's design artifact: the written spec for architectural
+   work, or the in-chat design/probe for bounded work and spikes. Check
+   proposed features and technical choices against that understanding.
+
+When the request already supplies the purpose and constraints, reflect
+that understanding instead of asking the same questions again. Keep the
+note concise; its accuracy and the opportunity to correct it matter.
+
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any
-project, or take any implementation action until you have told your
-human partner what you intend and they have approved it. This applies
-to EVERY task on EVERY path below — the ceremony scales with the task;
-the approval gate never does.
+Before taking any implementation action, including invoking an
+implementation skill, writing product code, scaffolding, installing
+product dependencies, or creating an external project, complete the
+selected path's prerequisites:
+
+- Spike: the human partner approves the question and probe.
+- Bounded: the human partner approves the short in-chat design.
+- Architectural: the human partner reviews and approves the written spec,
+  then reviews the written implementation plan and selects its execution
+  method. Conversational design approval only permits writing the spec;
+  written-spec approval only permits invoking writing-plans.
+
+A reply approves the stage actually presented. Approval of an idea or
+feature scope does not approve artifacts that do not exist yet. Resume
+at the earliest incomplete stage; do not turn one approval into permission
+to skip the rest of the selected path. Read-only project exploration is
+allowed while those prerequisites remain incomplete.
 </HARD-GATE>
 
 ## Three Paths
@@ -53,18 +89,17 @@ stop, say so, and step up. Nothing downgrades mid-task.
 
 ## Anti-Pattern: "Too Simple To Need Approval"
 
-Every path ends with your human partner approving your intent before
-implementation. A todo list, a single-function utility, a config
-change — the design may be two sentences in chat, but you MUST present
-it and get approval. "Simple" tasks are where unexamined assumptions
-cause the most wasted work. What scales with simplicity is the
-artifact, never the approval.
+Every path ends with your human partner approving the required design
+before implementation. A bounded change may need only two sentences in
+chat. A new todo-list project is architectural and requires the written
+spec and planning handoffs. Scale the artifact to the selected path;
+complete that path's reviews before implementation.
 
 ## Red Flags
 
 | Thought | Reality |
 |---------|---------|
-| "This is too simple to need a design" | Simple means a short design, not no design. Two sentences in chat, then approval. |
+| "This is too simple to need a design" | Follow the selected path: a bounded change gets a short chat design; an architectural change gets the written spec and planning handoffs. |
 | "I'll call it bounded and skip the spec" | Reaching for a label to skip work IS the doubt — take the heavier path. |
 | "It's bounded and the design is obvious — I'll start while they read it" | The gate is the approval, not the design's length. Present, then stop until you hear yes. |
 | "I understand this kind of app, so it's bounded" | Bounded measures the repo, not your familiarity. A new project has no existing flow — it is architectural. |
@@ -85,19 +120,19 @@ your path and complete them in order.
 5. **Report findings** — a recommendation; label anything built as throwaway
 
 **Bounded:**
-1. **Explore project context** — check files, docs, recent commits
+1. **Explore project context** — check files, docs, recent changes (`jj log`)
 2. **Ask clarifying questions** — one at a time, the ones that matter
 3. **Present short design in chat** — approach, files touched, testing
 4. **Get approval** — STOP and wait for an explicit yes; presenting the design and starting in the same breath is skipping the gate
 5. **Implement** — proceed with the normal development workflow (TDD applies); no plan document
 
 **Architectural:**
-1. **Explore project context** — check files, docs, recent commits
+1. **Explore project context** — check files, docs, recent changes (`jj log`)
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md` and commit
+6. **Write design doc** — save to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md` and record a change
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -163,7 +198,7 @@ is the whole process.
 
 **Understanding the idea:**
 
-- Check out the current project state first (files, docs, recent commits)
+- Check out the current project state first (files, docs, recent changes)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
 - For appropriately-scoped projects, ask questions one at a time to refine the idea
@@ -206,13 +241,7 @@ is the whole process.
 - Write the validated design (spec) to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document:
-
-  Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax from project instructions and `git log` ALWAYS wins when it differs from Go guidance. Files are auto-tracked — no staging step. The message must describe this design doc (what was specified and why), not a generic placeholder.
-
-  ```bash
-  jj commit -m "<message composed from the standards above>"
-  ```
+- Record the design document as a jj change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `jj log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `jj log` ALWAYS wins when it differs from Go guidance. Do not use fixed `feat:` / `fix:` Conventional Commit templates. Example: `jj describe -m "<message composed from the standards above>"` then `jj commit` (or `jj commit -m "<message composed from the standards above>"`).
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
@@ -227,7 +256,7 @@ Fix any issues inline. No need to re-review — just fix and move on.
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:
 
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
+> "Spec written and recorded at `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
 
