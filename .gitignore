@@ -1,7 +1,7 @@
 .worktrees/
 .private-journal/
 .claude/
-.superpowers/
+.rocketclaw/
 .DS_Store
 node_modules/
 inspo
@@ -17,3 +17,6 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+
+# Local scratch / agent temp (jj workspace root .tmp)
+.tmp/

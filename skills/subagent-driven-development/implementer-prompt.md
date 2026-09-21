@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Record a jj change for your work
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +45,19 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before recording the change, not after every edit.
+
+    ## Change messages
+
+    Based on https://go.dev/wiki/CommitMessage and on past commit messages that
+    you can see in `jj log`, compose commit messages adherent to the present
+    standards. Repository-local syntax from project instructions and `jj log`
+    ALWAYS wins when it differs from Go guidance. Do not use fixed templates
+    such as `feat:` or `fix:` prefixes. Describe what the change does and why.
+
+    Record with `jj commit -m "<message composed from the standards above>"`
+    or `jj describe -m "<message composed from the standards above>"` as
+    appropriate for the workspace state.
 
     ## You Do Not Dispatch Subagents
 
@@ -140,7 +152,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Changes created (short ID + subject from `jj log`)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path
