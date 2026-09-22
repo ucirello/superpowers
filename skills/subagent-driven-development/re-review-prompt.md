@@ -38,7 +38,7 @@ Subagent (general-purpose):
     and the fix diff with surrounding context. Do not re-run jj commands.
     If the diff file is missing, fetch the diff yourself:
     `jj diff --from [FIX_BASE_SHA] --to [HEAD_SHA] --stat` and
-    `jj diff --from [FIX_BASE_SHA] --to [HEAD_SHA] --git`.
+    `jj diff --from [FIX_BASE_SHA] --to [HEAD_SHA] --context 10`.
 
     Your review is read-only on this checkout. Do not mutate the working
     copy, @, or bookmark state in any way.

@@ -42,7 +42,7 @@ Subagent (general-purpose):
     mid-function — and say so in your report. Do not re-run jj commands.
     If the diff file is missing, fetch the diff yourself:
     `jj diff --from [BASE_SHA] --to [HEAD_SHA] --stat` and
-    `jj diff --from [BASE_SHA] --to [HEAD_SHA] --git`.
+    `jj diff --from [BASE_SHA] --to [HEAD_SHA] --context 10`.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.

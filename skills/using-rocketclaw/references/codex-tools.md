@@ -105,4 +105,4 @@ work and informs the user to use the App's native controls:
 - **"Hand off to local"** — transfers work to the user's local checkout
 
 The agent can still run tests, edit files, and output suggested bookmark
-names, change messages, and PR descriptions for the user to copy.
+names, change messages, and PR descriptions for the user to copy. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Do not use a fixed prefix, type, or Conventional Commit template; keep any required semantic content as a constraint on the composed message.

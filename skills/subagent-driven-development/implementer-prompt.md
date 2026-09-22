@@ -50,9 +50,9 @@ Subagent (general-purpose):
     ## Change messages
 
     Based on https://go.dev/wiki/CommitMessage and on past commit messages that
-    you can see in `jj log`, compose commit messages adherent to the present
-    standards. Repository-local syntax from project instructions and `jj log`
-    ALWAYS wins when it differs from Go guidance. Do not use fixed templates
+    you can see in `git log`, compose commit messages adherent to the present
+    standards. Repository-local commit-message syntax as established by project instructions and `git log`
+    ALWAYS wins when it differs from the Go guidance. Do not use fixed templates
     such as `feat:` or `fix:` prefixes. Describe what the change does and why.
 
     Record with `jj commit -m "<message composed from the standards above>"`

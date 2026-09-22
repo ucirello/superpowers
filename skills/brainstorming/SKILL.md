@@ -241,7 +241,7 @@ is the whole process.
 - Write the validated design (spec) to `docs/rocketclaw/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Record the design document as a jj change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `jj log`, compose commit messages adherent to the present standards. Repository-local syntax from project instructions and `jj log` ALWAYS wins when it differs from Go guidance. Do not use fixed `feat:` / `fix:` Conventional Commit templates. Example: `jj describe -m "<message composed from the standards above>"` then `jj commit` (or `jj commit -m "<message composed from the standards above>"`).
+- Record the design document as a jj change. Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards. Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Do not use fixed `feat:` / `fix:` Conventional Commit templates. Example: `jj describe -m "<message composed from the standards above>"` then `jj commit` (or `jj commit -m "<message composed from the standards above>"`).
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:

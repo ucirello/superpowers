@@ -204,9 +204,9 @@ read its output, and compare. Three outcomes:
 
 Record changes as the plan's change steps say. Based on
 https://go.dev/wiki/CommitMessage and on past commit messages that you can
-see in `jj log`, compose commit messages adherent to the present standards.
-Repository-local syntax from project instructions and `jj log` ALWAYS wins
-when it differs from Go guidance. Follow the plan's semantic requirements
+see in `git log`, compose commit messages adherent to the present standards.
+Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins
+when it differs from the Go guidance. Follow the plan's semantic requirements
 for what each change describes; compose the message dynamically — do not
 use fixed `feat:` / `fix:` templates. A task that spans several changes is
 fine; BASE is what the review range is cut from, never `@-` alone.

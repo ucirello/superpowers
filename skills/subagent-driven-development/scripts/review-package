@@ -60,7 +60,7 @@ fi
   jj diff --from "$base_id" --to "$head_id" --stat
   echo
   echo "## Diff"
-  jj diff --from "$base_id" --to "$head_id" --git -U10
+  jj diff --from "$base_id" --to "$head_id" --context 10
 } > "$out"
 
 echo "wrote ${out}: ${change_count} change(s), $(wc -c < "$out" | tr -d ' ') bytes"

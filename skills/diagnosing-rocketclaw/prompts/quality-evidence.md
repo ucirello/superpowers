@@ -16,10 +16,8 @@ not evaluate the code the session produced.
    diff). Report claims with no supporting result in that turn.
 3. Changes: every `jj commit` or `jj describe` with its description. Based on
    https://go.dev/wiki/CommitMessage and on past commit messages that you can
-   see in `jj log`, compose commit messages adherent to the present standards
-   only when judging whether a recorded description matches the work —
-   repository-local syntax from project instructions and `jj log` ALWAYS wins
-   when it differs from Go guidance. Compare each description to the tool
+   see in `git log`, compose commit messages adherent to the present standards.
+   Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance. Apply that only when judging whether a recorded description matches the work. Compare each description to the tool
    calls in the preceding turn(s). Report changes whose description claims
    work that no tool call performed, and work performed that was never
    recorded when the agreed plan said it would be.
