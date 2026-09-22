@@ -212,10 +212,10 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**JJ Change Message Helper skill:**
 
 ```yaml  theme={null}
-description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
+description: Generate descriptive change messages by analyzing jj diffs. Use when the user asks for help writing change messages or reviewing working-copy changes.
 ```
 
 Avoid vague descriptions like these:
@@ -653,39 +653,26 @@ Adjust sections as needed for the specific analysis type.
 For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
 
 ````markdown  theme={null}
-## Commit message format
+## Change message format
 
-Generate commit messages following these examples:
+Based on https://go.dev/wiki/CommitMessage and on past commit messages that you can see in `git log`, compose commit messages adherent to the present standards.
 
-**Example 1:**
+Repository-local commit-message syntax as established by project instructions and `git log` ALWAYS wins when it differs from the Go guidance.
+
+Do not use fixed templates (`feat:`, `fix:`, Conventional Commit prefixes). Compose each message dynamically from the standards above and the semantic content of the change.
+
+**Example workflow:**
 Input: Added user authentication with JWT tokens
-Output:
+Output: a message composed from the standards above (what changed and why), e.g. via:
 ```
-feat(auth): implement JWT-based authentication
-
-Add login endpoint and token validation middleware
+jj commit -m "<message composed from the standards above>"
 ```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
+or:
 ```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
+jj describe -m "<message composed from the standards above>"
 ```
 
-**Example 3:**
-Input: Updated dependencies and refactored error handling
-Output:
-```
-chore: update dependencies and refactor error handling
-
-- Upgrade lodash to 4.17.21
-- Standardize error response format across endpoints
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
+Keep semantic requirements (what the change describes) as constraints on the composed message; do not prescribe a fixed prefix format.
 ````
 
 Examples help agents understand the desired style and level of detail more clearly than descriptions alone.

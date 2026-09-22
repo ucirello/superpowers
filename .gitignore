@@ -17,3 +17,6 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+
+# Local scratch / agent temp (jj workspace root .tmp)
+.tmp/

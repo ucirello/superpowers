@@ -4,7 +4,7 @@ context-safety rules, and the return format. This file adds the dimension.
 Dimension: Plan adherence
 
 Recover the plan the session agreed to, then map each plan step to what
-happened. "Plan" here means any agreed course of action, not git commits.
+happened. "Plan" here means any agreed course of action, not jj changes.
 
 1. Find the agreed plan: a design or plan agreed in chat (look for the
    assistant text preceding a human "yes/ok/go ahead"), a spec or plan file

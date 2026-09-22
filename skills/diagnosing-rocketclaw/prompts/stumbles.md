@@ -13,7 +13,7 @@ commands to locate line numbers:
 - retries: the same tool call re-issued within the same turn after an
   error;
 - reverted edits: an edit followed by an edit that restores the earlier
-  content, or `git checkout`/`git restore`/`git revert`/`git reset` on a
+  content, or `jj restore`/`jj undo`/`jj abandon` on a
   file the session touched;
 - backtracking in assistant text ("actually", "let me instead", "that was
   wrong", "I misread");
